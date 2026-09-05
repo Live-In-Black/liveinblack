@@ -21,13 +21,17 @@ const XOF_REGION_KEYS = new Set(
     .map(normKey)
 )
 
+const LEGACY_EUR_REGION_KEYS = new Set(['france', 'fr'])
+
 export function regionToCurrency(region: unknown): 'EUR' | 'XOF' {
-  return XOF_REGION_KEYS.has(normKey(region)) ? 'XOF' : 'EUR'
+  const key = normKey(region)
+  if (LEGACY_EUR_REGION_KEYS.has(key)) return 'EUR'
+  return XOF_REGION_KEYS.has(key) ? 'XOF' : 'XOF'
 }
 
 export function eventCurrency(event: { currency?: string } | null | undefined): 'EUR' | 'XOF' {
-  if (!event) return 'EUR'
-  return String(event.currency || '').toUpperCase() === 'XOF' ? 'XOF' : 'EUR'
+  if (!event) return 'XOF'
+  return String(event.currency || '').toUpperCase() === 'EUR' ? 'EUR' : 'XOF'
 }
 
 export function organizerCurrency(profile: { regionId?: string; country?: string } | null | undefined): 'EUR' | 'XOF' | null {
@@ -37,11 +41,11 @@ export function organizerCurrency(profile: { regionId?: string; country?: string
   return regionToCurrency(anchor)
 }
 
-export function payRailLabel(currency: string = 'EUR'): string {
-  return String(currency).toUpperCase() === 'XOF' ? 'Mobile Money / carte (FedaPay)' : 'Carte bancaire (Stripe)'
+export function payRailLabel(currency: string = 'XOF'): string {
+  return String(currency).toUpperCase() === 'EUR' ? 'Carte bancaire (Stripe)' : 'Mobile Money / carte (FedaPay)'
 }
 
-export function fmtMoney(amount: unknown, currency: string = 'EUR'): string {
+export function fmtMoney(amount: unknown, currency: string = 'XOF'): string {
   const n = Number(amount) || 0
   if (String(currency).toUpperCase() === 'XOF') {
     return `${Math.round(n).toLocaleString('fr-FR')} FCFA`
@@ -53,6 +57,6 @@ export function fmtMoney(amount: unknown, currency: string = 'EUR'): string {
   })} €`
 }
 
-export function currencySymbol(currency: string = 'EUR'): string {
+export function currencySymbol(currency: string = 'XOF'): string {
   return String(currency).toUpperCase() === 'XOF' ? 'FCFA' : '€'
 }

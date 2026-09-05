@@ -1599,7 +1599,7 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
             <InputField label="Nom du lieu" placeholder="Ex: Club Le Baroque, Salle des Fêtes..." value={venueName} onChange={(e) => setVenueName(e.target.value)} locked={locked} />
             <InputField label="Adresse" placeholder="Ex: 12 rue de la Paix" value={address} onChange={(e) => setAddress(e.target.value)} locked={locked} />
-            <InputField label="Ville *" placeholder="Ex: Paris, Lomé, Abidjan..." value={city} onChange={(e) => setCity(e.target.value)} error={errors.city} locked={locked} />
+            <InputField label="Ville *" placeholder="Ex: Cotonou, Porto-Novo..." value={city} onChange={(e) => setCity(e.target.value)} error={errors.city} locked={locked} />
 
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={{ ...S.label, marginBottom: 4 }}>Région *</label>

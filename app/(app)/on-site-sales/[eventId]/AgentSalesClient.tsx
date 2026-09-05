@@ -48,7 +48,7 @@ export default function AgentSalesClient({
   const [settlementMode, setSettlementMode] = useState<'instant_debit' | 'agent_settles'>('agent_settles')
   const [momoNumber, setMomoNumber] = useState('')
   const [momoCountry, setMomoCountry] = useState('TG')
-  const [momoMode, setMomoMode] = useState<'mtn' | 'moov' | 'mtn_ci' | 'moov_tg'>('moov_tg')
+  const [momoMode, setMomoMode] = useState<'mtn' | 'moov'>('moov')
   const [busy, setBusy] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [result, setResult] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
@@ -203,7 +203,7 @@ export default function AgentSalesClient({
           </div>
           <div>
             <Label>Téléphone {!contactEmail.trim() ? '(email ou téléphone requis)' : '(optionnel)'}</Label>
-            <Input aria-label="Téléphone du client" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+228 90 00 00 00" />
+          <Input aria-label="Téléphone du client" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+229 90 00 00 00" />
           </div>
         </div>
 
@@ -253,8 +253,6 @@ export default function AgentSalesClient({
                 value={momoMode}
                 onChange={(v) => setMomoMode(v as typeof momoMode)}
                 options={[
-                  { value: 'moov_tg', label: 'Moov Togo' },
-                  { value: 'mtn_ci', label: 'MTN Côte d’Ivoire' },
                   { value: 'mtn', label: 'MTN Bénin' },
                   { value: 'moov', label: 'Moov Bénin' },
                 ]}

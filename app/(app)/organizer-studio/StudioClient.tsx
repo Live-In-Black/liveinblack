@@ -292,7 +292,7 @@ export default function StudioClient({
     if (res.ok && data.ok) setProfile(data.profile)
   }
 
-  const regionCurrency = regions.find((r) => r.id === profile.regionId)?.currency ?? 'EUR'
+  const regionCurrency = regions.find((r) => r.id === profile.regionId)?.currency ?? 'XOF'
 
   return (
     <>
@@ -698,7 +698,7 @@ export default function StudioClient({
 
                     <div>
                       <Label style={{ fontWeight: 700, fontSize: 'var(--font-size-caption-lg)', marginBottom: 6 }}>Ville de base</Label>
-                      <Input aria-label="Ville d’intervention" value={profile.city} onChange={(e) => update({ city: e.target.value })} placeholder="Ex. Lomé, Cotonou, Paris…" />
+                      <Input aria-label="Ville d’intervention" value={profile.city} onChange={(e) => update({ city: e.target.value })} placeholder="Ex. Cotonou, Porto-Novo…" />
                     </div>
                   </div>
 
@@ -1776,7 +1776,7 @@ function PayoutSection({
 
                   <Input
                     aria-label={`Numéro Mobile Money pour ${region?.name}`}
-                    placeholder="Ex. +228 90 00 00 00"
+                    placeholder="Ex. +229 90 00 00 00"
                     value={momos[c] || ''}
                     onChange={(e) => setMomos((m) => ({ ...m, [c]: e.target.value }))}
                     style={{ fontSize: 'var(--font-size-footnote)' }}

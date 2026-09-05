@@ -153,8 +153,12 @@ export async function listPublicEventsDirectory({
   const now = new Date()
 
   const baseFilter = buildDiscoverableFilters(now)
+  // The current public launch is Bénin-only. Historical records remain in the
+  // database for back-office compatibility but are never discoverable here.
+  baseFilter.region = safeRegion && normalizeGeoText(safeRegion) !== 'benin'
+    ? '__unsupported_launch_region__'
+    : 'Bénin'
   if (safeCategory) baseFilter.category = safeCategory
-  if (safeRegion) baseFilter.region = safeRegion
 
   const query = safeText ? { ...baseFilter, $text: { $search: safeText } } : baseFilter
 
@@ -197,7 +201,7 @@ export type EventSitemapEntry = { id: string; updatedAt?: Date | string | null }
 
 export async function countPublicEventsForSitemap(): Promise<number> {
   await getDb()
-  return Event.estimatedDocumentCount().maxTimeMS(2_000)
+  return Event.countDocuments(buildDiscoverableFilters()).maxTimeMS(2_000)
 }
 
 export async function listPublicEventsForSitemapPage(params: { offset: number; limit: number }): Promise<EventSitemapEntry[]> {
@@ -240,5 +244,6 @@ export async function getEventById(id: string): Promise<EventAccessResult> {
   await getDb()
   const doc = await Event.findById(id).lean()
   if (!doc) return { status: 'not_found' }
-  return { status: 'ok', event: toPublicEvent(doc) }
+  const event = toPublicEvent(doc)
+  return isClientDiscoverableEvent(event) ? { status: 'ok', event } : { status: 'not_found' }
 }

@@ -6,7 +6,7 @@ import { getRegionByName } from './regions'
 // UTC+0 toute l'année (aucune des régions XOF n'a de changement d'heure) —
 // repère par défaut si `region` est absent/inconnu, ex. anciens events sans
 // région ou fixtures de test.
-const DEFAULT_TIMEZONE = 'Africa/Lome'
+const DEFAULT_TIMEZONE = 'Africa/Porto-Novo'
 
 function eventTimezone(ev: EventLike | null | undefined): string {
   const region = ev?.region ? getRegionByName(ev.region) : null

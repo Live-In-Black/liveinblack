@@ -8,17 +8,20 @@ export type RegionOption = Region | { id: string; name: string; country: string;
 
 export const REGION_OPTIONS: RegionOption[] = [
   ...regions,
-  { id: INTERNATIONAL_REGION_ID, name: 'International', country: 'International', flag: '🌍', code: 'INT' },
 ]
 
 const LEGACY_CITY_REGION = new Map<string, string>(
   Object.entries({
-    paris: 'france', lyon: 'france', marseille: 'france', lille: 'france', bordeaux: 'france',
-    toulouse: 'france', nantes: 'france', nice: 'france', strasbourg: 'france', montpellier: 'france', rennes: 'france',
-    lome: 'togo', kara: 'togo', sokode: 'togo', kpalime: 'togo', atakpame: 'togo',
     cotonou: 'benin', 'porto novo': 'benin', 'abomey calavi': 'benin', parakou: 'benin', abomey: 'benin',
   })
 )
+
+// Kept only so historical records can still be normalized internally. These
+// regions are intentionally not exposed through REGION_OPTIONS.
+const LEGACY_REGION_IDS = new Map([
+  ['france', 'france'], ['fr', 'france'], ['togo', 'togo'], ['tg', 'togo'],
+  ['cote d ivoire', 'cote-ivoire'], ['ci', 'cote-ivoire'], ['senegal', 'senegal'], ['sn', 'senegal'],
+])
 
 export function normalizeGeoText(value: unknown = ''): string {
   return stripDiacritics(String(value))
@@ -36,6 +39,9 @@ export function normalizeRegionId(value: RegionLike): string {
   )
   if (!token) return ''
   if (token === INTERNATIONAL_REGION_ID || token === 'monde' || token === 'worldwide') return INTERNATIONAL_REGION_ID
+
+  const legacyId = LEGACY_REGION_IDS.get(token)
+  if (legacyId) return legacyId
 
   const exact = regions.find((region) =>
     [region.id, region.code, region.name, region.country].some((candidate) => normalizeGeoText(candidate) === token)

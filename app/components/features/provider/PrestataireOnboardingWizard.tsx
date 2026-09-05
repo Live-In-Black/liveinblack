@@ -399,7 +399,7 @@ export default function PrestataireOnboardingWizard({
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: mode === 'anonymous' ? '6px 10px' : 14 }}>
                 <div>
                   <Label style={labelStyle}>Ville</Label>
-                  <Input aria-label="Ville" style={inputStyle} value={form.ville} onChange={(e) => set('ville', e.target.value)} placeholder="Paris, Lomé, Cotonou…" />
+                  <Input aria-label="Ville" style={inputStyle} value={form.ville} onChange={(e) => set('ville', e.target.value)} placeholder="Cotonou" />
                 </div>
                 <div>
                   <Label style={labelStyle}>Pays</Label>

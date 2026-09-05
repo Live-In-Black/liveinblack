@@ -1,6 +1,6 @@
 import { getDb } from '@/lib/db/mongoose'
 import ProviderProfile, { type ProviderProfileDoc } from '@/lib/models/ProviderProfile'
-import { normalizeGeoText } from '@/lib/shared/locations'
+import { normalizeGeoText, normalizeRegionId } from '@/lib/shared/locations'
 
 export type PublicProvider = ProviderProfileDoc & { userId: string }
 
@@ -156,14 +156,17 @@ function buildProviderFilters(params: PublicProviderDirectoryParams) {
   const normalizedSearch = normalizeGeoText(search)
 
   const filter: Record<string, unknown> = { subscriptionActive: true }
-  const andClauses: Record<string, unknown>[] = []
+  const andClauses: Record<string, unknown>[] = [
+    { $or: [{ regionId: 'benin' }, { zonesIntervention: 'benin' }, { country: 'Bénin' }] },
+  ]
 
   if (category) {
     andClauses.push({ $or: [{ prestataireType: category }, { prestataireTypes: category }] })
   }
 
   if (region) {
-    andClauses.push({ $or: [{ regionId: region }, { zonesIntervention: region }] })
+    const regionId = normalizeRegionId(region)
+    andClauses.push(regionId === 'benin' ? { $or: [{ regionId: 'benin' }, { zonesIntervention: 'benin' }] } : { regionId: '__unsupported_launch_region__' })
   }
 
   if (search) {
@@ -197,7 +200,10 @@ function buildProviderFilters(params: PublicProviderDirectoryParams) {
  */
 export async function listPublicProviders(): Promise<PublicProvider[]> {
   await getDb()
-  const docs = await ProviderProfile.find(withNonGhostFilter({ subscriptionActive: true }))
+  const docs = await ProviderProfile.find(withNonGhostFilter({
+    subscriptionActive: true,
+    $or: [{ regionId: 'benin' }, { zonesIntervention: 'benin' }, { country: 'Bénin' }],
+  }))
     .select(PROVIDER_FIELDS)
     .sort({ updatedAt: -1 })
     .lean()
@@ -208,14 +214,20 @@ export type ProviderSitemapEntry = { userId: string; updatedAt?: Date | string |
 
 export async function countPublicProvidersForSitemap(): Promise<number> {
   await getDb()
-  return ProviderProfile.estimatedDocumentCount().maxTimeMS(2_000)
+  return ProviderProfile.countDocuments(withNonGhostFilter({
+    subscriptionActive: true,
+    $or: [{ regionId: 'benin' }, { zonesIntervention: 'benin' }, { country: 'Bénin' }],
+  })).maxTimeMS(2_000)
 }
 
 export async function listPublicProvidersForSitemapPage(params: { offset: number; limit: number }): Promise<ProviderSitemapEntry[]> {
   await getDb()
   const offset = Math.max(0, Math.floor(params.offset))
   const limit = Math.min(5_000, Math.max(1, Math.floor(params.limit)))
-  const docs = await ProviderProfile.find(withNonGhostFilter({ subscriptionActive: true }))
+  const docs = await ProviderProfile.find(withNonGhostFilter({
+    subscriptionActive: true,
+    $or: [{ regionId: 'benin' }, { zonesIntervention: 'benin' }, { country: 'Bénin' }],
+  }))
     .select('userId updatedAt')
     .sort({ updatedAt: -1, _id: 1 })
     .skip(offset)

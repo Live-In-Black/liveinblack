@@ -856,7 +856,7 @@ export default function ProposerServicesClient({
                   </Field>
                 </div>
                 <Field label="Ville de base">
-                  <Input value={profile.city} onChange={(e) => update({ city: e.target.value })} placeholder="Paris, Lomé, Cotonou…" />
+                  <Input value={profile.city} onChange={(e) => update({ city: e.target.value })} placeholder="Cotonou" />
                 </Field>
                 <Field label="Site principal">
                   <Input value={profile.socialLinks.website || profile.website || ''} onChange={(e) => update({ website: e.target.value, socialLinks: { ...profile.socialLinks, website: e.target.value } })} placeholder="https://tonsite.com" />
@@ -977,7 +977,6 @@ export default function ProposerServicesClient({
                       value={newItem.currency || catalogDefaultCurrency}
                       onChange={(value) => setNewItem((c) => ({ ...c, currency: value }))}
                       options={[
-                        { value: 'EUR', label: 'Euro (€)' },
                         { value: 'XOF', label: 'Franc CFA (FCFA)' },
                       ]}
                     />
@@ -1078,10 +1077,7 @@ export default function ProposerServicesClient({
                             <Select
                               value={editingItem.currency}
                               onChange={(value) => setEditingItem((c) => (c ? { ...c, currency: value } : c))}
-                              options={[
-                                { value: 'EUR', label: '€' },
-                                { value: 'XOF', label: 'FCFA' },
-                              ]}
+                              options={[{ value: 'XOF', label: 'FCFA' }]}
                             />
                           </Label>
                           <Select

@@ -113,6 +113,8 @@ export async function getTransaction(transactionId: number | string): Promise<Fe
 // confirmation arrive ENSUITE par le même webhook que le checkout classique
 // (transaction.approved) — voir lib/server/agentSales.ts::fulfillAgentMomoSale.
 // Doc FedaPay : POST /transactions/{mode} avec {token, phone_number}.
+// Legacy modes remain typed for historical settlement records; active APIs
+// accept only the two Bénin operators.
 export type MobileMoneyMode = 'mtn' | 'moov' | 'mtn_ci' | 'moov_tg'
 
 export async function sendPaymentToUser(

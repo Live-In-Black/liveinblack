@@ -16,7 +16,7 @@ export const LEGAL = {
     street: '',
     zip: '',
     city: '',
-    country: 'France',
+    country: 'Bénin',
   },
   // Représentant légal
   director: {
@@ -49,9 +49,9 @@ export const LEGAL = {
   dpo: null as { name: string; email: string } | null, // ex: { name: 'XX', email: 'dpo@liveinblack.com' }
   // Autorité de contrôle
   authority: {
-    name: 'CNIL',
-    url: 'https://www.cnil.fr',
-    address: '3 Place de Fontenoy, TSA 80715, 75334 Paris Cedex 07',
+    name: 'Autorité de protection des données du Bénin',
+    url: 'https://apdp.bj',
+    address: '',
   },
   lastUpdate: 'Avril 2026',
 }

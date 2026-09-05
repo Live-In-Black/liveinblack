@@ -426,7 +426,7 @@ export default function OrganizerOnboardingWizard({
                 <>
                   <div>
                     <Label style={labelStyle}>Ville {requiredMark}</Label>
-                    <Input style={inputStyle} value={form.ville} onChange={(e) => set('ville', e.target.value)} placeholder="Paris" />
+                    <Input style={inputStyle} value={form.ville} onChange={(e) => set('ville', e.target.value)} placeholder="Cotonou" />
                   </div>
                   <div>
                     <Label style={labelStyle}>Pays</Label>

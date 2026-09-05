@@ -31,18 +31,18 @@ interface SeedPost {
 
 const posts: SeedPost[] = [
   {
-    slug: 'meilleurs-evenements-nuit-lome-2026',
-    title: 'Les meilleurs événements de nuit à Lomé en 2026',
-    excerpt: "Rooftop, clubs, soirées afrobeat en plein air : voici où sortir à Lomé cette année, et comment ne jamais rater le bon événement.",
+    slug: 'meilleurs-evenements-nuit-cotonou-2026',
+    title: 'Les meilleurs événements de nuit à Cotonou en 2026',
+    excerpt: "Rooftop, clubs, soirées afrobeat en plein air : voici où sortir à Cotonou cette année, et comment ne jamais rater le bon événement.",
     coverImageUrl: '/images/live-in-black/blog/blog-editorial-benin-nightlife.png',
-    category: 'togo',
-    tags: ['Lomé', 'Togo', 'sorties', 'afrobeat'],
+    category: 'benin',
+    tags: ['Cotonou', 'Bénin', 'sorties', 'afrobeat'],
     authorName: 'La rédaction LIVEINBLACK',
-    metaTitle: 'Meilleures soirées et événements à Lomé en 2026 | LIVEINBLACK',
-    metaDescription: "Panorama des lieux et types de soirées qui font vibrer Lomé en 2026 : rooftops, clubs, plein air, et conseils pour réserver sa place à temps.",
+    metaTitle: 'Meilleures soirées et événements à Cotonou en 2026 | LIVEINBLACK',
+    metaDescription: "Panorama des lieux et types de soirées qui font vibrer Cotonou en 2026 : rooftops, clubs, plein air, et conseils pour réserver sa place à temps.",
     publishedAt: daysAgo(21),
     content: `
-<p>Lomé n'a jamais autant bougé la nuit. Entre les rooftops du quartier des ambassades, les clubs historiques du centre-ville et les soirées en plein air qui fleurissent à chaque saison sèche, la capitale togolaise est devenue l'une des scènes nightlife les plus dynamiques d'Afrique de l'Ouest. Voici un tour d'horizon de ce qui fait vibrer la ville en 2026, et quelques conseils pratiques pour ne rien manquer.</p>
+<p>Cotonou n'a jamais autant bougé la nuit. Entre les rooftops de la Haie Vive, les clubs du centre-ville et les soirées en plein air qui fleurissent à chaque saison sèche, la capitale béninoise est devenue l'une des scènes nightlife les plus dynamiques d'Afrique de l'Ouest. Voici un tour d'horizon de ce qui fait vibrer la ville en 2026, et quelques conseils pratiques pour ne rien manquer.</p>
 
 <h2>Les rooftops, nouvelle valeur sûre</h2>
 <p>Depuis deux ou trois ans, les rooftops se sont imposés comme le format préféré des jeunes actifs lomékains. Vue sur la lagune ou sur les toits du centre, cocktails soignés et programmation DJ pointue : ces lieux misent sur une ambiance plus feutrée en début de soirée avant de monter progressivement en intensité. Ils sont particulièrement prisés pour les after-works du vendredi qui se prolongent souvent bien après minuit.</p>
@@ -64,14 +64,14 @@ const posts: SeedPost[] = [
   },
   {
     slug: 'guide-organiser-soiree-reussie-togo',
-    title: 'Guide : comment organiser une soirée réussie au Togo',
+    title: 'Guide : comment organiser une soirée réussie au Bénin',
     excerpt: "Budget, lieu, sécurité, billetterie : les étapes concrètes pour monter un événement nightlife qui marche, du premier brief au jour J.",
     coverImageUrl: '/images/live-in-black/auth/auth-organizer-backstage-ops.png',
     category: 'guide',
-    tags: ['organisation', 'événementiel', 'Togo', 'billetterie'],
+    tags: ['organisation', 'événementiel', 'Bénin', 'billetterie'],
     authorName: 'La rédaction LIVEINBLACK',
-    metaTitle: 'Organiser une soirée réussie au Togo : le guide complet | LIVEINBLACK',
-    metaDescription: "Les étapes essentielles pour organiser un événement nightlife au Togo : budget, lieu, prestataires, sécurité et billetterie en ligne.",
+    metaTitle: 'Organiser une soirée réussie au Bénin : le guide complet | LIVEINBLACK',
+    metaDescription: "Les étapes essentielles pour organiser un événement nightlife au Bénin : budget, lieu, prestataires, sécurité et billetterie en ligne.",
     publishedAt: daysAgo(18),
     content: `
 <p>Organiser une soirée qui marque les esprits ne relève pas de la chance : c'est avant tout une question de méthode. Que tu prépares ton premier événement ou que tu cherches à professionnaliser ta façon de faire, voici les étapes clés pour partir sur de bonnes bases.</p>
@@ -83,7 +83,7 @@ const posts: SeedPost[] = [
 <p>Le budget d'une soirée se répartit généralement entre la location du lieu, la sonorisation et l'éclairage, le cachet des artistes ou DJ, la sécurité, la communication et une marge de sécurité pour les imprévus (souvent sous-estimée par les débutants). Une règle simple : ne jamais engager de dépenses fixes importantes tant que la billetterie n'a pas confirmé un minimum de ventes.</p>
 
 <h2>3. Choisir le bon lieu et sécuriser les autorisations</h2>
-<p>Au Togo comme ailleurs, un lieu adapté au nombre d'invités attendus, à l'accessibilité (parking, transport) et aux nuisances sonores évite bien des complications le jour J. Les autorisations administratives et l'accord écrit du propriétaire des lieux sont à obtenir en amont, jamais à la dernière minute.</p>
+<p>Au Bénin comme ailleurs, un lieu adapté au nombre d'invités attendus, à l'accessibilité (parking, transport) et aux nuisances sonores évite bien des complications le jour J. Les autorisations administratives et l'accord écrit du propriétaire des lieux sont à obtenir en amont, jamais à la dernière minute.</p>
 
 <h2>4. S'entourer des bons prestataires</h2>
 <p>DJ, traiteur, sécurité, photographe : la qualité de ces prestataires fait souvent la différence entre une bonne soirée et une soirée mémorable. C'est là que l'annuaire de prestataires de LIVEINBLACK devient utile : tu peux comparer plusieurs profils, voir leurs réalisations précédentes et échanger directement avec eux via la messagerie de la plateforme, sans passer par des intermédiaires.</p>

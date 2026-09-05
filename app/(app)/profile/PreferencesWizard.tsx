@@ -52,10 +52,10 @@ const AMBIANCES = [
 ]
 const BUDGETS = [
   { id: 'gratuit', label: 'Gratuit' },
-  { id: 'moins-10', label: 'Moins de 10 €' },
-  { id: '10-20', label: '10 à 20 €' },
-  { id: '20-50', label: '20 à 50 €' },
-  { id: 'plus-50', label: 'Plus de 50 €' },
+  { id: 'moins-5000', label: 'Moins de 5 000 FCFA' },
+  { id: '5000-10000', label: '5 000 à 10 000 FCFA' },
+  { id: '10000-25000', label: '10 000 à 25 000 FCFA' },
+  { id: 'plus-25000', label: 'Plus de 25 000 FCFA' },
   { id: 'vip', label: 'VIP / Premium' },
 ]
 const FREQUENCIES = [
@@ -82,11 +82,7 @@ const ARTIST_SUGGESTIONS = [
   'David Guetta', 'DJ Snake', 'Martin Garrix', 'Calvin Harris',
 ]
 const CITY_SUGGESTIONS = [
-  'Lomé', 'Kara', 'Kpalimé',
-  'Cotonou', 'Porto-Novo', 'Parakou',
-  'Abidjan', 'Yamoussoukro', 'Bouaké',
-  'Paris', 'Lyon', 'Marseille', 'Lille', 'Bordeaux', 'Toulouse', 'Nice', 'Strasbourg', 'Nantes',
-  'Bruxelles', 'Londres', 'Genève', 'Dakar', 'Accra', 'Lagos', 'Douala', 'Libreville',
+  'Cotonou', 'Porto-Novo', 'Abomey-Calavi', 'Parakou', 'Ouidah', 'Bohicon', 'Natitingou', 'Grand-Popo',
 ]
 
 export interface Preferences {
