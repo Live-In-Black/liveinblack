@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { getMyApplication, type ApplicationView } from '@/lib/server/provider/applications'
 import { Card } from '@/app/components/ui'
+import styles from './my-application.module.css'
 
 // Port de src/pages/MonDossierPage.jsx. Legacy ne montre qu'UN dossier à la
 // fois — organisateur gagne silencieusement si les deux existent en local,
@@ -26,7 +27,7 @@ const primaryBtn: React.CSSProperties = {
   border: 'none',
   background: 'var(--primary)',
   color: 'var(--primary-ink)',
-  fontWeight: 800,
+  fontWeight: 500,
   fontSize: 'var(--font-size-body-sm)',
   alignItems: 'center',
   textTransform: 'none',
@@ -41,7 +42,7 @@ const secondaryBtn: React.CSSProperties = {
   border: '1px solid var(--border-strong)',
   background: 'transparent',
   color: 'var(--text)',
-  fontWeight: 700,
+  fontWeight: 500,
   fontSize: 'var(--font-size-body-sm)',
   alignItems: 'center',
   textDecoration: 'none',
@@ -69,7 +70,7 @@ function formatDate(iso: string): string {
 
 function SupportLink() {
   return (
-    <a href={`mailto:${SUPPORT_EMAIL}?subject=Question%20sur%20mon%20dossier`} style={{ minHeight: 'var(--control-height-md)', display: 'inline-flex', alignItems: 'center', fontSize: 'var(--font-size-body-sm)', color: 'var(--primary)', textDecoration: 'none' }}>
+    <a className={styles.supportLink} href={`mailto:${SUPPORT_EMAIL}?subject=Question%20sur%20mon%20dossier`}>
       Une question ? Contacte le support
     </a>
   )
@@ -79,8 +80,11 @@ function ApplicationCard({ type, application, roleStatus, id }: { type: 'organis
   const editPath = EDIT_PATH[type]
 
   return (
-    <section id={id} style={{ display: 'flex', flexDirection: 'column', gap: 10, scrollMarginTop: 20 }}>
-      <h2 style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>{TYPE_LABEL[type]}</h2>
+    <section id={id} className={styles.applicationSection}>
+      <div className={styles.applicationHeading}>
+        <span aria-hidden="true">{type === 'organisateur' ? '01' : '02'}</span>
+        <h2>{TYPE_LABEL[type]}</h2>
+      </div>
 
       {!application && roleStatus === 'active' && (
         <Card accent="var(--primary-a35)" style={{ padding: 24 }}>
@@ -114,8 +118,8 @@ function ApplicationCard({ type, application, roleStatus, id }: { type: 'organis
       )}
 
       {application && ['submitted', 'under_review', 'resubmitted'].includes(application.status) && (
-        <Card accent="var(--violet-border)" style={{ padding: 24 }}>
-          <p style={{ fontSize: 'var(--font-size-headline-lg)', fontWeight: 800, color: 'var(--violet)', margin: '0 0 8px' }}>Dossier verrouillé — en attente de validation</p>
+        <Card accent="var(--primary-a35)" style={{ padding: 24 }}>
+          <p style={{ fontSize: 'var(--font-size-headline-lg)', fontWeight: 500, color: 'var(--primary)', margin: '0 0 8px' }}>Dossier verrouillé — en attente de validation</p>
           {application.submittedAt && (
             <p style={{ fontSize: 'var(--font-size-footnote-lg)', color: 'var(--text-faint)', margin: '0 0 8px' }}>Envoyé le {formatDate(application.submittedAt)}</p>
           )}
@@ -196,28 +200,24 @@ export default async function MonDossierPage() {
 
   return (
     <main className="lb-dashboard-page lb-dashboard-page--medium">
-      <style>{`
-        @media (max-width: 900px) {
-          .my-application-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-        <Link href="/profile" style={{ minHeight: 'var(--control-height-md)', display: 'inline-flex', alignItems: 'center', fontSize: 'var(--font-size-body-sm)', color: 'var(--text-muted)', textDecoration: 'none' }}>
+      <div className={styles.pageContent}>
+        <Link href="/profile" className={styles.backLink}>
           ← Mon profil
         </Link>
-        <header>
-          <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(28px,3.6vw,38px)', fontWeight: 720, letterSpacing: '-.045em' }}>Mes dossiers</h1>
-          <p style={{ maxWidth: 650, margin: '7px 0 0', color: 'var(--text-faint)', fontSize: 'var(--font-size-callout)', lineHeight: 1.42 }}>Suis l’avancement de tes candidatures organisateur et prestataire.</p>
+        <header className={styles.header}>
+          <p>Suivi des candidatures</p>
+          <h1>Mes dossiers</h1>
+          <span>Suis l’avancement de tes candidatures organisateur et prestataire.</span>
         </header>
-        <nav style={{ display: 'flex', gap: 10 }}>
-          <a href="#organisateur" style={{ minHeight: 'var(--control-height-md)', display: 'inline-flex', alignItems: 'center', fontSize: 'var(--font-size-body-sm)', color: 'var(--text-muted)', textDecoration: 'none' }}>
-            ↓ Dossier organisateur
+        <nav className={styles.sectionNav} aria-label="Accès aux dossiers">
+          <a href="#organisateur">
+            Dossier organisateur
           </a>
-          <a href="#prestataire" style={{ minHeight: 'var(--control-height-md)', display: 'inline-flex', alignItems: 'center', fontSize: 'var(--font-size-body-sm)', color: 'var(--text-muted)', textDecoration: 'none' }}>
-            ↓ Dossier prestataire
+          <a href="#prestataire">
+            Dossier prestataire
           </a>
         </nav>
-        <div className="my-application-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, alignItems: 'start' }}>
+        <div className={styles.applicationGrid}>
           <ApplicationCard id="organisateur" type="organisateur" application={organisateur} roleStatus={session.user.orgStatus} />
           <ApplicationCard id="prestataire" type="prestataire" application={prestataire} roleStatus={session.user.prestStatus} />
         </div>

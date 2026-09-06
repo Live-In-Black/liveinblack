@@ -4,6 +4,7 @@ import { useState } from 'react'
 import TicketWalletPanel, { type TicketWalletGroupView } from '../TicketWallet'
 import { Button, Card, Input, Modal, Textarea } from '@/app/components/ui'
 import { fmtMoney } from '@/lib/shared/money'
+import styles from './BilletsClient.module.css'
 
 type RefundCaseView = {
   id: string
@@ -45,10 +46,10 @@ const CAUSE_LABELS: Record<string, string> = {
 
 export default function BilletsClient({ groups, currentUserId, initialRefunds }: { groups: TicketWalletGroupView[]; currentUserId: string; initialRefunds: RefundCaseView[] }) {
   return (
-    <>
-      <RefundCasesPanel initialRefunds={initialRefunds} />
+    <main className={`lb-dashboard-page ${styles.page}`}>
       <TicketWalletPanel groups={groups} currentUserId={currentUserId} />
-    </>
+      <RefundCasesPanel initialRefunds={initialRefunds} />
+    </main>
   )
 }
 
@@ -91,16 +92,16 @@ function RefundCasesPanel({ initialRefunds }: { initialRefunds: RefundCaseView[]
   if (refunds.length === 0) return null
 
   return (
-    <section className="lb-dashboard-page" style={{ paddingBottom: 0 }}>
-      <header className="lb-dashboard-page-header" style={{ marginBottom: 16 }}>
-        <p style={{ margin: '0 0 6px', color: 'var(--primary)', fontSize: 'var(--font-size-body-sm)', letterSpacing: '3.2px', textTransform: 'uppercase', fontFamily: 'var(--font-display), sans-serif' }}>Remboursements</p>
-        <h2 className="lb-dashboard-title" style={{ fontSize: 'var(--font-size-title-2)' }}>Mes dossiers actifs</h2>
-        <p className="lb-dashboard-description">Retrait espèces par code, bascule individuelle irréversible, preuve et contestation restent suivis ici.</p>
+    <section className={styles.refunds}>
+      <header className={styles.refundHeader}>
+        <p>Remboursements</p>
+        <h2>Mes dossiers actifs</h2>
+        <span>Retraits, remboursements individuels et contestations sont suivis au même endroit.</span>
       </header>
       {message && <p style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--surface)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>{message}</p>}
-      <div style={{ display: 'grid', gap: 12, marginBottom: 24 }}>
+      <div className={styles.refundGrid}>
         {refunds.map((refund) => (
-          <Card key={refund.id} style={{ padding: 16, display: 'grid', gap: 12 }}>
+          <Card key={refund.id} className={styles.refundCard}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div>
                 <p style={{ margin: 0, color: 'var(--gold)', fontSize: 'var(--font-size-caption)', textTransform: 'uppercase', letterSpacing: '.08em', fontWeight: 800 }}>{CAUSE_LABELS[refund.cause] || refund.cause}</p>

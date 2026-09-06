@@ -164,10 +164,10 @@
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 20px;
-  --radius-xl: 28px;
+  --radius-xl: 20px;
   --radius-pill: 999px;
-  --radius-control: 14px;
-  --radius-card: var(--radius-xl);
+  --radius-control: 12px;
+  --radius-card: 20px;
   --font-size-tiny-1: 6.5px;
   --font-size-tiny-2: 7.5px;
   --font-size-tiny-3: 8.5px;
@@ -473,7 +473,7 @@ select:-webkit-autofill:focus {
 ::-webkit-scrollbar-thumb { background: rgba(var(--text-rgb), 0.32); border-radius: 999px; }
 
 .lb-card {
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-card) !important;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   box-shadow: 0 20px 56px rgba(var(--black-rgb), .22);
@@ -483,7 +483,7 @@ select:-webkit-autofill:focus {
 
 /* Contrat global des contrôles privés : les pages peuvent composer, mais ne
    doivent pas réduire la zone tactile minimale ni réinventer les rayons. */
-:where(button:not([data-lb-icon-button]):not([data-lb-button='link']), [role='button']) {
+:where(button:not([data-lb-icon-button]):not([data-lb-button='link']):not([role='switch']), [role='button']:not([role='switch'])) {
   min-height: var(--density-action-min) !important;
   border-radius: var(--radius-control) !important;
 }
@@ -494,6 +494,18 @@ select:-webkit-autofill:focus {
    écran lui transmet encore un borderRadius inline. Les boutons icônes et
    les liens textuels gardent leur géométrie dédiée. */
 :where(button[data-lb-button='primary'], button[data-lb-button='secondary'], button[data-lb-button='danger'], button[data-lb-button='ghost']) {
+  border-radius: var(--radius-control) !important;
+}
+
+/* Les liens visuellement présentés comme des actions suivent le même contrat
+   que Button. Les liens éditoriaux simples ne sont pas concernés. */
+:where(
+  a[class*='button'],
+  a[class*='Button'],
+  a[class*='action'],
+  a[class*='Action'],
+  a[role='button']
+) {
   border-radius: var(--radius-control) !important;
 }
 
@@ -808,7 +820,7 @@ button:hover > .lb-card {
   display: grid;
   grid-template-columns: minmax(0, .95fr) minmax(420px, 1.05fr);
   gap: var(--density-section-gap);
-  align-items: start;
+  align-items: center;
 }
 
 .lb-operational-primary {
@@ -852,13 +864,164 @@ button:hover > .lb-card {
    par ligne sans sacrifier la lisibilité des actions. */
 .lb-organizer-event-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 260px));
   gap: 10px;
+  align-items: start;
+  justify-content: start;
+}
+
+.lb-organizer-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.lb-organizer-action-card {
+  position: relative;
+  min-height: 104px !important;
+  display: grid !important;
+  grid-template-columns: 38px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 11px;
+  padding: 14px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-card) !important;
+  background: var(--card-bg) !important;
+  box-shadow: 0 10px 26px rgba(var(--black-rgb), .10) !important;
+  color: var(--text) !important;
+  transition: border-color .18s ease, background-color .18s ease, transform .18s ease;
+}
+
+.lb-organizer-action-card:hover {
+  border-color: var(--primary-a35) !important;
+  background: var(--surface-2) !important;
+  transform: translateY(-1px);
+}
+
+.lb-organizer-actions,
+.lb-organizer-events-section {
+  margin-bottom: 24px;
+}
+
+.lb-organizer-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.lb-organizer-section-heading p {
+  margin: 0 0 4px;
+  color: var(--primary);
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.lb-organizer-section-heading h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--font-size-title-5);
+  font-weight: 500;
+  letter-spacing: -.015em;
+}
+
+.lb-organizer-section-heading > span {
+  color: var(--text-faint);
+  font-size: var(--font-size-footnote);
+}
+
+.lb-organizer-action-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--primary-a20);
+  border-radius: 12px;
+  background: var(--primary-a08);
+  color: var(--primary);
+  flex-shrink: 0;
+  align-self: center !important;
+}
+
+.lb-organizer-action-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  gap: 4px;
+  text-align: left !important;
+}
+
+.lb-organizer-action-content strong {
+  color: var(--text);
+  font-size: var(--font-size-body);
+  font-weight: 500;
+}
+
+.lb-organizer-action-content small {
+  color: var(--text-muted);
+  font-size: var(--font-size-footnote);
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.lb-organizer-action-arrow {
+  align-self: center;
+  color: var(--text-faint);
+}
+
+.lb-event-wizard {
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+.lb-event-wizard-media-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.lb-event-wizard-upload-block {
+  min-width: 0;
+}
+
+.lb-event-wizard-poster-upload {
+  width: 100%;
+  height: clamp(176px, 20vw, 224px);
+  min-height: 0 !important;
+  box-shadow: none !important;
+}
+
+.lb-event-wizard-video-upload {
+  height: clamp(176px, 20vw, 224px);
+  min-height: 0;
+  box-shadow: none;
+}
+
+.lb-event-wizard-video-upload video {
+  height: min(160px, 100%);
 }
 
 @media (max-width: 820px) {
   .lb-events-tools { grid-template-columns: 1fr; }
   .lb-operational-grid { grid-template-columns: 1fr; }
+  .lb-organizer-action-grid { grid-template-columns: 1fr; }
+  .lb-organizer-section-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .lb-event-wizard-media-grid { grid-template-columns: 1fr; }
+  .lb-event-wizard-poster-upload,
+  .lb-event-wizard-video-upload { height: 190px; }
+}
+
+@media (max-width: 560px) {
+  .lb-organizer-event-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 390px) {
+  .lb-organizer-event-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 620px) {
@@ -1052,6 +1215,16 @@ input[type='radio'] {
   .lb-slider::-moz-range-thumb {
     transition: none;
   }
+}
+
+/* Contrat typographique final. Le faux identifiant dans :is() augmente
+   volontairement la spécificité sans devoir modifier chaque ancien écran. */
+html body :is(#lb-normal-weight-lock, *) {
+  font-weight: 400 !important;
+}
+
+html body :is(#lb-medium-weight-lock, strong, b, label, button, summary, a) {
+  font-weight: 500 !important;
 }
 
 /* Direction visuelle globale : aucune ombre ni halo. La hiérarchie repose

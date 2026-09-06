@@ -95,6 +95,7 @@ export default function OrganizerOnboardingWizard({
   const [regPassword, setRegPassword] = useState('')
   const [regPasswordConfirm, setRegPasswordConfirm] = useState('')
   const [showRegPassword, setShowRegPassword] = useState(false)
+  const [showRegPasswordConfirm, setShowRegPasswordConfirm] = useState(false)
   const [documents, setDocuments] = useState<Record<string, DocState[]>>({})
   const [candidateNote, setCandidateNote] = useState(initialCandidateNote ?? '')
   const [error, setError] = useState<string | null>(null)
@@ -297,10 +298,6 @@ export default function OrganizerOnboardingWizard({
                   <Input aria-label="Nom de l’établissement ou nom commercial" style={inputStyle} value={form.nomCommercial} onChange={(e) => set('nomCommercial', e.target.value)} placeholder="Ex : Club Neon, L|VE Events…" />
                 </div>
                 <div>
-                  <Label style={labelStyle}>Numéro IFU / RCCM (ou SIRET/SIREN) {requiredMark}</Label>
-                  <Input aria-label="Numéro IFU, RCCM ou SIRET" style={inputStyle} value={form.siret} onChange={(e) => set('siret', e.target.value)} placeholder="IFU, RCCM ou 000" />
-                </div>
-                <div>
                   <Label style={labelStyle}>Email professionnel {requiredMark}</Label>
                   <Input
                     aria-label="Email professionnel"
@@ -319,7 +316,7 @@ export default function OrganizerOnboardingWizard({
                         aria-label="Indicatif"
                         value={form.telephoneProCode}
                         onChange={(value) => set('telephoneProCode', value)}
-                        options={regions.map((r) => ({ value: r.dial, label: `${r.flag} ${r.dial}` }))}
+                        options={[{ value: '+229', label: '🇧🇯 +229' }]}
                         style={{ minHeight: 38, padding: '0 8px' }}
                       />
                     </div>
@@ -345,34 +342,42 @@ export default function OrganizerOnboardingWizard({
                       onChange={(e) => set('noFixedAddress', e.target.checked)}
                     />
                   </div>
-                  <div className="lb-organizer-auth-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 10px' }}>
-                    <div>
+                  <div className="lb-organizer-auth-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+                    <div style={{ gridColumn: '1 / -1' }}>
                       <Label style={labelStyle}>Adresse e-mail (identifiant connexion) {requiredMark}</Label>
                       <Input aria-label="Adresse e-mail de connexion" style={inputStyle} type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} placeholder="ton@email.com" />
                     </div>
                     <div>
-                      <Label style={labelStyle}>Mot de passe & confirmation {requiredMark}</Label>
-                      <div className="lb-organizer-password-grid" style={{ display: 'flex', gap: 6 }}>
-                        <div style={{ position: 'relative', flex: 1 }}>
-                          <Input
-                            aria-label="Mot de passe"
-                            style={{ ...inputStyle, paddingRight: 36 }}
-                            type={showRegPassword ? 'text' : 'password'}
-                            value={regPassword}
-                            onChange={(e) => setRegPassword(e.target.value)}
-                            placeholder="8+ car."
-                          />
-                          <Button
-                            variant="ghost"
-                            type="button"
-                            onClick={() => setShowRegPassword((v) => !v)}
-                            style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', padding: 0, color: 'var(--text-muted)' }}
-                          >
-                            <IconEye open={showRegPassword} size={13} />
-                          </Button>
-                        </div>
-                        <Input aria-label="Confirmation" style={{ ...inputStyle, flex: 1 }} type="password" value={regPasswordConfirm} onChange={(e) => setRegPasswordConfirm(e.target.value)} placeholder="Confirmer" />
-                      </div>
+                      <Label style={labelStyle}>Mot de passe {requiredMark}</Label>
+                      <Input
+                        aria-label="Mot de passe"
+                        style={inputStyle}
+                        type={showRegPassword ? 'text' : 'password'}
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        placeholder="Minimum 8 caractères"
+                        rightIcon={(
+                          <button type="button" aria-label={showRegPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} aria-pressed={showRegPassword} onClick={() => setShowRegPassword((value) => !value)} style={{ width: 28, height: 28, padding: 0, border: 0, borderRadius: 8, background: 'transparent', color: 'inherit', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+                            <IconEye open={showRegPassword} size={17} />
+                          </button>
+                        )}
+                      />
+                    </div>
+                    <div>
+                      <Label style={labelStyle}>Confirmer le mot de passe {requiredMark}</Label>
+                      <Input
+                        aria-label="Confirmation du mot de passe"
+                        style={inputStyle}
+                        type={showRegPasswordConfirm ? 'text' : 'password'}
+                        value={regPasswordConfirm}
+                        onChange={(e) => setRegPasswordConfirm(e.target.value)}
+                        placeholder="Saisis-le à nouveau"
+                        rightIcon={(
+                          <button type="button" aria-label={showRegPasswordConfirm ? 'Masquer la confirmation' : 'Afficher la confirmation'} aria-pressed={showRegPasswordConfirm} onClick={() => setShowRegPasswordConfirm((value) => !value)} style={{ width: 28, height: 28, padding: 0, border: 0, borderRadius: 8, background: 'transparent', color: 'inherit', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+                            <IconEye open={showRegPasswordConfirm} size={17} />
+                          </button>
+                        )}
+                      />
                     </div>
                   </div>
                 </>

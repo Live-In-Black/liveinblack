@@ -116,22 +116,19 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
   const upcomingSeatCount = countUpcomingSeats(buckets.upcoming)
 
   return (
-    <main className="lb-dashboard-page">
+    <section className="ticket-wallet-page">
       <style>{`
         .ticket-wallet-section-grid {
           display: grid !important;
-          grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)) !important;
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 300px)) !important;
           gap: 10px !important;
           width: 100% !important;
-        }
-        @media (min-width: 1024px) {
-          .ticket-wallet-section-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-          }
+          justify-content: start !important;
+          align-items: start !important;
         }
         @media (min-width: 640px) and (max-width: 1023px) {
           .ticket-wallet-section-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            grid-template-columns: repeat(2, minmax(0, 300px)) !important;
           }
         }
         @media (max-width: 639px) {
@@ -145,7 +142,7 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
         .ticket-wallet-ticket-list { padding: 0 12px 12px !important; gap: 8px !important; }
         .ticket-wallet-face { display: grid !important; grid-template-columns: minmax(0, 1fr) 112px !important; }
         .ticket-wallet-rail { min-height: 76px !important; padding: 10px 12px !important; }
-        .ticket-wallet-card-shell { border-radius: 14px !important; box-shadow: none !important; width: 100% !important; }
+        .ticket-wallet-card-shell { border-radius: var(--radius-card) !important; box-shadow: none !important; width: 100% !important; }
         .ticket-wallet-card-body { padding: 8px 10px !important; }
         .ticket-wallet-card-actions { padding: 8px 10px !important; gap: 6px !important; }
         .ticket-wallet-action-grid { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 6px !important; }
@@ -154,6 +151,18 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
         .ticket-wallet-qr canvas { width: 80px !important; height: 80px !important; }
         .ticket-wallet-meta > div { padding: 8px 9px !important; }
         .ticket-wallet-meta > div p:first-child { margin-bottom: 2px !important; }
+        .ticket-wallet-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+          min-height: 48px;
+          margin-top: 24px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid var(--border);
+        }
+        .ticket-wallet-profile-link { gap: 10px !important; padding-right: 12px; }
+        .ticket-wallet-toolbar > a:last-child { margin-left: auto; }
         @media (max-width: 480px) {
           .ticket-wallet-face { grid-template-columns: 1fr !important; }
           .ticket-wallet-qr { width: 100% !important; border-left: 0 !important; border-top: 1px dashed var(--border-strong) !important; }
@@ -162,11 +171,12 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
           .ticket-wallet-summary { grid-template-columns: 1fr !important; }
           .ticket-wallet-summary-action { justify-content: flex-start !important; }
           .ticket-wallet-summary-action a { min-height: 32px !important; padding: 6px 10px !important; font-size: var(--font-size-caption) !important; }
+          .ticket-wallet-toolbar { gap: 16px; }
         }
       `}</style>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <Link href="/profile" style={{ minHeight: 36, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--font-size-footnote-lg)', fontWeight: 700, color: 'var(--text-muted)', textDecoration: 'none' }}>
+        <div className="ticket-wallet-toolbar">
+          <Link className="ticket-wallet-profile-link" href="/profile" style={{ minHeight: 36, display: 'inline-flex', alignItems: 'center', fontSize: 'var(--font-size-footnote-lg)', color: 'var(--text-muted)', textDecoration: 'none' }}>
             <ArrowLeft size={16} aria-hidden="true" />
             Profil
           </Link>
@@ -174,7 +184,7 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
         </div>
 
         <header style={{ marginBottom: 6 }}>
-          <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(26px,3.2vw,34px)', fontWeight: 720, letterSpacing: '-.045em' }}>Mes billets</h1>
+          <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(26px,3.2vw,34px)', fontWeight: 500, letterSpacing: '-.035em' }}>Mes billets</h1>
           <p style={{ maxWidth: 720, margin: '5px 0 0', color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote)', lineHeight: 1.38 }}>Tous tes accès, QR codes et places à venir dans un seul portefeuille.</p>
         </header>
 
@@ -188,7 +198,7 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                 <TicketGlyph />
                 <div>
-                  <p style={{ fontWeight: 800, fontSize: 'var(--font-size-headline)', color: 'var(--text)', margin: 0 }}>
+                  <p style={{ fontWeight: 500, fontSize: 'var(--font-size-headline)', color: 'var(--text)', margin: 0 }}>
                     {upcomingSeatCount > 0 ? `${upcomingSeatCount} place${upcomingSeatCount > 1 ? 's' : ''} à venir` : 'Aucune place à venir'}
                   </p>
                   <p style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--text-muted)', margin: '2px 0 0' }}>
@@ -206,7 +216,7 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
           </>
         )}
       </div>
-    </main>
+    </section>
   )
 }
 

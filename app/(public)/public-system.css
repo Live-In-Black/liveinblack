@@ -148,7 +148,7 @@
 
 @media (max-width: 640px) {
   .lb-organizer-auth-grid { grid-template-columns: 1fr !important; }
-  .lb-organizer-password-grid { flex-direction: column; }
+  .lb-organizer-auth-grid > div { grid-column: auto !important; }
 }
 
 /* Pages légales et contact */

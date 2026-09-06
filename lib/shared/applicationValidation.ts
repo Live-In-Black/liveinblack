@@ -68,7 +68,6 @@ export type FormValidationResult = { ok: true } | { ok: false; error: string }
 // Étape 0 — "Informations de l'établissement".
 export function validateOrganizerStep0(f: Partial<OrganizerFormData>): FormValidationResult {
   if (!f.nomCommercial?.trim()) return { ok: false, error: "Le nom de l'établissement est obligatoire." }
-  if (!isValidSiret(f.siret || '')) return { ok: false, error: 'Numéro SIRET/SIREN invalide (ou saisis au moins 3 zéros si tu n’en as pas).' }
   if (!isValidEmail(f.emailPro || '')) return { ok: false, error: 'Adresse e-mail professionnelle invalide.' }
   if (!isValidPhone(f.telephoneProCode || '', f.telephonePro || '')) return { ok: false, error: 'Numéro de téléphone professionnel invalide.' }
   if (!f.noFixedAddress && !f.adresseEtablissement?.trim()) return { ok: false, error: "L'adresse de l'établissement est obligatoire (ou coche « pas de lieu fixe »)." }

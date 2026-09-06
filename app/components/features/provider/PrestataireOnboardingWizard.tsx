@@ -390,7 +390,7 @@ export default function PrestataireOnboardingWizard({
                     aria-label="Indicatif téléphonique"
                     value={form.telephoneCode}
                     onChange={(value) => set('telephoneCode', value)}
-                    options={regions.map((r) => ({ value: r.dial, label: `${r.flag} ${r.dial}` }))}
+                    options={[{ value: '+229', label: '🇧🇯 +229' }]}
                     style={{ minHeight: 38, padding: '0 8px' }}
                   />
                 </div>

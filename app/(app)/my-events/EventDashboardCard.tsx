@@ -14,8 +14,8 @@ const ACTIONS: { key: EventActionKey; label: string; color: string }[] = [
   { key: 'boost', label: 'Booster', color: 'var(--pink)' },
   { key: 'guests', label: 'Guestlist', color: 'var(--primary)' },
   { key: 'staff', label: 'Équipe', color: 'var(--gold)' },
-  { key: 'promo', label: 'Codes promo', color: 'var(--violet)' },
-  { key: 'duplicate', label: 'Dupliquer', color: 'var(--violet)' },
+  { key: 'promo', label: 'Codes promo', color: 'var(--text-muted)' },
+  { key: 'duplicate', label: 'Dupliquer', color: 'var(--text-muted)' },
   { key: 'edit', label: 'Modifier', color: 'var(--gold)' },
   { key: 'postpone', label: 'Reporter', color: 'var(--gold)' },
   { key: 'delete', label: 'Supprimer / Annuler', color: 'var(--danger)' },
@@ -25,7 +25,7 @@ const PRIMARY_ACTION_KEYS = new Set<EventActionKey>(['stats', 'bookings', 'edit'
 function statusBadge(event: OrganizerEventView): { label: string; background: string; color: string } {
   if (event.cancelled) return { label: 'Annulé', background: 'var(--danger)', color: 'var(--danger-ink)' }
   if (event.postponed) return { label: 'Reporté', background: 'var(--gold)', color: 'var(--obsidian)' }
-  if (event.publishAt && new Date(event.publishAt).getTime() > Date.now()) return { label: 'Programmé', background: 'var(--violet)', color: 'var(--primary-ink)' }
+  if (event.publishAt && new Date(event.publishAt).getTime() > Date.now()) return { label: 'Programmé', background: 'var(--surface-2)', color: 'var(--text)' }
   return { label: 'Publié', background: 'var(--primary)', color: 'var(--primary-ink)' }
 }
 
@@ -43,14 +43,14 @@ export default function EventDashboardCard({
   return (
     <article
       style={{
-        border: '1px solid var(--border-strong)',
+        border: '1px solid var(--border)',
         borderRadius: 'var(--radius-card)',
-        background: 'linear-gradient(180deg,var(--surface-2),var(--surface))',
-        boxShadow: '0 18px 48px rgba(var(--black-rgb), .24)',
+        background: 'var(--card-bg)',
+        boxShadow: '0 10px 26px rgba(var(--black-rgb), .10)',
         overflow: 'hidden',
       }}
     >
-      <div style={{ height: 220, background: `url(${event.imageUrl || placeholderPhotoUrl(event.id, 640, 220)}) center/cover`, position: 'relative', display: 'grid', placeItems: 'center' }}>
+      <div style={{ aspectRatio: '16 / 8.5', maxHeight: 138, background: `url(${event.imageUrl || placeholderPhotoUrl(event.id, 640, 340)}) center/cover`, position: 'relative', display: 'grid', placeItems: 'center' }}>
         <span
           style={{
             position: 'absolute',
@@ -68,9 +68,9 @@ export default function EventDashboardCard({
           {badge.label}
         </span>
       </div>
-      <div style={{ padding: '22px 22px 24px' }}>
-        <h3 style={{ fontSize: 'var(--font-size-title-5)', lineHeight: 1.2, fontWeight: 800, color: 'var(--text)', margin: '0 0 6px' }}>{event.name}</h3>
-        <p style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 10px' }}>
+      <div style={{ padding: '12px' }}>
+        <h3 style={{ fontSize: 'var(--font-size-headline)', lineHeight: 1.25, fontWeight: 500, color: 'var(--text)', margin: '0 0 5px' }}>{event.name}</h3>
+        <p style={{ fontSize: 'var(--font-size-footnote-lg)', fontWeight: 400, color: 'var(--text-muted)', margin: '0 0 7px' }}>
           {event.dateDisplay || event.date} · {event.city}
         </p>
         <Link
@@ -79,7 +79,7 @@ export default function EventDashboardCard({
         >
           Voir la page de l&rsquo;événement →
         </Link>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
           {ACTIONS.filter((action) => PRIMARY_ACTION_KEYS.has(action.key)).map((action) => {
             // 'duplicate' n'a pas de modale de confirmation (contrairement à
             // 'delete'/'postpone') — un double-clic pendant la requête POST
@@ -96,13 +96,13 @@ export default function EventDashboardCard({
                 loadingText="Duplication…"
                 style={{
                   minHeight: 'var(--density-action-min)',
-                  padding: '10px 12px',
+                  padding: '7px 8px',
                   borderRadius: 'var(--radius-control)',
                   border: '1px solid var(--border)',
                   background: 'var(--surface-2)',
                   color: action.color,
                   fontSize: 'var(--font-size-footnote-lg)',
-                  fontWeight: 700,
+                  fontWeight: 500,
                   letterSpacing: '.02em',
                   textAlign: 'left',
                   justifyContent: 'flex-start',
@@ -113,11 +113,11 @@ export default function EventDashboardCard({
             )
           })}
         </div>
-        <details style={{ marginTop: 12, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface-2)', overflow: 'hidden' }}>
-          <summary style={{ minHeight: 'var(--density-action-min)', display: 'flex', alignItems: 'center', padding: '0 14px', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 'var(--font-size-body-sm)', fontWeight: 750 }}>
+        <details style={{ marginTop: 8, border: '1px solid var(--border)', borderRadius: 'var(--radius-control)', background: 'var(--surface-2)', overflow: 'hidden' }}>
+          <summary style={{ minHeight: 'var(--density-action-min)', display: 'flex', alignItems: 'center', padding: '0 12px', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 'var(--font-size-body-sm)', fontWeight: 500 }}>
             Plus d’actions
           </summary>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 12px 12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, padding: '0 7px 7px' }}>
             {ACTIONS.filter((action) => !PRIMARY_ACTION_KEYS.has(action.key)).map((action) => {
               const isDuplicating = action.key === 'duplicate' && duplicating
               return (
@@ -128,7 +128,7 @@ export default function EventDashboardCard({
                   disabled={isDuplicating}
                   loading={isDuplicating}
                   loadingText="Duplication…"
-                  style={{ minHeight: 'var(--density-action-min)', padding: '10px 12px', borderRadius: 'var(--radius-control)', border: '1px solid var(--border)', background: 'var(--surface)', color: action.color, fontSize: 'var(--font-size-body-sm)', fontWeight: 700, textAlign: 'left', justifyContent: 'flex-start' }}
+                  style={{ minHeight: 'var(--density-action-min)', padding: '7px 8px', borderRadius: 'var(--radius-control)', border: '1px solid var(--border)', background: 'var(--surface)', color: action.color, fontSize: 'var(--font-size-footnote-lg)', fontWeight: 500, textAlign: 'left', justifyContent: 'flex-start' }}
                 >
                   {action.label}
                 </Button>

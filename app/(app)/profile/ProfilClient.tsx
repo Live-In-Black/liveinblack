@@ -675,7 +675,7 @@ function IdentityCard({ user, setUser }: { user: ProfilUser; setUser: (u: Profil
   }
 
   return (
-    <Card className="settings-identity-card">
+    <Card className="settings-identity-card" style={{ overflow: 'visible' }}>
       <header className="settings-personal-heading">
         <h3>Informations personnelles</h3>
         <p>Modifie uniquement la partie dont tu as besoin.</p>
