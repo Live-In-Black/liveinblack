@@ -13,7 +13,6 @@ import type { PublicMediaUploadReference } from '@/lib/shared/publicMediaUploads
 import { revalidateTag } from 'next/cache'
 import {
   resolveCatalogCurrency,
-  resolveProviderZones,
   sanitizeProviderSocialLinks,
   toProviderProfileView,
   type ProviderProfileView,
@@ -58,6 +57,7 @@ export async function getOrCreateMyProviderProfile(caller: ProfileCaller): Promi
 
   const prestataireTypes = normalizeProviderTypes(formData.prestataireTypes, (formData.prestataireType as string) ?? null)
   const regionId = normalizeRegionId(String(formData.pays || ''))
+  if (regionId !== 'benin') return { ok: false, status: 400, error: 'benin_launch_region_required' }
   const name =
     String(formData.nomCommercial || '').trim() ||
     String(formData.nomScene || '').trim() ||
@@ -133,23 +133,19 @@ export async function updateProviderProfile(caller: ProfileCaller, input?: Updat
     profile.location = resolved.input.city.trim()
   }
 
-  // `regionId` ("Pays de base") est un champ 100% marketing/affichage ici —
-  // contrairement à l'organisateur, il ne modifie JAMAIS la facturation (voir
-  // User.providerBillingRegionId / lib/server/providerBilling.ts, totalement
-  // séparé). Traité AVANT zonesIntervention pour que la garantie ci-dessous
-  // utilise le nouveau pays, pas l'ancien.
+  // Le lancement est limité au Bénin. La région de profil et la région de
+  // facturation restent deux champs distincts, mais aucune nouvelle fiche ne
+  // peut enregistrer un autre pays.
   if (resolved.input.regionId !== undefined) {
     const regionId = normalizeRegionId(resolved.input.regionId)
-    if (regionId) {
-      profile.regionId = regionId
-      profile.country = getRegionName(regionId)
-    }
+    if (regionId !== 'benin') return { ok: false, status: 400, error: 'benin_launch_region_required' }
+    profile.regionId = regionId
+    profile.country = getRegionName(regionId)
   }
 
   if (resolved.input.zonesIntervention !== undefined) {
-    // Marketing multi-pays — même garantie que updateOrganizerProfile :
-    // regionId reste toujours dans la liste.
-    profile.zonesIntervention = resolveProviderZones(profile.regionId, resolved.input.zonesIntervention) as typeof profile.zonesIntervention
+    // Les zones hors Bénin ne sont pas disponibles pendant le lancement.
+    profile.zonesIntervention = ['benin'] as typeof profile.zonesIntervention
   }
 
   if (resolved.input.prestataireTypes !== undefined) {

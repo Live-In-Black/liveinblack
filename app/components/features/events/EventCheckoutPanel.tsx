@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { fmtMoney } from '@/lib/shared/money'
-import { computeTicketFeeCents, computeTicketFeeXOF, computeCancellationProtectionFeeCents, computeCancellationProtectionFeeXOF } from '@/lib/shared/fees'
+import { computeTicketFeeCents, computeTicketFeeXOF, computeGroupTicketFeeXOF, computeCancellationProtectionFeeCents, computeCancellationProtectionFeeXOF } from '@/lib/shared/fees'
 import { cancellationOptionDeadline } from '@/lib/shared/refundPolicy'
 import type { ShowOption } from '@/lib/shared/showOptions'
 import { GROWTH_EVENT_NAMES, trackGrowthEvent } from '@/lib/client/growthAnalytics'
@@ -16,20 +16,12 @@ import { Button, Card, Input, Textarea, Checkbox, Modal, SlideOverModal } from '
 // (sélecteur de place + table/groupe, stepper de quantité, précommande, code
 // promo, confirmation, options show et bouton Payer). Les différences
 // techniques avec le legacy renforcent les frontières serveur :
-//  - le flux « billet gratuit » (création directe côté client, sans Stripe) EST
-//    reproduit, mais via un endpoint serveur dédié plutôt qu'une écriture
-//    client directe : quand le total calculé pour la sélection courante est
-//    0 (place non-groupe à prix 0, sans précommande payante), le bouton
-//    Payer appelle /api/checkout/free (lib/server/freeCheckout.ts) au lieu de
-//    /api/checkout(/fedapay) — le billet est émis SYNCHRONE côté serveur
-//    (createOrder() + fulfillOrder() directement, sans Stripe/FedaPay), avec
-//    les mêmes gardes que le legacy (1 place gratuite par compte et par
-//    événement, table de groupe gratuite refusée). Le tunnel payant normal
-//    reste inchangé pour toute sélection dont le total est non nul.
+//  - le flux « billet gratuit » legacy est ferme en V1 : R58 retient les
+//    evenements payants et distingue les guestlists des achats publics.
 //  - la sélection tient sur un panneau continu, puis une modale récapitule la
 //    commande avant toute redirection vers le moyen de paiement.
 //  - les précommandes sont réparties par billet dans `ticketPreorders`, avec
-//    un agrégat serveur conservé pour les montants Stripe/FedaPay.
+//    un agrégat serveur conservé pour les montants FedaPay.
 //  - le code promo est prévalidé par un endpoint dédié, puis revérifié lors
 //    de la création autoritaire de l'Order pour éviter toute course.
 
@@ -94,6 +86,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   event_not_published: "Cet événement n'est pas encore publié.",
   place_not_found: "Cette place n'existe plus. Réactualise la page.",
   not_a_group_place: "Cette place n'est pas une place de groupe.",
+  group_place_requires_bundle: 'Cette place doit être achetée avec toutes ses entrées de groupe.',
+  place_changed: 'Cette offre a changé. Actualise la page pour vérifier le prix et le nombre d’entrées.',
+  cancellation_option_unavailable: 'L’option d’annulation n’est plus disponible pour cette commande. Actualise la page avant de continuer.',
   max_per_account_exceeded: 'Tu as atteint la limite autorisée pour cette place sur ce compte.',
   insufficient_stock: 'Il ne reste plus assez de places disponibles.',
   wrong_rail_for_currency: 'Erreur de configuration de paiement — réessaye.',
@@ -106,14 +101,15 @@ const ERROR_MESSAGES: Record<string, string> = {
   invalid_ticket_preorders: 'La personnalisation des billets est invalide — vérifie les précommandes.',
   invalid_show_option: "Une option show n'est plus disponible pour cette place.",
   show_info_required: "Une information demandée pour le show est manquante.",
-  stripe_error: 'Le paiement est momentanément indisponible. Réessaye plus tard.',
+  stripe_checkout_disabled_v1: 'La billetterie du lancement passe uniquement par FedaPay en FCFA.',
   fedapay_error: 'Le paiement Mobile Money est momentanément indisponible. Réessaye plus tard.',
+  fedapay_marketplace_account_required: "Le paiement de cet événement n'est pas encore configuré. L'organisateur doit finaliser son compte FedaPay.",
   order_creation_failed: 'Une erreur est survenue — réessaye dans un instant.',
   internal_error: 'Une erreur est survenue — réessaye dans un instant.',
   auth_required: 'Ta session a expiré — reconnecte-toi pour continuer.',
-  // /api/checkout/free (lib/server/freeCheckout.ts) uniquement :
-  already_free: 'Tu as déjà réservé ta place gratuite pour cet événement — une seule par compte.',
-  free_qty_exceeds_one: 'Une seule place gratuite par compte et par événement.',
+  free_checkout_disabled_v1: 'Les événements entièrement gratuits ne sont pas proposés dans la V1. Utilise une invitation ou une guestlist si nécessaire.',
+  already_free: 'Cette invitation gratuite existe déjà pour cet événement.',
+  free_qty_exceeds_one: 'Une seule invitation gratuite par compte et par événement.',
   free_table_not_supported: "Cette place de groupe n'a pas de tarif — contacte l'organisateur.",
   not_free: "Cette sélection n'est en réalité pas gratuite — réessaye pour continuer avec le paiement.",
   refunded_cancelled_event: 'Cet événement a été annulé.',
@@ -181,6 +177,7 @@ export default function EventCheckoutPanel({
 
   const selectedPlace = places.find((p) => p.id === selectedPlaceId) || null
   const isGroup = selectedPlace?.groupType === 'group'
+  const invalidGroup = isGroup && (!Number.isSafeInteger(selectedPlace?.groupMax) || (selectedPlace?.groupMax ?? 0) < 2)
   const maxPerAccount = selectedPlace?.maxPerAccount || 0
   const maxQty = selectedPlace
     ? Math.max(
@@ -203,7 +200,9 @@ export default function EventCheckoutPanel({
   const ticketCount = selectedPlace ? (isGroup ? Math.max(1, selectedPlace.groupMax) : qty) : 1
   const preorderQty = preordersByTicket[preorderTicketIndex] || {}
   const preorderTotal = Object.values(preordersByTicket).reduce((total, ticketItems) => total + activeMenu.reduce((sum, item) => sum + (ticketItems[item.name] || 0) * item.price, 0), 0)
-  const fee = currency === 'XOF' ? computeTicketFeeXOF(discountedPlacePrice, lineQty) : computeTicketFeeCents(Math.round(discountedPlacePrice * 100), lineQty) / 100
+  const fee = currency === 'XOF'
+    ? isGroup ? invalidGroup ? 0 : computeGroupTicketFeeXOF(Math.round(discountedPlacePrice), ticketCount) : computeTicketFeeXOF(discountedPlacePrice, lineQty)
+    : computeTicketFeeCents(Math.round(discountedPlacePrice * 100), lineQty) / 100
   // Option d'annulation — préviz uniquement, le serveur recalcule (jamais de
   // confiance dans un montant venu du client, cf. createOrder). Non
   // proposée hors seuil ou hors délai (fermeture billetterie - 48h).
@@ -214,7 +213,8 @@ export default function EventCheckoutPanel({
         : computeCancellationProtectionFeeCents(Math.round(discountedPlacePrice * 100), lineQty) / 100
       : 0
   const grandTotal = discountedPlacePrice * lineQty + preorderTotal + fee + cancellationProtectionFee
-  const disabled = Boolean(bookingDisabledReason)
+  const checkoutDisabledReason = bookingDisabledReason || (invalidGroup ? 'Le nombre d’entrées de ce groupe doit être corrigé par l’organisateur.' : null)
+  const disabled = Boolean(checkoutDisabledReason)
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowMs(Date.now()), 30_000)
@@ -357,26 +357,23 @@ export default function EventCheckoutPanel({
       }),
     })).filter((group) => group.items.length > 0)
 
-    // Sélection réellement gratuite (place non-groupe à prix 0, sans
-    // précommande payante) : /api/checkout/free émet le billet SYNCHRONE côté
-    // serveur (lib/server/freeCheckout.ts) — pas de Stripe/FedaPay. Le serveur
-    // revérifie ce total de façon autoritaire (jamais confiance au calcul
-    // client) : toute autre sélection passe par le tunnel payant normal.
-    const isFreeSelection = grandTotal === 0 && !isGroup
+    if (grandTotal === 0) {
+      setCheckoutError(resolveErrorMessage('free_checkout_disabled_v1'))
+      setSubmitting(false)
+      return
+    }
 
-    const body = isFreeSelection
-      ? { eventId, placeId: selectedPlace.id, qty, isTable: false, preorders: [], ticketPreorders }
-      : {
-          eventId,
-          placeId: selectedPlace.id,
-          qty: isGroup ? 1 : qty,
-          isTable: isGroup,
-          promoCode: promoApplied || null,
-          preorders: [],
-          ticketPreorders,
-          cancellationProtection: wantsCancellationOption,
-        }
-    const endpoint = isFreeSelection ? '/api/checkout/free' : currency === 'XOF' ? '/api/checkout/fedapay' : '/api/checkout'
+    const body = {
+      eventId,
+      placeId: selectedPlace.id,
+      qty: isGroup ? 1 : qty,
+      isTable: isGroup,
+      promoCode: promoApplied || null,
+      preorders: [],
+      ticketPreorders,
+      cancellationProtection: wantsCancellationOption,
+    }
+    const endpoint = '/api/checkout/fedapay'
 
     try {
       const res = await fetch(endpoint, {
@@ -385,7 +382,7 @@ export default function EventCheckoutPanel({
         body: JSON.stringify(body),
       })
       const data = (await res.json().catch(() => null)) as { url?: string; orderId?: string; error?: string } | null
-      const success = isFreeSelection ? Boolean(data?.orderId) : Boolean(data?.url)
+      const success = Boolean(data?.url)
       if (!res.ok || !success) {
         setSubmitting(false)
         const code = data?.error
@@ -401,13 +398,6 @@ export default function EventCheckoutPanel({
         } else {
           setCheckoutError(message)
         }
-        return
-      }
-      if (isFreeSelection) {
-        // Billet déjà émis — direction la page de confirmation, qui reconnaît
-        // order_id + free=true et affiche l'état "success" sans interroger
-        // Stripe/FedaPay (voir GET /api/checkout et PaymentSuccessClient.tsx).
-        router.push(`/payment-success?order_id=${encodeURIComponent(data!.orderId as string)}&free=true`)
         return
       }
       window.location.assign(data!.url as string)
@@ -432,7 +422,7 @@ export default function EventCheckoutPanel({
     })
     setSeatHoldBusy(tier)
     setSeatHoldError('')
-    const endpoint = currency === 'XOF' ? '/api/seat-holds/fedapay' : '/api/seat-holds'
+    const endpoint = '/api/seat-holds/fedapay'
     try {
       const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventId, placeId: selectedPlace.id, tier }) })
       const data = (await res.json().catch(() => null)) as { url?: string; error?: string } | null
@@ -498,7 +488,7 @@ export default function EventCheckoutPanel({
 
       {disabled && (
         <div style={{ marginBottom: 14, padding: '12px 14px', background: 'var(--danger-fill)', border: '1px solid var(--danger-border)', borderRadius: 12 }}>
-          <p style={{ fontSize: 'var(--font-size-callout)', fontWeight: 700, color: 'var(--pink)', margin: 0 }}>{bookingDisabledReason}</p>
+          <p style={{ fontSize: 'var(--font-size-callout)', fontWeight: 700, color: 'var(--pink)', margin: 0 }}>{checkoutDisabledReason}</p>
         </div>
       )}
 
@@ -546,7 +536,7 @@ export default function EventCheckoutPanel({
                     borderRadius: 999,
                   }}
                 >
-                  Place de groupe · {place.groupMin}-{place.groupMax} pers.
+                  Place de groupe · {place.groupMax} entrées
                 </span>
               )}
               <p style={{ fontSize: 'var(--font-size-footnote)', color: soldOut ? 'var(--pink)' : 'var(--text-faint)', margin: '8px 0 0' }}>
@@ -619,7 +609,7 @@ export default function EventCheckoutPanel({
               </div>
             ) : (
               <p style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--text-faint)', margin: 0, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
-                Vendue comme place de groupe entière, pour {selectedPlace.groupMin}-{selectedPlace.groupMax} personnes.
+                Vendue comme place de groupe entière, avec {selectedPlace.groupMax} entrées incluses.
               </p>
             )}
             {!isGroup && maxPerAccount > 0 && (
@@ -877,7 +867,7 @@ export default function EventCheckoutPanel({
               boxShadow: buyDisabled ? 'none' : '0 8px 26px var(--primary-a32)',
             }}
           >
-            {disabled ? bookingDisabledReason : buyLabel}
+            {disabled ? checkoutDisabledReason : buyLabel}
           </Button>
 
           {!disabled && !isGroup && discountedPlacePrice > 0 && (

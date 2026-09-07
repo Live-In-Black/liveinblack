@@ -16,7 +16,8 @@ if (!integrationTestUri) {
   process.exit(0)
 }
 
-if (!/test/i.test(integrationTestUri)) {
+const databaseName = integrationTestUri.split('?')[0]?.split('/').pop() || ''
+if (!/test/i.test(databaseName)) {
   console.error('MONGODB_TEST_URI doit pointer vers une base de test dédiée (son nom doit contenir "test").')
   process.exit(1)
 }
@@ -28,7 +29,8 @@ const child = spawn(
     stdio: 'inherit',
     env: {
       ...process.env,
-      MONGODB_URI: process.env.MONGODB_URI?.trim() || integrationTestUri,
+      // Ne jamais laisser une URI applicative gagner sur la base de test.
+      MONGODB_URI: integrationTestUri,
     },
   }
 )

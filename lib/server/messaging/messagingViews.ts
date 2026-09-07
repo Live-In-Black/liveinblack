@@ -68,6 +68,7 @@ export interface ConversationSource {
   lastSenderId?: string | null
   pinnedMessageId?: string | null
   lastReadAt?: Record<string, Date | string>
+  messageDigestSentAt?: Record<string, Date | string>
   pinnedByUserIds?: string[]
   mutedConversationByUserIds?: string[]
   hiddenByUserIds?: string[]
@@ -168,7 +169,7 @@ export function toMessageView(
                   name: msg.poll.event.name ?? '',
                   date: msg.poll.event.date ?? '',
                   price: msg.poll.event.price ?? 0,
-                  currency: msg.poll.event.currency ?? 'EUR',
+                  currency: msg.poll.event.currency ?? 'XOF',
                   image: msg.poll.event.image ?? null,
                 }
               : null,

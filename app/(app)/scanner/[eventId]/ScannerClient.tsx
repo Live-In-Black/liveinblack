@@ -2,14 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { fmtMoney } from '@/lib/shared/money'
 import CameraScanner from './CameraScanner'
 import { Button, Card, Input, Label, Modal } from '@/app/components/ui'
 import {
   checkinErrorMessage,
-  findEditableLine,
-  groupByCategory,
   orderErrorMessage,
   resolveScanInput,
   resolveTicketCodeForLookup,
@@ -63,10 +60,6 @@ interface ListSuccessResponse {
   ok: true
   items: OrderItem[]
 }
-interface AddSuccessResponse {
-  ok: true
-  item: OrderItem
-}
 type ServeSuccessResponse = { ok: true; alreadyServed: true } | { ok: true; alreadyServed?: false; item: OrderItem }
 interface PaySuccessResponse {
   ok: true
@@ -74,8 +67,6 @@ interface PaySuccessResponse {
   itemCount: number
 }
 type CancelSuccessResponse = { ok: true; noop: true } | { ok: true; noop?: false; item: OrderItem }
-type UpdateQuantitySuccessResponse = { ok: true; noop: true } | { ok: true; noop?: false; item: OrderItem }
-type RemoveSuccessResponse = { ok: true; noop: true } | { ok: true; noop?: false }
 
 async function parseJson<T>(res: Response): Promise<T | ApiErrorResponse> {
   try {
@@ -119,7 +110,7 @@ const SR_ONLY_STYLE: React.CSSProperties = {
 
 type Mode = 'scan' | 'service'
 
-export default function ScannerClient({ eventId, eventName, currency, menu, rank }: ScannerClientProps) {
+export default function ScannerClient({ eventId, eventName, currency, rank }: ScannerClientProps) {
   const [mode, setMode] = useState<Mode>('scan')
   const [scanning, setScanning] = useState(false)
   const [manualCode, setManualCode] = useState('')
@@ -141,7 +132,6 @@ export default function ScannerClient({ eventId, eventName, currency, menu, rank
   const ticketCodeRef = useRef<string | null>(null)
   const [items, setItems] = useState<OrderItem[]>([])
   const [busyKey, setBusyKey] = useState<string | null>(null)
-  const [confirmRemoveItem, setConfirmRemoveItem] = useState<{ menuItem: MenuItemView; item: OrderItem } | null>(null)
   const [cancellingItemId, setCancellingItemId] = useState<string | null>(null)
   const [cancelDrafts, setCancelDrafts] = useState<Record<string, string>>({})
 
@@ -326,107 +316,6 @@ export default function ScannerClient({ eventId, eventName, currency, menu, rank
     // eslint-disable-next-line react-hooks/exhaustive-deps -- restauration au montage uniquement, `enterServiceMode` est stable (deps eventId/fetchOrders).
   }, [])
 
-  async function handleAddItem(menuItem: MenuItemView) {
-    if (!ticketCode) return
-    const code = ticketCode
-    const key = `add:${menuItem.name}`
-    setBusyKey(key)
-    try {
-      const res = await fetch('/api/event-orders/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, ticketId: code, menuItemId: menuItem.name, quantity: 1 }),
-      })
-      const data = await parseJson<AddSuccessResponse>(res)
-      if (!res.ok || !('ok' in data) || !data.ok) {
-        pushToast(orderErrorMessage('error' in data ? data.error : undefined))
-        return
-      }
-      // Même garde de péremption que fetchOrders : si le staff a déjà switché
-      // vers un autre billet (enterServiceMode a réinitialisé items: []) pendant
-      // que cet ajout était en vol, ne pas injecter la ligne du billet précédent
-      // dans la liste du nouveau billet affiché.
-      if (ticketCodeRef.current !== code) return
-      setItems((prev) => [...prev, data.item])
-    } catch {
-      pushToast('Connexion impossible — réessaie.')
-    } finally {
-      setBusyKey((prev) => (prev === key ? null : prev))
-    }
-  }
-
-  // Ajuste la quantité d'une ligne déjà ajoutée par le staff (n'importe
-  // lequel — voir findEditableLine) plutôt que de créer une nouvelle ligne à
-  // chaque clic sur "Ajouter" pour le même article.
-  async function handleSetQuantity(menuItem: MenuItemView, item: OrderItem, quantity: number) {
-    const key = `add:${menuItem.name}`
-    setBusyKey(key)
-    try {
-      const res = await fetch('/api/event-orders/update-quantity', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, itemId: item.id, quantity }),
-      })
-      const data = await parseJson<UpdateQuantitySuccessResponse>(res)
-      if (!res.ok || !('ok' in data) || !data.ok) {
-        pushToast(orderErrorMessage('error' in data ? data.error : undefined))
-        return
-      }
-      if (data.noop) {
-        // La ligne a été servie/payée/annulée entre-temps par un autre
-        // membre du staff — l'état local optimiste n'est plus fiable.
-        showNotice('Cet article a déjà été servi, payé ou annulé — modification impossible.')
-        if (ticketCode) void fetchOrders(ticketCode)
-        return
-      }
-      setItems((prev) => prev.map((i) => (i.id === item.id ? data.item : i)))
-    } catch {
-      pushToast('Connexion impossible — réessaie.')
-    } finally {
-      setBusyKey((prev) => (prev === key ? null : prev))
-    }
-  }
-
-  async function handleRemoveLine(menuItem: MenuItemView, item: OrderItem) {
-    const key = `add:${menuItem.name}`
-    setBusyKey(key)
-    try {
-      const res = await fetch('/api/event-orders/remove', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, itemId: item.id }),
-      })
-      const data = await parseJson<RemoveSuccessResponse>(res)
-      if (!res.ok || !('ok' in data) || !data.ok) {
-        pushToast(orderErrorMessage('error' in data ? data.error : undefined))
-        return
-      }
-      if (data.noop) {
-        showNotice('Cet article a déjà été servi, payé ou annulé — modification impossible.')
-        if (ticketCode) void fetchOrders(ticketCode)
-        return
-      }
-      setItems((prev) => prev.filter((i) => i.id !== item.id))
-    } catch {
-      pushToast('Connexion impossible — réessaie.')
-    } finally {
-      setBusyKey((prev) => (prev === key ? null : prev))
-    }
-  }
-
-  function handleStep(menuItem: MenuItemView, editable: OrderItem | undefined, delta: number) {
-    if (!editable) {
-      if (delta > 0) void handleAddItem(menuItem)
-      return
-    }
-    const next = editable.quantity + delta
-    if (next <= 0) {
-      setConfirmRemoveItem({ menuItem, item: editable })
-      return
-    }
-    else void handleSetQuantity(menuItem, editable, next)
-  }
-
   async function handleServe(item: OrderItem) {
     const key = `serve:${item.id}`
     setBusyKey(key)
@@ -524,7 +413,6 @@ export default function ScannerClient({ eventId, eventName, currency, menu, rank
     if (i.kind === 'preorder' || i.status === 'cancelled' || i.paidAt) return sum
     return sum + i.unitPriceMinor * i.quantity
   }, 0)
-  const groups = groupByCategory(menu)
 
   return (
     <main className={styles.shell}>
@@ -813,66 +701,7 @@ export default function ScannerClient({ eventId, eventName, currency, menu, rank
             )}
             </div>
 
-            {rank >= 2 && (
-            <section className={styles.menuPanel}>
-              <h2 style={{ ...sectionTitleStyle, marginBottom: 12 }}>Ajouter au menu</h2>
-              {menu.length === 0 ? (
-                <Card style={{ padding: '28px 18px', textAlign: 'center', boxShadow: '0 8px 24px var(--scrim-mid)' }}>
-                  <p style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 700, margin: '0 0 4px' }}>Aucune carte disponible</p>
-                  <p style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--text-muted)', margin: 0 }}>L&apos;organisateur n&apos;a pas publié de menu pour cet événement.</p>
-                </Card>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  {groups.map(([category, catItems]) => (
-                    <div key={category}>
-                      <p style={{ fontSize: 'var(--font-size-caption)', fontWeight: 700, color: 'var(--gold)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                        {category}
-                      </p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {catItems.map((menuItem) => {
-                          const key = `add:${menuItem.name}`
-                          const busy = busyKey === key
-                          const editable = findEditableLine(items, menuItem.name)
-                          return (
-                            <Card
-                              key={menuItem.name}
-                              style={{
-                                borderRadius: 11,
-                                boxShadow: '0 8px 24px var(--scrim-mid)',
-                                padding: '10px 12px',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                gap: 10,
-                              }}
-                            >
-                          {(menuItem.imageUrl || menuItem.emoji) && <div style={{ width: 34, height: 34, flexShrink: 0, borderRadius: 9, overflow: 'hidden', display: 'grid', placeItems: 'center', background: 'var(--surface-2)', fontSize: 'var(--font-size-title-5)' }}>{menuItem.imageUrl ? <Image src={menuItem.imageUrl} alt="" width={34} height={34} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span aria-hidden="true">{menuItem.emoji}</span>}</div>}
-                              <div style={{ minWidth: 0, flex: 1 }}>
-                                <p style={{ fontSize: 'var(--font-size-callout)', fontWeight: 600, margin: 0 }}>{menuItem.name}</p>
-                                {menuItem.description && <p style={{ fontSize: 'var(--font-size-caption-lg)', color: 'var(--text-faint)', margin: '2px 0 0' }}>{menuItem.description}</p>}
-                                <p style={{ fontSize: 'var(--font-size-footnote)', fontWeight: 700, color: 'var(--gold)', margin: '3px 0 0' }}>{fmtMoney(menuItem.price, currency)}</p>
-                              </div>
-                              {editable ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                                  <StepButton label="−" disabled={busy} onClick={() => handleStep(menuItem, editable, -1)} />
-                                  <span style={{ minWidth: 18, textAlign: 'center', fontWeight: 700 }}>{editable.quantity}</span>
-                                  <StepButton label="+" disabled={busy} onClick={() => handleStep(menuItem, editable, 1)} />
-                                </div>
-                              ) : (
-                                <Button type="button" variant="primary" size="sm" disabled={busy} loading={busy} loadingText="…" onClick={() => void handleAddItem(menuItem)}>
-                                  Ajouter
-                                </Button>
-                              )}
-                            </Card>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-            )}
+            <p style={{ color: 'var(--text-muted)' }}>Les consommations sont achetées avec le billet. Aucun ajout sur place.</p>
           </div>
         )}
       </div>
@@ -978,51 +807,6 @@ export default function ScannerClient({ eventId, eventName, currency, menu, rank
           </p>
         </Modal>
       )}
-      {confirmRemoveItem && (
-        <Modal onClose={() => setConfirmRemoveItem(null)} title="Retirer cette ligne ?">
-          <p style={{ margin: 0, color: 'var(--text-muted)', lineHeight: 1.6, fontSize: 'var(--font-size-body-sm)' }}>
-            « {confirmRemoveItem.item.name} » sera retiré de la commande de ce billet.
-          </p>
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <Button variant="secondary" onClick={() => setConfirmRemoveItem(null)} style={{ flex: 1 }}>
-              Annuler
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => {
-                const target = confirmRemoveItem
-                setConfirmRemoveItem(null)
-                if (target) void handleRemoveLine(target.menuItem, target.item)
-              }}
-              style={{ flex: 1, textTransform: 'none', letterSpacing: 'normal' }}
-            >
-              Retirer
-            </Button>
-          </div>
-        </Modal>
-      )}
     </main>
-  )
-}
-
-function StepButton({ label, disabled, onClick }: { label: string; disabled: boolean; onClick: () => void }) {
-  return (
-    <Button
-      type="button"
-      variant="secondary"
-      disabled={disabled}
-      onClick={onClick}
-      style={{
-        width: 38,
-        height: 38,
-        minWidth: 38,
-        minHeight: 38,
-        padding: 0,
-        borderRadius: '50%',
-        fontSize: 'var(--font-size-headline-lg)',
-      }}
-    >
-      {label}
-    </Button>
   )
 }

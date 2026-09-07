@@ -27,7 +27,7 @@ const LOCKED_STATUSES = ['submitted', 'under_review', 'resubmitted', 'approved',
 export default async function InscriptionOrganisateurPage() {
   const session = await auth()
 
-  if (session?.user) {
+  if (session?.user?.activeRole === 'organisateur' && session.user.roles.includes('organisateur')) {
     const application = await getMyApplication({ id: session.user.id }, 'organisateur')
     if (application && LOCKED_STATUSES.includes(application.status)) redirect('/my-application')
 

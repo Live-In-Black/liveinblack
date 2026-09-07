@@ -2,13 +2,16 @@
 // câblage serveur des statistiques événement (#7 phase organisateur —
 // lib/server/eventStats.ts). Le calcul lui-même est déjà couvert par les
 // tests unitaires purs de lib/shared/eventStats.ts.
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import mongoose from 'mongoose'
 import { getEventStats } from '../events/eventStats'
 import { createOrganizerEvent } from '../organizer/organizerEvents'
 import Event from '@/lib/models/Event'
 import EventOrder from '@/lib/models/EventOrder'
 import Ticket from '@/lib/models/Ticket'
+import ResaleListing from '@/lib/models/ResaleListing'
+
+vi.mock('../emails/notify', () => ({ notifyUserById: vi.fn(async () => {}) }))
 
 const RUN_INTEGRATION = Boolean(process.env.MONGODB_URI)
 const describeIntegration = describe.skipIf(!RUN_INTEGRATION)
@@ -26,6 +29,7 @@ afterAll(async () => {
 })
 
 beforeEach(async () => {
+  vi.restoreAllMocks()
   if (!RUN_INTEGRATION) return
   await Event.deleteMany({})
   await EventOrder.deleteMany({})
@@ -36,7 +40,7 @@ async function seedEvent(ownerId = 'org-1') {
   const result = await createOrganizerEvent(
     { id: ownerId },
     'Organisateur Test',
-    { name: 'Soirée Test', date: '2020-01-01', city: 'Lomé', region: 'Togo', places: [{ id: '', type: 'Standard', price: 20, total: 100 }] }
+    { name: 'Soirée Test', date: '2020-01-01', city: 'Cotonou', region: 'Benin', currency: 'XOF', places: [{ id: '', type: 'Standard', price: 20, total: 100 }] }
   )
   if (!result.ok) throw new Error('seed failed')
   return result.eventId
@@ -88,6 +92,7 @@ describeIntegration('eventStats (intégration, vraie base) — accès et câblag
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.view.stats.assignedTickets).toBe(1)
+    expect(result.view.demographics.total).toBe(1)
   })
 
   it('exclut des recettes de consommation les précommandes annulées au contrôle', async () => {
@@ -122,5 +127,27 @@ describeIntegration('eventStats (intégration, vraie base) — accès et câblag
     expect(result.view.stats.preorderRevenue).toBe(10)
     expect(result.view.stats.totalEstimatedRevenue).toBe(30)
     expect(result.view.stats.preorderItems).toEqual([{ name: 'Chicha', quantity: 1, revenue: 10 }])
+  })
+
+  it('ne consulte aucun historique de revente en V1', async () => {
+    const eventId = await seedEvent()
+    const resaleQuery = vi.spyOn(ResaleListing, 'countDocuments')
+    const result = await getEventStats({ id: 'org-1', roles: ['organisateur'] }, eventId)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.view.resaleStats).toEqual({ active: 0, sold: 0, suspended: 0 })
+    expect(resaleQuery).not.toHaveBeenCalled()
+  })
+
+  it('ne reprend pas les montants du billet si toutes ses precommandes sont annulees', async () => {
+    const eventId = await seedEvent()
+    await Ticket.create({ ticketCode: 'ALL-CANCELLED', eventId, userId: new mongoose.Types.ObjectId().toString(), paid: true, place: 'Standard', placePrice: 20, preorders: [{ name: 'Repas', price: 10, qty: 2 }] })
+    await EventOrder.create({ eventId, items: [{ id: 'meal', name: 'Repas', quantity: 2, unitPriceMinor: 10, ticketId: 'ALL-CANCELLED', addedBy: 'staff-1', status: 'cancelled', kind: 'preorder' }] })
+    const result = await getEventStats({ id: 'org-1', roles: ['organisateur'] }, eventId)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.view.stats.preorderRevenue).toBe(0)
+    expect(result.view.stats.preorderItems).toEqual([])
+    expect(result.view.stats.totalEstimatedRevenue).toBe(20)
   })
 })

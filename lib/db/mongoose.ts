@@ -4,6 +4,7 @@ import ProviderProfile from '../models/ProviderProfile'
 import Event from '../models/Event'
 import Conversation from '../models/Conversation'
 import Message from '../models/Message'
+import MessageDigest from '../models/MessageDigest'
 import User from '../models/User'
 import Order from '../models/Order'
 import Ticket from '../models/Ticket'
@@ -116,6 +117,7 @@ async function ensureIndexes() {
     Event.init(),
     Conversation.init(),
     Message.init(),
+    MessageDigest.init(),
     User.init(),
     Order.init(),
     Ticket.init(),

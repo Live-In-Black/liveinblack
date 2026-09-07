@@ -26,5 +26,5 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
 
   const result = await requestClientRefundByTicketToken(token)
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
-  return NextResponse.json({ ok: true, refunded: result.refunded })
+  return NextResponse.json(result)
 }

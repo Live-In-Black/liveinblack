@@ -5,16 +5,19 @@ import { auth } from '@/auth'
 import { getDb } from '@/lib/db/mongoose'
 import Event from '@/lib/models/Event'
 import Boost from '@/lib/models/Boost'
+import BoostSlot from '@/lib/models/BoostSlot'
 import PaymentAlert from '@/lib/models/PaymentAlert'
 import { getBoostPlan } from '@/lib/shared/boosts'
 import { getEventEndTimestamp } from '@/lib/shared/eventUrgency'
 import { reserveBoostSlot, releaseBoostSlotIfPending } from '@/lib/server/events/boostSlots'
 import { boostSlotId, normalizeBoostRegion } from '@/lib/shared/boosts'
-import stripe from '@/lib/server/payments/stripeClient'
+import { createTransaction, createToken, getTransaction, isFedapayConfigured } from '@/lib/server/payments/fedapayClient'
+import { finalizeFedapayBoost } from '@/lib/server/payments/finalizeBoost'
 
-// Remplace api/checkout-boost.js — achat d'un créneau Top 1/2/3. Le prix
-// vient TOUJOURS de lib/shared/boosts.ts (BOOST_PLANS), jamais du client.
+// V1 Bénin : le barème boost est en FCFA. L'ancien checkout Stripe/EUR est
+// fermé ; le checkout FedaPay boost doit être câblé avant activation payante.
 const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
+const MIN_XOF = 100
 
 const bodySchema = z.object({
   eventId: z.string().min(1),
@@ -26,6 +29,9 @@ const bodySchema = z.object({
 export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'auth_required' }, { status: 401 })
+  const requestHost = req.headers.get('x-forwarded-host') || req.headers.get('host')
+  const requestProto = req.headers.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+  const site = process.env.NODE_ENV === 'production' ? SITE : requestHost ? `${requestProto}://${requestHost}` : new URL(req.url).origin
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: 'invalid_body' }, { status: 400 })
@@ -53,91 +59,92 @@ export async function POST(req: Request) {
   const reserved = await reserveBoostSlot({ eventId, userId: session.user.id, position, region, boostId })
   if (!reserved.ok) return NextResponse.json({ error: 'slot_taken' }, { status: 409 })
   const slotId = boostSlotId(region, position)
+  const amountTotal = Math.round(offer.tier.price)
+
+  if (amountTotal < MIN_XOF) {
+    await releaseBoostSlotIfPending(slotId, boostId)
+    return NextResponse.json({ error: 'amount_below_minimum' }, { status: 400 })
+  }
+
+  await BoostSlot.updateOne({ slotId, boostId, status: 'pending' }, { $set: { days: offer.tier.days, price: amountTotal } })
+
+  if (!isFedapayConfigured() && process.env.NODE_ENV !== 'production') {
+    const transactionId = `dev_fedapay_boost_${boostId}`
+    await BoostSlot.updateOne({ slotId, boostId, status: 'pending' }, { $set: { fedapayTxnId: transactionId } })
+    const finalized = await finalizeFedapayBoost({ id: transactionId, status: 'approved', amount: amountTotal })
+    if (finalized.status !== 'active') {
+      await releaseBoostSlotIfPending(slotId, boostId)
+      return NextResponse.json({ error: 'boost_activation_failed' }, { status: 502 })
+    }
+    return NextResponse.json({
+      url: `${site}/boost-active?session_id=${encodeURIComponent(transactionId)}&boost_id=${encodeURIComponent(boostId)}&dev_payment=1`,
+      transactionId,
+      amountTotal,
+      currency: 'XOF',
+      simulated: true,
+    })
+  }
 
   try {
-    const stripeSession = await stripe.checkout.sessions.create(
-      {
-        mode: 'payment',
-        payment_method_types: ['card'],
-        expires_at: Math.floor((now + 31 * 60000) / 1000),
-        line_items: [
-          {
-            price_data: {
-              currency: 'eur',
-              product_data: { name: `Boost ${offer.plan.label} — ${event.name}`, description: offer.plan.description },
-              unit_amount: Math.round(offer.tier.price * 100),
-            },
-            quantity: 1,
-          },
-        ],
-        success_url: `${SITE}/boost-active?session_id={CHECKOUT_SESSION_ID}&boost_id=${boostId}`,
-        cancel_url: `${SITE}/events/${eventId}?boost_cancelled=1`,
-        metadata: {
-          intent: 'boost',
-          eventId,
-          eventName: event.name,
-          position: String(position),
-          days: String(days),
-          region,
-          userId: session.user.id,
-          boostId,
-          slotId,
-        },
-        locale: 'fr',
-      },
-      { idempotencyKey: `boost-checkout-${boostId}` }
-    )
-    return NextResponse.json({ url: stripeSession.url })
+    const txn = await createTransaction({
+      description: `Boost ${offer.plan.label} — ${event.name}`.slice(0, 200),
+      amount: amountTotal,
+      callbackUrl: `${site}/boost-active?boost_id=${encodeURIComponent(boostId)}`,
+      customer: session.user.email ? { email: session.user.email } : null,
+      metadata: { intent: 'boost', boostId, eventId, position: String(position), days: String(days), region, userId: session.user.id },
+      reference: boostId,
+    })
+    const tok = await createToken(txn.id)
+    await BoostSlot.updateOne({ slotId, boostId, status: 'pending' }, { $set: { fedapayTxnId: String(txn.id) } })
+    return NextResponse.json({ url: tok.url, transactionId: txn.id, amountTotal, currency: 'XOF' })
   } catch (err) {
-    console.error('[checkout/boost] Stripe session creation failed:', err)
+    console.error('[checkout/boost] FedaPay transaction creation failed:', err)
     await releaseBoostSlotIfPending(slotId, boostId)
-    return NextResponse.json({ error: 'stripe_error' }, { status: 502 })
+    return NextResponse.json({ error: 'fedapay_error' }, { status: 502 })
   }
 }
 
-// Vérification côté /boost-active. Le webhook Stripe (finalizeBoost) est la
-// SEULE source de vérité pour l'activation — cette route ne fait que relire
-// le statut de paiement Stripe puis regarder si le Boost a déjà été créé
-// (ou si un conflit de créneau a mené à un remboursement automatique).
+// Vérification historique côté /boost-active. L'ancien retour Stripe boost est
+// fermé pour la V1 afin de ne pas valider un paiement hors périmètre.
 export async function GET(req: Request) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'auth_required' }, { status: 401 })
 
   const url = new URL(req.url)
-  const sessionId = url.searchParams.get('session_id')
+  const sessionId = url.searchParams.get('session_id') || url.searchParams.get('id')
   const boostId = url.searchParams.get('boost_id')
   if (!sessionId || !boostId) return NextResponse.json({ error: 'missing_params' }, { status: 400 })
 
-  const stripeSession = await stripe.checkout.sessions.retrieve(sessionId)
-  if (stripeSession.metadata?.boostId !== boostId || stripeSession.metadata?.userId !== session.user.id) {
-    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
-  }
-
-  if (stripeSession.payment_status !== 'paid') {
-    return NextResponse.json({ paid: false, paymentStatus: stripeSession.payment_status })
-  }
-
   await getDb()
-  const meta = stripeSession.metadata
-  const boost = await Boost.findOne({ boostId }).lean()
+  const slot = await BoostSlot.findOne({ fedapayTxnId: String(sessionId), boostId }).lean()
+  if (!slot || slot.userId !== session.user.id) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
 
-  let boostStatus: 'active' | 'refunded_conflict' | 'pending' = 'pending'
-  if (boost) boostStatus = boost.status === 'refunded_conflict' ? 'refunded_conflict' : 'active'
-  else {
-    const conflictAlert = await PaymentAlert.findOne({ key: `boost_slot_lost_${boostId}` }).lean()
-    if (conflictAlert) boostStatus = 'refunded_conflict'
+  let txn
+  try {
+    txn = String(sessionId).startsWith('dev_fedapay_boost_')
+      ? { id: sessionId, status: 'approved', amount: Number(slot.price) || 0 }
+      : await getTransaction(sessionId)
+  } catch (err) {
+    console.error('[checkout/boost][GET] transaction lookup failed:', err)
+    return NextResponse.json({ error: 'fedapay_error' }, { status: 502 })
   }
+
+  const finalized = await finalizeFedapayBoost(txn)
+  const boost = await Boost.findOne({ boostId }).lean()
+  const conflictAlert = boost ? null : await PaymentAlert.findOne({ key: `boost_slot_lost_${boostId}` }).lean()
+  const boostStatus = boost?.status === 'active' ? 'active' : conflictAlert ? 'refunded_conflict' : finalized.status === 'pending' ? 'pending' : 'pending'
+  const eventName = (await Event.findById(slot.eventId).select('name').lean())?.name || ''
 
   return NextResponse.json({
-    paid: true,
-    paymentStatus: stripeSession.payment_status,
+    paid: txn.status === 'approved' || boostStatus === 'active',
+    paymentStatus: txn.status,
     boostStatus,
-    amountTotal: stripeSession.amount_total,
+    amountTotal: txn.amount,
     metadata: {
-      eventId: meta?.eventId || '',
-      eventName: meta?.eventName || '',
-      position: meta?.position || '',
-      days: meta?.days || '',
+      eventId: slot.eventId,
+      eventName,
+      position: String(slot.position),
+      days: String(slot.days || ''),
     },
   })
 }

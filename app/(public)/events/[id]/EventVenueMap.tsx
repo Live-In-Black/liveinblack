@@ -7,8 +7,9 @@ import Button from '@/app/components/ui/Button'
 
 export default function EventVenueMap({ address }: { address: string }) {
   const [openModal, setOpenModal] = useState(false)
+  const [mapFailed, setMapFailed] = useState(false)
   const encoded = encodeURIComponent(address)
-  const osmEmbedSrc = `https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=&query=${encoded}`
+  const osmEmbedSrc = `https://www.openstreetmap.org/export/embed.html?layer=mapnik&query=${encoded}`
   const googleMapsHref = `https://www.google.com/maps/search/?api=1&query=${encoded}`
   const osmMapsHref = `https://www.openstreetmap.org/search?query=${encoded}`
 
@@ -27,13 +28,22 @@ export default function EventVenueMap({ address }: { address: string }) {
           boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
         }}
       >
-        <iframe
-          title={`Carte OpenStreetMap — ${address}`}
-          src={osmEmbedSrc}
-          style={{ border: 0, width: '100%', height: '100%' }}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-        />
+        {mapFailed ? (
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>
+            <MapPin size={28} aria-hidden="true" />
+            <strong style={{ color: 'var(--text)' }}>Carte indisponible</strong>
+            <span>Ouvre l&apos;adresse dans Google Maps ou OpenStreetMap.</span>
+          </div>
+        ) : (
+          <iframe
+            title={`Carte OpenStreetMap — ${address}`}
+            src={osmEmbedSrc}
+            style={{ border: 0, width: '100%', height: '100%' }}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            onError={() => setMapFailed(true)}
+          />
+        )}
 
         <button
           type="button"
@@ -119,13 +129,21 @@ export default function EventVenueMap({ address }: { address: string }) {
             <p style={{ margin: 0, fontSize: 'var(--font-size-body)', fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{address}</p>
           </div>
           <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 120px)', background: 'var(--surface)' }}>
-            <iframe
-              title={`Carte Plein Écran — ${address}`}
-              src={osmEmbedSrc}
-              style={{ border: 0, width: '100%', height: '100%' }}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+            {mapFailed ? (
+              <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>
+                <MapPin size={32} aria-hidden="true" />
+                <strong style={{ color: 'var(--text)' }}>Carte indisponible</strong>
+              </div>
+            ) : (
+              <iframe
+                title={`Carte Plein Écran — ${address}`}
+                src={osmEmbedSrc}
+                style={{ border: 0, width: '100%', height: '100%' }}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                onError={() => setMapFailed(true)}
+              />
+            )}
           </div>
           <div style={{ display: 'flex', gap: 10, padding: 14, background: 'var(--surface-2)' }}>
             <a

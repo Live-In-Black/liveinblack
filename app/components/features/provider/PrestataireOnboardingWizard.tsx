@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { signIn, useSession } from 'next-auth/react'
+import { signIn } from 'next-auth/react'
 import { regions } from '@/lib/shared/regions'
+import { phoneCallingCodeOptions } from '@/lib/shared/phoneCallingCodes'
 import { PROVIDER_CATEGORIES, getPrimaryProviderType } from '@/lib/shared/providerCategories'
-import { regionToCurrency } from '@/lib/shared/money'
 import { fmtMoney } from '@/lib/shared/money'
 import { PROVIDER_SUB } from '@/lib/shared/providerSubscription'
 import { validatePrestataireStep0, validatePrestataireStep2, getRequiredDocs, type PrestataireFormData } from '@/lib/shared/applicationValidation'
@@ -13,11 +13,11 @@ import { getPasswordPolicyErrors } from '@/lib/shared/passwordPolicy'
 import { uploadApplicationDocument } from '@/lib/client/applicationDocumentUpload'
 import type { ApplicationDocumentUploadReference } from '@/lib/shared/applicationDocuments'
 import { GROWTH_EVENT_NAMES, trackGrowthEvent } from '@/lib/client/growthAnalytics'
-import { Globe } from 'lucide-react'
 import { Button, Card, Input, Textarea, Select, Checkbox, Label } from '@/app/components/ui'
+import PasswordPolicyHint from '@/app/components/ui/PasswordPolicyHint'
 
-// Port de src/pages/OnboardingPrestataire.jsx (#8 phase prestataire) — 6
-// étapes (Compte/Activités/Détails/Fonctionnement/Documents/Finaliser),
+// Inscription sans étape tarifaire : les détails métier restent dans Activités.
+// Cinq étapes (Compte/Activités/Fonctionnement/Documents/Finaliser),
 // même architecture que OrganizerOnboardingWizard.tsx (#7) : utilisé À LA
 // FOIS par /inscription-prestataire (mode anonyme) et /onboarding-prestataire
 // (mode connecté). Contrairement au legacy (compte Firebase créé au milieu
@@ -27,11 +27,11 @@ import { Button, Card, Input, Textarea, Select, Checkbox, Label } from '@/app/co
 // soumission finale"), invisible pour l'utilisateur qui remplit le même
 // formulaire dans le même ordre.
 //
-// L'abonnement prestataire (Stripe EUR / FedaPay XOF) n'est PAS déclenché
-// ici — fidèle au legacy, l'étape "Finaliser" ne fait qu'informer du prix ;
+// L'abonnement prestataire FedaPay n'est PAS déclenché ici — fidèle au legacy,
+// l'étape "Finaliser" ne fait qu'informer du prix ;
 // l'activation réelle se fait depuis /proposer-services après approbation.
 
-const STEPS = ['Compte', 'Activités', 'Détails', 'Fonctionnement', 'Documents', 'Finaliser']
+const STEPS = ['Compte', 'Activités', 'Fonctionnement', 'Documents', 'Finaliser']
 
 const EMPTY_FORM: PrestataireFormData = {
   prestataireType: 'autre',
@@ -44,7 +44,6 @@ const EMPTY_FORM: PrestataireFormData = {
   pays: 'Bénin',
   nomCommercial: '',
   nomScene: '',
-  siret: '',
   zonesIntervention: [],
   description: '',
   specialitesLibre: '',
@@ -100,11 +99,7 @@ const chip = (active: boolean): React.CSSProperties => ({
 })
 
 const DOC_LABELS: Record<string, string> = {
-  identity: "Pièce d'identité",
-  billing_proof: 'Justificatif de facturation (auto-entrepreneur, statut artiste…)',
-  business_doc: "Document officiel de l'entreprise (RCCM, attestation IFU, statuts…)",
-  insurance: 'Attestation d’assurance responsabilité civile professionnelle',
-  exploitation_proof: "Justificatif d'exploitation du lieu (bail, autorisation…)",
+  identity: "Pièce d'identité du titulaire du compte",
 }
 
 type DocState = ApplicationDocumentUploadReference
@@ -133,7 +128,6 @@ export default function PrestataireOnboardingWizard({
   initialCandidateNote?: string
 }) {
   const router = useRouter()
-  const { update } = useSession()
   const [step, setStep] = useState(0)
   const [form, setForm] = useState<PrestataireFormData>({ ...EMPTY_FORM, ...initialFormData })
   const [regEmail, setRegEmail] = useState('')
@@ -215,7 +209,7 @@ export default function PrestataireOnboardingWizard({
         if (regPassword !== regPasswordConfirm) return setError('Les mots de passe ne correspondent pas.')
       }
     }
-    if (step === 2) {
+    if (step === 1) {
       const result = validatePrestataireStep2(form)
       if (!result.ok) return setError(result.error)
     }
@@ -229,7 +223,6 @@ export default function PrestataireOnboardingWizard({
         ville: form.ville.trim(),
         nomCommercial: form.nomCommercial.trim(),
         nomScene: form.nomScene.trim(),
-        siret: form.siret.trim(),
       }
       fetch('/api/applications/prestataire/draft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cleanedForm) })
         .then((res) => setAutosaveState(res.ok ? 'saved' : 'error'))
@@ -244,7 +237,6 @@ export default function PrestataireOnboardingWizard({
 
   const requiredDocs = getRequiredDocs('prestataire', form.prestataireTypes)
   const missingDocs = requiredDocs.filter((key) => !(documents[key]?.length > 0))
-  const candidateCurrency = regionToCurrency(form.pays)
 
   async function handleSubmit() {
     setError(null)
@@ -258,7 +250,6 @@ export default function PrestataireOnboardingWizard({
       ville: form.ville.trim(),
       nomCommercial: form.nomCommercial.trim(),
       nomScene: form.nomScene.trim(),
-      siret: form.siret.trim(),
     }
 
     setBusy(true)
@@ -273,7 +264,7 @@ export default function PrestataireOnboardingWizard({
         const data = await res.json()
         if (!res.ok || !data.ok) {
           if (data.error === 'email_taken') {
-            setError('Cet email est déjà associé à un compte. Connecte-toi à ce compte, puis débloque l’interface prestataire depuis ton profil.')
+            setError('Cette adresse e-mail est déjà associée à un compte. Veuillez utiliser une autre adresse pour créer ce compte.')
           } else {
             setError('Impossible d’envoyer ta demande. Réessaie.')
           }
@@ -313,7 +304,6 @@ export default function PrestataireOnboardingWizard({
           provider_type: cleanedForm.prestataireType || null,
           has_documents: Object.values(documents).some((entries) => entries.length > 0),
         })
-        await update({ activeRole: 'prestataire' })
         router.replace('/offer-services')
         router.refresh()
       }
@@ -390,7 +380,7 @@ export default function PrestataireOnboardingWizard({
                     aria-label="Indicatif téléphonique"
                     value={form.telephoneCode}
                     onChange={(value) => set('telephoneCode', value)}
-                    options={regions.map((r) => ({ value: r.dial, label: `${r.flag} ${r.dial}` }))}
+                    options={phoneCallingCodeOptions}
                     style={{ minHeight: 38, padding: '0 8px' }}
                   />
                 </div>
@@ -421,22 +411,27 @@ export default function PrestataireOnboardingWizard({
                       <Input aria-label="Adresse e-mail de connexion" style={inputStyle} type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} />
                     </div>
                     <div>
-                      <Label style={labelStyle}>Mot de passe</Label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Label htmlFor="provider-password" style={labelStyle}>Mot de passe</Label>
+                        <PasswordPolicyHint />
+                      </div>
                       <div style={{ position: 'relative' }}>
                         <Input
+                          id="provider-password"
                           aria-label="Mot de passe"
+                          autoComplete="new-password"
                           style={{ ...inputStyle, paddingRight: 56 }}
                           type={showRegPwd ? 'text' : 'password'}
                           value={regPassword}
                           onChange={(e) => setRegPassword(e.target.value)}
-                          placeholder="Minimum 8 caractères"
+                          placeholder="Ton mot de passe"
                         />
                         <Button
                           variant="ghost"
                           type="button"
                           aria-label={showRegPwd ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                           onClick={() => setShowRegPwd((v) => !v)}
-                          style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', padding: 4, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          style={{ position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)', width: 36, minHeight: 36, height: 36, padding: 4, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           <IconEye open={showRegPwd} size={15} />
                         </Button>
@@ -486,9 +481,6 @@ export default function PrestataireOnboardingWizard({
               <div>
                 <Label style={labelStyle}>Zones d&apos;intervention</Label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  <Button variant="secondary" type="button" onClick={() => toggleZone('international')} style={{ ...chip(form.zonesIntervention.includes('international')), display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                    <Globe size={14} /> International
-                  </Button>
                   {regions.map((r) => (
                     <Button key={r.id} variant="secondary" type="button" onClick={() => toggleZone(r.id)} style={chip(form.zonesIntervention.includes(r.id))}>
                       {r.flag} {r.name}
@@ -496,15 +488,6 @@ export default function PrestataireOnboardingWizard({
                   ))}
                 </div>
               </div>
-              <div>
-                <Label style={labelStyle}>Numéro IFU / RCCM ou SIRET (optionnel)</Label>
-                <Input style={inputStyle} value={form.siret} onChange={(e) => set('siret', e.target.value)} placeholder="IFU, RCCM ou 14 chiffres" />
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <h2 style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>Détails de ton activité</h2>
 
               {types.includes('artiste') && (
@@ -637,42 +620,14 @@ export default function PrestataireOnboardingWizard({
                     .filter((t) => !['artiste', 'salle', 'materiel', 'food'].includes(t))
                     .map((t) => PROVIDER_CATEGORIES.find((c) => c.id === t)?.label || t)
                     .join(', ')}{' '}
-                  — la description libre renseignée à l&apos;étape précédente suffit.
+                  : la description libre ci-dessus suffit.
                 </p>
               )}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <p style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>Tarifs ({candidateCurrency === 'XOF' ? 'FCFA' : candidateCurrency})</p>
-                <Checkbox
-                  label="Sur devis uniquement"
-                  checked={form.tarifDevis}
-                  onChange={(e) => set('tarifDevis', e.target.checked)}
-                />
-                {!form.tarifDevis && (
-                  <>
-                    <div style={{ display: 'flex', gap: 10 }}>
-                      <Input style={inputStyle} type="number" min={0} value={form.tarifMin ?? ''} onChange={(e) => set('tarifMin', e.target.value ? Number(e.target.value) : null)} placeholder={candidateCurrency === 'XOF' ? 'Tarif min (FCFA)' : 'Tarif min'} />
-                      <Input style={inputStyle} type="number" min={0} value={form.tarifMax ?? ''} onChange={(e) => set('tarifMax', e.target.value ? Number(e.target.value) : null)} placeholder={candidateCurrency === 'XOF' ? 'Tarif max (FCFA)' : 'Tarif max'} />
-                    </div>
-                    <Select
-                      value={form.tarifType}
-                      onChange={(value) => set('tarifType', value)}
-                      options={[
-                        { value: '', label: 'Type de tarif —' },
-                        { value: 'soiree', label: 'Par soirée' },
-                        { value: 'heure', label: 'Par heure' },
-                        { value: 'journee', label: 'Par journée' },
-                        { value: 'forfait', label: 'Forfait' },
-                        { value: 'personne', label: 'Par personne' },
-                      ]}
-                    />
-                  </>
-                )}
-              </div>
             </div>
           )}
 
-          {step === 3 && (
+          {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <h2 style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>Comment ça marche</h2>
               {[
@@ -694,26 +649,20 @@ export default function PrestataireOnboardingWizard({
             </div>
           )}
 
-          {step === 4 && (
+          {step === 3 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <h2 style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>Documents justificatifs</h2>
               <p style={{ fontSize: 'var(--font-size-footnote-lg)', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
-                Ces documents nous permettent de vérifier ton identité et la légitimité de ton activité. Ils sont stockés de façon privée et accessibles uniquement à
-                l&apos;équipe LIVEINBLACK.
+                Seule la pièce d&apos;identité du titulaire du compte est demandée dans le formulaire LIVEINBLACK. Elle est stockée de façon privée et accessible
+                uniquement à l&apos;équipe LIVEINBLACK.
               </p>
               {requiredDocs.map((key) => (
                 <DocUpload key={key} label={DOC_LABELS[key] || key} required docKey={key} documents={documents} onChange={handleFileChange} onRemove={removeDoc} />
               ))}
-              {!requiredDocs.includes('insurance') && (
-                <DocUpload label="Attestation d’assurance RC Pro (optionnel)" docKey="rc_pro" documents={documents} onChange={handleFileChange} onRemove={removeDoc} />
-              )}
-              {types.includes('food') && form.alcoolFood && (
-                <DocUpload label="Licence / justificatif de débit de boissons" docKey="alcohol_license" documents={documents} onChange={handleFileChange} onRemove={removeDoc} />
-              )}
             </div>
           )}
 
-          {step === 5 && (
+          {step === 4 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <h2 style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>Finaliser</h2>
               {missingDocs.length > 0 ? (
@@ -725,9 +674,7 @@ export default function PrestataireOnboardingWizard({
               )}
               <p style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
                 Une fois validé, ton compte est créé. Pour rendre ton profil visible publiquement, tu activeras ton abonnement depuis ton espace prestataire —{' '}
-                {candidateCurrency === 'XOF'
-                  ? `${fmtMoney(PROVIDER_SUB.price, 'XOF')} / ${PROVIDER_SUB.periodDays} j · Mobile Money`
-                  : '9,99 € / mois · carte bancaire'}
+                {`${fmtMoney(PROVIDER_SUB.price, 'XOF')} / ${PROVIDER_SUB.periodDays} j · Mobile Money / carte via FedaPay`}
                 .
               </p>
               <div>

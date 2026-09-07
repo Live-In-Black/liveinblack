@@ -5,12 +5,9 @@ import { auth } from '@/auth'
 import { getMyApplication, type ApplicationView } from '@/lib/server/provider/applications'
 import { Card } from '@/app/components/ui'
 
-// Port de src/pages/MonDossierPage.jsx. Legacy ne montre qu'UN dossier à la
-// fois — organisateur gagne silencieusement si les deux existent en local,
-// puis un second fetch Firestore peut écraser ce choix de façon non
-// déterministe (voir l'audit de ce fichier). Cette migration corrige ce
-// comportement plutôt que de le reproduire : les DEUX dossiers sont chargés
-// et chacun affiche sa propre carte s'il existe (#8 phase prestataire).
+// Chaque dossier est rattaché uniquement au compte correspondant. Depuis un
+// compte client, les boutons ci-dessous ouvrent une inscription séparée avec
+// une nouvelle adresse e-mail ; aucun rôle n'est ajouté au compte courant.
 export const metadata: Metadata = {
   title: 'Mon dossier — LIVEINBLACK',
   robots: { index: false, follow: false },
@@ -49,8 +46,8 @@ const secondaryBtn: React.CSSProperties = {
 
 const TYPE_LABEL: Record<'organisateur' | 'prestataire', string> = { organisateur: 'Dossier organisateur', prestataire: 'Dossier prestataire' }
 const TYPE_CONTEXT: Record<'organisateur' | 'prestataire', string> = {
-  organisateur: 'Ce dossier te permet de créer et gérer tes propres événements.',
-  prestataire: 'Ce dossier te permet de proposer tes services (DJ, salle, traiteur…) aux organisateurs et clients.',
+  organisateur: 'Cette démarche crée un compte organisateur séparé pour créer et gérer tes propres événements.',
+  prestataire: 'Cette démarche crée un compte prestataire séparé pour proposer tes services (DJ, salle, traiteur…).',
 }
 const SUCCESS_PATH: Record<'organisateur' | 'prestataire', string> = { organisateur: '/my-events', prestataire: '/offer-services' }
 const SUCCESS_LABEL: Record<'organisateur' | 'prestataire', string> = { organisateur: 'Aller à mes événements', prestataire: 'Aller à mon espace prestataire' }

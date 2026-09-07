@@ -43,6 +43,9 @@ describe('eventWizardUtils', () => {
       city: 'La ville est obligatoire',
       region: 'Choisis une région',
     })
+    expect(validateWizardLocation({ city: 'Paris', region: 'IDF' })).toEqual({
+      region: 'Le lancement billetterie est ouvert au Bénin uniquement.',
+    })
   })
 
   it('bloque la progression avancée sans article valable en précommande', () => {
@@ -86,10 +89,10 @@ describe('eventWizardUtils', () => {
           included: [{ name: ' Vestiaire offert ', qty: 0 }],
         },
       ],
-      venueName: ' Skyline ',
-      address: ' 12 rue des Arts ',
-      city: ' Paris ',
-      region: 'IDF',
+      venueName: ' Palais des Congrès ',
+      address: ' Boulevard de la Marina ',
+      city: ' Cotonou ',
+      region: 'Bénin',
       playlist: true,
       preorder: true,
       menuItems: [
@@ -119,9 +122,9 @@ describe('eventWizardUtils', () => {
       date: '2026-09-01',
       time: '22:00',
       endTime: '05:00',
-      location: 'Skyline, 12 rue des Arts',
-      city: 'Paris',
-      region: 'IDF',
+      location: 'Palais des Congrès, Boulevard de la Marina',
+      city: 'Cotonou',
+      region: 'Bénin',
       dj: 'DJ Nala',
       artists: [{ name: 'DJ Nala', role: 'DJ', providerId: 'prov_1' }],
       minAge: 21,

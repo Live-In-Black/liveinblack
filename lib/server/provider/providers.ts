@@ -92,6 +92,47 @@ const PROVIDER_FIELDS =
   'userId name headline description city location regionId country photoUrl coverUrl prestataireType prestataireTypes subscriptionActive catalog catalogCurrency ratingAvg ratingCount updatedAt'
 
 const PROVIDER_TOTAL_TTL_MS = 30_000
+const BENIN_REGION_VALUES = ['benin', 'Bénin', 'Benin', 'BJ']
+
+function beninProviderClause(): Record<string, unknown> {
+  return {
+    $and: [
+      {
+        $or: [
+          { regionId: 'benin' },
+          { zonesIntervention: { $in: BENIN_REGION_VALUES } },
+          { country: { $in: ['Bénin', 'Benin', 'BJ'] } },
+        ],
+      },
+      { $or: [{ regionId: { $in: ['', 'benin'] } }, { regionId: { $exists: false } }] },
+      { $or: [{ country: { $in: ['', 'Bénin', 'Benin', 'BJ'] } }, { country: { $exists: false } }] },
+      {
+        $or: [
+          { zonesIntervention: { $exists: false } },
+          { zonesIntervention: { $not: { $elemMatch: { $nin: BENIN_REGION_VALUES } } } },
+        ],
+      },
+    ],
+  }
+}
+
+function isBeninProvider(provider: Pick<ProviderProfileDoc, 'regionId' | 'country' | 'zonesIntervention'>): boolean {
+  return [provider.regionId, provider.country, ...(provider.zonesIntervention || [])]
+    .some((value) => normalizeRegionId(value) === 'benin')
+}
+
+function hasOnlyBeninProviderData(provider: Pick<ProviderProfileDoc, 'regionId' | 'country' | 'zonesIntervention'>): boolean {
+  return [provider.regionId, provider.country, ...(provider.zonesIntervention || [])]
+    .filter(Boolean)
+    .every((value) => normalizeRegionId(value) === 'benin')
+}
+
+function normalizeBeninProviderView<T extends { catalogCurrency?: string | null; zonesIntervention?: string[] | null; catalog?: { currency?: string | null; available?: boolean | null }[] | null }>(provider: T): T {
+  // Filter using the stored currency before setting the public view's currency.
+  // An unlabelled legacy EUR price is not an XOF price with the same number.
+  const catalog = (provider.catalog || []).filter(item => item.available !== false && (item.currency || provider.catalogCurrency) === 'XOF')
+  return { ...provider, catalog, catalogCurrency: 'XOF', zonesIntervention: ['benin'] }
+}
 
 type CachedCount = {
   value: number
@@ -157,7 +198,7 @@ function buildProviderFilters(params: PublicProviderDirectoryParams) {
 
   const filter: Record<string, unknown> = { subscriptionActive: true }
   const andClauses: Record<string, unknown>[] = [
-    { $or: [{ regionId: 'benin' }, { zonesIntervention: 'benin' }, { country: 'Bénin' }] },
+    beninProviderClause(),
   ]
 
   if (category) {
@@ -166,7 +207,7 @@ function buildProviderFilters(params: PublicProviderDirectoryParams) {
 
   if (region) {
     const regionId = normalizeRegionId(region)
-    andClauses.push(regionId === 'benin' ? { $or: [{ regionId: 'benin' }, { zonesIntervention: 'benin' }] } : { regionId: '__unsupported_launch_region__' })
+    andClauses.push(regionId === 'benin' ? beninProviderClause() : { regionId: '__unsupported_launch_region__' })
   }
 
   if (search) {
@@ -200,34 +241,25 @@ function buildProviderFilters(params: PublicProviderDirectoryParams) {
  */
 export async function listPublicProviders(): Promise<PublicProvider[]> {
   await getDb()
-  const docs = await ProviderProfile.find(withNonGhostFilter({
-    subscriptionActive: true,
-    $or: [{ regionId: 'benin' }, { zonesIntervention: 'benin' }, { country: 'Bénin' }],
-  }))
+  const docs = await ProviderProfile.find(withNonGhostFilter({ subscriptionActive: true, ...beninProviderClause() }))
     .select(PROVIDER_FIELDS)
     .sort({ updatedAt: -1 })
     .lean()
-  return docs as PublicProvider[]
+  return docs.map(normalizeBeninProviderView) as PublicProvider[]
 }
 
 export type ProviderSitemapEntry = { userId: string; updatedAt?: Date | string | null }
 
 export async function countPublicProvidersForSitemap(): Promise<number> {
   await getDb()
-  return ProviderProfile.countDocuments(withNonGhostFilter({
-    subscriptionActive: true,
-    $or: [{ regionId: 'benin' }, { zonesIntervention: 'benin' }, { country: 'Bénin' }],
-  })).maxTimeMS(2_000)
+  return ProviderProfile.countDocuments(withNonGhostFilter({ subscriptionActive: true, ...beninProviderClause() })).maxTimeMS(2_000)
 }
 
 export async function listPublicProvidersForSitemapPage(params: { offset: number; limit: number }): Promise<ProviderSitemapEntry[]> {
   await getDb()
   const offset = Math.max(0, Math.floor(params.offset))
   const limit = Math.min(5_000, Math.max(1, Math.floor(params.limit)))
-  const docs = await ProviderProfile.find(withNonGhostFilter({
-    subscriptionActive: true,
-    $or: [{ regionId: 'benin' }, { zonesIntervention: 'benin' }, { country: 'Bénin' }],
-  }))
+  const docs = await ProviderProfile.find(withNonGhostFilter({ subscriptionActive: true, ...beninProviderClause() }))
     .select('userId updatedAt')
     .sort({ updatedAt: -1, _id: 1 })
     .skip(offset)
@@ -280,7 +312,7 @@ export async function listPublicProvidersDirectory(
   const totalQuery = includeTotal ? getCachedTotalCount(safeFilter) : Promise.resolve(0)
   const [rawProviders, total] = await Promise.all([providersQuery, totalQuery])
 
-  const providers = rawProviders as PublicProvider[]
+  const providers = rawProviders.map(normalizeBeninProviderView) as PublicProvider[]
   const effectiveTotal = includeTotal ? total : providers.length
   const totalPages = includeTotal ? Math.max(1, Math.ceil(total / pageSize)) : 1
 
@@ -300,6 +332,9 @@ export async function getProviderByUserId(
   await getDb()
   const doc = await ProviderProfile.findOne({ userId }).lean()
   if (!doc) return null
+  // Les agents gardent une vue interne des anciennes fiches. En revanche,
+  // aucune page publique ne doit exposer une fiche hors du périmètre Bénin.
+  if ((!isBeninProvider(doc) || !hasOnlyBeninProviderData(doc)) && viewer?.activeRole !== 'agent') return null
   if (!isProviderVisible(doc, viewer, doc.userId)) return null
-  return doc as PublicProvider
+  return viewer?.activeRole === 'agent' ? doc as PublicProvider : normalizeBeninProviderView(doc) as PublicProvider
 }

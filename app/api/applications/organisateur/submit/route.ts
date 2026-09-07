@@ -8,7 +8,6 @@ import { applicationDocumentsSchema } from '@/lib/shared/applicationDocuments'
 const bodySchema = z.object({
   formData: z.object({
     nomCommercial: z.string().trim().min(1),
-    siret: z.string().trim().min(1),
     emailPro: z.string().trim().toLowerCase().email(),
     telephoneProCode: z.string().trim().min(1),
     telephonePro: z.string().trim().min(1),

@@ -2,9 +2,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
 import { ArrowUpRight, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react'
-import { getProviderCategories, PROVIDER_CATEGORIES } from '@/lib/shared/providerCategories'
-import { getRegionName } from '@/lib/shared/locations'
-import { regions } from '@/lib/shared/regions'
+import { PROVIDER_CATEGORIES } from '@/lib/shared/providerCategories'
+import { normalizeRegionId } from '@/lib/shared/locations'
 import { Button, HiddenField, Input, PageLinks } from '@/app/components/ui'
 import FilterSelect from '../_components/FilterSelect'
 import ProviderDirectoryCard from '../_components/ProviderDirectoryCard'
@@ -34,9 +33,10 @@ export default async function PublicPrestatairesPage({
 }: {
   searchParams: Promise<{ q?: string; categorie?: string; region?: string; page?: string }>
 }) {
-  const { q, categorie, region = '', page: pageParam } = await searchParams
+  const { q, categorie, region: rawRegion = '', page: pageParam } = await searchParams
   const search = (q || '').trim()
   const category = categorie || ''
+  const region = normalizeRegionId(rawRegion) === 'benin' ? 'benin' : ''
   const requestedPage = Math.max(1, Number(pageParam) || 1)
   const { providers, total, pageSize, totalPages } = await getCachedPublicProvidersDirectory({
     q: search,
@@ -49,10 +49,27 @@ export default async function PublicPrestatairesPage({
 
   const filtered = providers
 
-  const counts = new Map<string, number>()
-  for (const provider of filtered) {
-    for (const item of getProviderCategories(provider)) counts.set(item.id, (counts.get(item.id) || 0) + 1)
-  }
+  // Les catégories doivent rester navigables même lorsqu'une catégorie est
+  // déjà sélectionnée. Chaque compteur est calculé sur le même texte/région,
+  // mais sans réutiliser la page déjà filtrée.
+  const categoryCounts = await Promise.all(PROVIDER_CATEGORIES.map(async (item) => {
+    const result = await getCachedPublicProvidersDirectory({
+      q: search,
+      categorie: item.id,
+      region,
+      page: 1,
+      pageSize: 12,
+      includeTotal: true,
+    })
+    return [item.id, result.total] as const
+  }))
+  const counts = new Map(categoryCounts)
+  // Un profil peut appartenir a plusieurs metiers : ne pas sommer leurs totaux.
+  const allTotal = category
+    ? (await getCachedPublicProvidersDirectory({
+      q: search, region, page: 1, pageSize: 12, includeTotal: true,
+    })).total
+    : total
 
   const safePage = requestedPage
   const hasFilters = Boolean(search || category || region)
@@ -133,9 +150,9 @@ export default async function PublicPrestatairesPage({
           <div className={styles.regionField}>
             <FilterSelect
               name="region"
-              defaultValue={region}
-              ariaLabel="Filtrer par région"
-              options={[{ value: '', label: 'Toutes les régions' }, ...regions.map((item) => ({ value: item.id, label: `${item.flag} ${item.name}` }))]}
+              defaultValue="benin"
+              ariaLabel="Périmètre du lancement"
+              options={[{ value: 'benin', label: '🇧🇯 Bénin uniquement' }]}
               style={{ minHeight: 42, borderRadius: 'var(--radius-control)', background: 'var(--field-bg)', borderColor: 'var(--border)', fontSize: 'var(--font-size-body-sm)', padding: '0 14px' }}
             />
           </div>
@@ -155,9 +172,9 @@ export default async function PublicPrestatairesPage({
         {(total > 0 || hasFilters) && (
           <nav className={styles.categories} aria-label="Filtrer par métier">
             <Link href={categoryHref()} className={`${styles.categoryChip} ${!category ? styles.categoryChipActive : ''}`} aria-current={!category ? 'page' : undefined}>
-              Tous <span>{total}</span>
+              Tous <span>{allTotal}</span>
             </Link>
-            {PROVIDER_CATEGORIES.filter((item) => counts.get(item.id)).map((item) => (
+            {PROVIDER_CATEGORIES.map((item) => (
               <Link
                 key={item.id}
                 href={categoryHref(item.id)}
@@ -177,7 +194,7 @@ export default async function PublicPrestatairesPage({
               {search && (category || region) ? <span aria-hidden="true"> · </span> : null}
               {category && <>Métier : <strong>{PROVIDER_CATEGORIES.find((item) => item.id === category)?.label || category}</strong></>}
               {category && region ? <span aria-hidden="true"> · </span> : null}
-              {region && <>Région : <strong>{getRegionName(region)}</strong></>}
+              {region && <>Périmètre : <strong>Bénin</strong></>}
             </p>
             <Link href="/providers"><X size={17} aria-hidden="true" /> Effacer les filtres</Link>
           </div>
@@ -204,7 +221,7 @@ export default async function PublicPrestatairesPage({
             <div className={styles.emptyContent}>
               <p className={styles.emptyEyebrow}>{hasFilters ? 'Aucun résultat' : 'Annuaire en préparation'}</p>
               <h3>{hasFilters ? 'Aucun professionnel ne correspond à ces critères.' : 'Les talents qui font vivre vos événements arrivent.'}</h3>
-              <p>{hasFilters ? 'Essayez un autre métier, une autre région ou repartez de tout l’annuaire.' : 'DJ, lieux, image, son et création rejoignent progressivement notre sélection.'}</p>
+              <p>{hasFilters ? 'Essayez un autre métier ou repartez de tout l’annuaire Bénin.' : 'DJ, lieux, image, son et création rejoignent progressivement notre sélection.'}</p>
               <Link href={hasFilters ? '/providers' : '/provider-signup'}>
                 {hasFilters ? 'Effacer les filtres' : 'Proposer mes services'} <span aria-hidden="true">↗</span>
               </Link>

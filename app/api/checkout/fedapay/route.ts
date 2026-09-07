@@ -50,7 +50,7 @@ export async function POST(req: Request) {
   await getDb()
   const event = await Event.findById(eventId).lean()
   if (!event) return NextResponse.json({ error: 'event_not_found' }, { status: 404 })
-  if (event.currency !== 'XOF') return NextResponse.json({ error: 'benin_xof_launch_scope_required' }, { status: 400 })
+  if (event.currency === 'EUR') return NextResponse.json({ error: 'benin_xof_launch_scope_required' }, { status: 400 })
 
   const orderResult = await createOrder({
     userId: session.user.id,

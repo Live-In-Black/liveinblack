@@ -16,7 +16,7 @@ const bodySchema = z.object({
 })
 
 function hasPurposeAccess(user: { activeRole?: string; roles?: string[] }, purpose: (typeof PUBLIC_MEDIA_PURPOSES)[number]): boolean {
-  if (purpose === 'provider-catalog') return Boolean(user.roles?.includes('prestataire'))
+  if (purpose === 'provider-catalog') return user.activeRole === 'prestataire'
   return user.activeRole === 'organisateur' || user.activeRole === 'agent'
 }
 
@@ -26,6 +26,7 @@ export async function POST(req: Request) {
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: 'invalid_media' }, { status: 400 })
+  if (parsed.data.purpose === 'refund-proof') return NextResponse.json({ error: 'private_proof_required' }, { status: 410 })
   if (!hasPurposeAccess(session.user, parsed.data.purpose)) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   }

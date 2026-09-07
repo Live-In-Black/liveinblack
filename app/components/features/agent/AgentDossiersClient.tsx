@@ -130,13 +130,13 @@ const AUDIT_ACTION_COLOR: Record<string, string> = {
 const AUTO_NOTE_ACTIONS = new Set(['submitted', 'resubmitted'])
 
 const DOC_LABELS: Record<string, string> = {
-  identity: "Pièce d'identité",
-  billing_proof: 'Justificatif de facturation (auto-entrepreneur, statut artiste…)',
-  business_doc: "Document officiel de l'entreprise (KBIS, statuts, récépissé INSEE…)",
-  insurance: 'Attestation d’assurance responsabilité civile professionnelle',
-  exploitation_proof: "Justificatif d'exploitation du lieu (bail, autorisation…)",
-  rc_pro: 'Attestation d’assurance RC Pro (optionnelle)',
-  alcohol_license: 'Licence / justificatif de débit de boissons',
+  identity: "Pièce d'identité du titulaire du compte",
+  billing_proof: 'Document historique de facturation (hors formulaire V1)',
+  business_doc: 'Document entreprise historique (hors formulaire V1)',
+  insurance: 'Assurance historique (hors formulaire V1)',
+  exploitation_proof: 'Justificatif de lieu historique (hors formulaire V1)',
+  rc_pro: 'Assurance historique optionnelle (hors formulaire V1)',
+  alcohol_license: 'Justificatif alcool historique (hors formulaire V1)',
 }
 
 const TYPE_ARTISTE_LABEL: Record<string, string> = {
@@ -176,14 +176,6 @@ const TYPE_FOOD_LABEL: Record<string, string> = {
   desserts: 'Pâtisserie / desserts',
   autre: 'Autre',
 }
-const TARIF_TYPE_LABEL: Record<string, string> = {
-  soiree: 'Par soirée / événement',
-  heure: 'Par heure',
-  journee: 'Par journée',
-  forfait: 'Au forfait',
-  personne: 'Par personne',
-}
-
 const sectionTitleStyle: React.CSSProperties = { fontSize: 'var(--font-size-body-sm)', fontWeight: 400, textTransform: 'uppercase', letterSpacing: '3.2px', color: 'var(--primary)', fontFamily: 'var(--font-display), sans-serif', margin: '0 0 10px' }
 
 // Les couleurs `var(--*)` ne supportent pas la concaténation d'un canal alpha
@@ -231,7 +223,6 @@ function FieldRow({ label, value }: { label: string; value: string }) {
 function organizerFieldRows(f: Record<string, unknown>): { label: string; value: string }[] {
   const rows: { label: string; value: string }[] = []
   rows.push({ label: 'Nom commercial', value: str(f.nomCommercial) })
-  rows.push({ label: 'SIRET', value: str(f.siret) })
   rows.push({ label: 'Email pro', value: str(f.emailPro) })
   rows.push({ label: 'Téléphone pro', value: f.telephonePro ? `${str(f.telephoneProCode)}${str(f.telephonePro)}` : '' })
   rows.push({ label: 'Adresse établissement', value: f.noFixedAddress ? 'Pas de lieu fixe' : str(f.adresseEtablissement) })
@@ -260,7 +251,6 @@ function prestataireFieldRows(f: Record<string, unknown>): { header: string | nu
   ]
   if (types.includes('artiste') && f.nomScene) common.push({ label: 'Nom de scène', value: str(f.nomScene) })
   common.push({ label: 'Nom commercial', value: str(f.nomCommercial) })
-  if (f.siret) common.push({ label: 'SIRET', value: str(f.siret) })
   if (f.siteWeb) common.push({ label: 'Site web / Instagram', value: str(f.siteWeb) })
   common.push({ label: "Zones d'intervention", value: zonesLabel(f.zonesIntervention) })
   if (f.description) common.push({ label: 'Description', value: str(f.description) })
@@ -302,18 +292,6 @@ function prestataireFieldRows(f: Record<string, unknown>): { header: string | nu
     if (f.menuBase) rows.push({ label: 'Menu / Carte', value: str(f.menuBase) })
     rows.push({ label: 'Alcool', value: f.alcoolFood ? (f.alcoolFoodAtteste ? 'Oui — attestation fournie' : 'Oui — vérifier la licence alcool') : 'Non' })
     blocks.push({ header: 'Food / Boissons', rows })
-  }
-
-  const hasTarif = f.tarifDevis || f.tarifMin != null || f.tarifMax != null || f.tarifType
-  if (hasTarif) {
-    const rows: { label: string; value: string }[] = []
-    if (f.tarifDevis) {
-      rows.push({ label: 'Tarification', value: 'Sur devis uniquement' })
-    } else {
-      if (f.tarifMin != null || f.tarifMax != null) rows.push({ label: 'Fourchette', value: `${f.tarifMin ?? '?'}€ – ${f.tarifMax ?? '?'}€` })
-      if (f.tarifType) rows.push({ label: 'Type', value: TARIF_TYPE_LABEL[str(f.tarifType)] || str(f.tarifType) })
-    }
-    blocks.push({ header: 'Tarifs', rows })
   }
 
   return blocks

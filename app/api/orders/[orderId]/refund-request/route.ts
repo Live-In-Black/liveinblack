@@ -9,5 +9,5 @@ export async function POST(_req: Request, { params }: { params: Promise<{ orderI
   const { orderId } = await params
   const result = await requestClientRefund({ id: session.user.id }, orderId)
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
-  return NextResponse.json({ ok: true, refunded: result.refunded })
+  return NextResponse.json(result)
 }

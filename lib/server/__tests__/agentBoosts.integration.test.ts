@@ -31,10 +31,10 @@ beforeEach(async () => {
 
 async function seedEvent(overrides: Record<string, unknown> = {}) {
   return Event.create({
-    name: 'Soirée Neon',
+    name: 'Soirée Neon Cotonou',
     date: '2030-01-01',
-    city: 'Paris',
-    region: 'france',
+    city: 'Cotonou',
+    region: 'Bénin',
     organizerId: 'org-1',
     organizerName: 'Club Neon',
     createdBy: 'org-1',
@@ -50,8 +50,8 @@ describeIntegration('listActiveBoostsForAgent (intégration, vraie base) — pan
       boostId: 'BOOST-ACTIVE-1',
       eventId: String(event._id),
       position: 1,
-      region: 'france',
-      price: 9.99,
+      region: 'benin',
+      price: 5000,
       days: 1,
       userId: 'org-1',
       purchasedAt: new Date(),
@@ -61,10 +61,10 @@ describeIntegration('listActiveBoostsForAgent (intégration, vraie base) — pan
 
     const result = await listActiveBoostsForAgent()
     expect(result.active).toHaveLength(1)
-    expect(result.active[0].eventName).toBe('Soirée Neon')
+    expect(result.active[0].eventName).toBe('Soirée Neon Cotonou')
     expect(result.active[0].organizerName).toBe('Club Neon')
     expect(result.expired).toHaveLength(0)
-    expect(result.totalRevenue).toBe(9.99)
+    expect(result.totalRevenue).toBe(5000)
   })
 
   it('classe un boost dont expiresAt est passé comme expiré, pas actif', async () => {
@@ -73,8 +73,8 @@ describeIntegration('listActiveBoostsForAgent (intégration, vraie base) — pan
       boostId: 'BOOST-EXPIRED-1',
       eventId: String(event._id),
       position: 2,
-      region: 'togo',
-      price: 6.99,
+      region: 'benin',
+      price: 3500,
       days: 1,
       userId: 'org-1',
       purchasedAt: new Date(Date.now() - 2 * 86400000),
@@ -87,7 +87,7 @@ describeIntegration('listActiveBoostsForAgent (intégration, vraie base) — pan
     expect(result.expired).toHaveLength(1)
     // Le revenu reste compté : un boost simplement expiré (pas remboursé)
     // reste de l'argent encaissé par la plateforme.
-    expect(result.totalRevenue).toBe(6.99)
+    expect(result.totalRevenue).toBe(3500)
   })
 
   it('isole les boosts en conflit dans le bucket conflicts et exclut le remboursé du revenu', async () => {
@@ -96,8 +96,8 @@ describeIntegration('listActiveBoostsForAgent (intégration, vraie base) — pan
       boostId: 'BOOST-CONFLICT-1',
       eventId: String(event._id),
       position: 1,
-      region: 'france',
-      price: 24.99,
+      region: 'benin',
+      price: 13000,
       days: 3,
       userId: 'org-1',
       purchasedAt: new Date(),
@@ -109,8 +109,8 @@ describeIntegration('listActiveBoostsForAgent (intégration, vraie base) — pan
       boostId: 'BOOST-REFUNDED-1',
       eventId: String(event._id),
       position: 1,
-      region: 'france',
-      price: 24.99,
+      region: 'benin',
+      price: 13000,
       days: 3,
       userId: 'org-2',
       purchasedAt: new Date(),
@@ -129,7 +129,7 @@ describeIntegration('listActiveBoostsForAgent (intégration, vraie base) — pan
     // Le remboursé n'est pas "actif" (isBoostActive exclut conflict===true).
     expect(result.expired.map((b) => b.id)).toContain('BOOST-REFUNDED-1')
     // Revenu net : seul le boost non remboursé/annulé compte, une seule fois.
-    expect(result.totalRevenue).toBe(24.99)
+    expect(result.totalRevenue).toBe(13000)
   })
 
   it('retombe sur un libellé générique si l’événement n’existe plus', async () => {
@@ -138,7 +138,7 @@ describeIntegration('listActiveBoostsForAgent (intégration, vraie base) — pan
       eventId: '000000000000000000000000',
       position: 3,
       region: 'benin',
-      price: 3.99,
+      price: 2500,
       days: 1,
       userId: 'org-3',
       purchasedAt: new Date(),

@@ -4,7 +4,6 @@ import NextImage from 'next/image'
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { regions } from '@/lib/shared/regions'
-import { INTERNATIONAL_REGION_ID } from '@/lib/shared/locations'
 import { SOCIAL_NETWORKS, type SocialNetworkKey } from '@/lib/shared/social'
 import { PROVIDER_CATEGORIES, getPrimaryProviderType, getProviderCategory } from '@/lib/shared/providerCategories'
 import { fmtMoney } from '@/lib/shared/money'
@@ -871,7 +870,7 @@ export default function ProposerServicesClient({
                 <div style={{ gridColumn: '1 / -1' }}>
                   <Field label="Pays / régions d'intervention" helper="Sélectionne tous les pays où tu peux te déplacer ou fournir ta prestation.">
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                      {[{ id: INTERNATIONAL_REGION_ID, name: 'International', flag: '🌍' }, ...regions].map((r) => {
+                      {regions.map((r) => {
                         const selected = profile.zonesIntervention.includes(r.id)
                         return (
                           <Button key={r.id} variant="ghost" onClick={() => toggleZone(r.id)} style={{ padding: '8px 12px', borderRadius: 999, fontSize: 'var(--font-size-footnote)', color: selected ? C.teal : 'var(--text-muted)', background: selected ? 'var(--primary-a10)' : 'var(--surface-2)', border: `1px solid ${selected ? 'var(--primary-a55)' : 'var(--border)'}` }}>

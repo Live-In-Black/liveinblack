@@ -4,7 +4,6 @@ import { auth } from '@/auth'
 import { checkRateLimit } from '@/lib/server/rateLimit'
 
 const querySchema = z.object({ type: z.enum(['artists', 'cities']), q: z.string().trim().min(2).max(60) })
-const CITY_PRIORITY = new Set(['tg', 'bj', 'ci', 'fr', 'sn', 'gh', 'ne', 'cm', 'ga', 'ml', 'bf', 'cg', 'cd', 'be', 'ch', 'ca', 'ma', 'gn', 'td'])
 
 async function fetchJson(url: string) {
   const response = await fetch(url, { signal: AbortSignal.timeout(4000), headers: { 'User-Agent': 'liveinblack.com' }, next: { revalidate: 86400 } })
@@ -45,10 +44,10 @@ export async function GET(req: Request) {
       const name = String(props.name || '').trim()
       const countryCode = String(props.countrycode || '').toLowerCase()
       const key = `${name.toLowerCase()}|${countryCode}`
-      if (!name || seen.has(key)) return []
+      if (!name || countryCode !== 'bj' || seen.has(key)) return []
       seen.add(key)
-      return [{ name, sublabel: String(props.country || ''), priority: CITY_PRIORITY.has(countryCode) ? 0 : 1 }]
-    }).sort((a, b) => a.priority - b.priority)
+      return [{ name, sublabel: 'Bénin' }]
+    })
     const byName = new Set<string>()
     const cities = rows.filter((row) => {
       const key = row.name.toLowerCase()

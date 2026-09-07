@@ -31,7 +31,7 @@ const catalogItemSchema = new Schema(
     name: { type: String, required: true },
     description: { type: String, default: '' },
     price: { type: Number, default: null },
-    currency: { type: String, enum: ['EUR', 'XOF'], default: 'EUR' },
+    currency: { type: String, enum: ['EUR', 'XOF'], default: 'XOF' },
     unit: { type: String, default: '' }, // '', 'heure', 'soirée', 'jour', 'personne', 'unité', 'lot', 'forfait'
     category: { type: String, default: '' },
     available: { type: Boolean, default: true },
@@ -64,7 +64,7 @@ const providerProfileSchema = new Schema(
     prestataireTypes: { type: [String], default: [] },
 
     phone: { type: String, default: '' },
-    catalogCurrency: { type: String, enum: ['EUR', 'XOF'], default: 'EUR' },
+    catalogCurrency: { type: String, enum: ['EUR', 'XOF'], default: 'XOF' },
 
     // Gate de visibilité publique — un profil n'apparaît dans l'annuaire ou par
     // URL directe que si subscriptionActive === true (sauf agent ou owner).

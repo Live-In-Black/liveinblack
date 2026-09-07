@@ -276,6 +276,9 @@ describeIntegration('agentDeletion (intégration, vraie base) — #9 phase agent
 
       const freshUser = await User.findById(alice.id).lean()
       expect(freshUser?.prestataireSubActive).toBe(false)
+      expect(freshUser?.prestataireSubRail).toBeNull()
+      expect(freshUser?.stripeSubscriptionId).toBeNull()
+      expect(freshUser?.stripeCustomerId).toBeNull()
     })
 
     it("n'effectue AUCUNE mutation si la résiliation Stripe échoue", async () => {

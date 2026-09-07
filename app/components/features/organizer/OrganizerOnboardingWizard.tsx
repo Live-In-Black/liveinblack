@@ -4,12 +4,14 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { regions } from '@/lib/shared/regions'
+import { phoneCallingCodeOptions } from '@/lib/shared/phoneCallingCodes'
 import { getPasswordPolicyErrors } from '@/lib/shared/passwordPolicy'
 import { validateOrganizerStep0, validateOrganizerStep1, type OrganizerFormData } from '@/lib/shared/applicationValidation'
 import { uploadApplicationDocument } from '@/lib/client/applicationDocumentUpload'
 import type { ApplicationDocumentUploadReference } from '@/lib/shared/applicationDocuments'
 import { GROWTH_EVENT_NAMES, trackGrowthEvent } from '@/lib/client/growthAnalytics'
 import { Button, Card, Input, Textarea, Select, Checkbox, Label } from '@/app/components/ui'
+import PasswordPolicyHint from '@/app/components/ui/PasswordPolicyHint'
 
 // Port de src/pages/OnboardingOrganisateur.jsx (#7 phase organisateur) — 4
 // étapes (Établissement/Activité/Revenus/Documents), utilisé À LA FOIS par
@@ -25,7 +27,6 @@ const STEPS = ['Établissement', 'Activité', 'Revenus', 'Documents']
 
 const EMPTY_FORM: OrganizerFormData = {
   nomCommercial: '',
-  siret: '',
   emailPro: '',
   telephoneProCode: '+229',
   telephonePro: '',
@@ -154,7 +155,6 @@ export default function OrganizerOnboardingWizard({
       const cleanedForm = {
         ...form,
         nomCommercial: form.nomCommercial.trim(),
-        siret: form.siret.trim(),
         emailPro: form.emailPro.trim().toLowerCase(),
         telephonePro: form.telephonePro.trim(),
         adresseEtablissement: form.adresseEtablissement.trim(),
@@ -181,7 +181,6 @@ export default function OrganizerOnboardingWizard({
     const cleanedForm = {
       ...form,
       nomCommercial: form.nomCommercial.trim(),
-      siret: form.siret.trim(),
       emailPro: form.emailPro.trim().toLowerCase(),
       telephonePro: form.telephonePro.trim(),
       adresseEtablissement: form.adresseEtablissement.trim(),
@@ -200,7 +199,7 @@ export default function OrganizerOnboardingWizard({
         if (!res.ok || !data.ok) {
           if (data.error === 'email_taken') {
             setEmailTaken(true)
-            setError('Cet email est déjà associé à un compte.')
+            setError('Cette adresse e-mail est déjà associée à un compte. Veuillez utiliser une autre adresse pour créer ce compte.')
           } else {
             setError('Impossible d’envoyer ta demande. Réessaie.')
           }
@@ -297,10 +296,6 @@ export default function OrganizerOnboardingWizard({
                   <Input aria-label="Nom de l’établissement ou nom commercial" style={inputStyle} value={form.nomCommercial} onChange={(e) => set('nomCommercial', e.target.value)} placeholder="Ex : Club Neon, L|VE Events…" />
                 </div>
                 <div>
-                  <Label style={labelStyle}>Numéro IFU / RCCM (ou SIRET/SIREN) {requiredMark}</Label>
-                  <Input aria-label="Numéro IFU, RCCM ou SIRET" style={inputStyle} value={form.siret} onChange={(e) => set('siret', e.target.value)} placeholder="IFU, RCCM ou 000" />
-                </div>
-                <div>
                   <Label style={labelStyle}>Email professionnel {requiredMark}</Label>
                   <Input
                     aria-label="Email professionnel"
@@ -319,7 +314,7 @@ export default function OrganizerOnboardingWizard({
                         aria-label="Indicatif"
                         value={form.telephoneProCode}
                         onChange={(value) => set('telephoneProCode', value)}
-                        options={regions.map((r) => ({ value: r.dial, label: `${r.flag} ${r.dial}` }))}
+                        options={phoneCallingCodeOptions}
                         style={{ minHeight: 38, padding: '0 8px' }}
                       />
                     </div>
@@ -345,34 +340,42 @@ export default function OrganizerOnboardingWizard({
                       onChange={(e) => set('noFixedAddress', e.target.checked)}
                     />
                   </div>
-                  <div className="lb-organizer-auth-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 10px' }}>
-                    <div>
+                  <div className="lb-organizer-auth-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 210px), 1fr))', gap: '10px' }}>
+                    <div style={{ gridColumn: '1 / -1' }}>
                       <Label style={labelStyle}>Adresse e-mail (identifiant connexion) {requiredMark}</Label>
                       <Input aria-label="Adresse e-mail de connexion" style={inputStyle} type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} placeholder="ton@email.com" />
                     </div>
                     <div>
-                      <Label style={labelStyle}>Mot de passe & confirmation {requiredMark}</Label>
-                      <div className="lb-organizer-password-grid" style={{ display: 'flex', gap: 6 }}>
-                        <div style={{ position: 'relative', flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Label htmlFor="organizer-password" style={labelStyle}>Mot de passe {requiredMark}</Label>
+                        <PasswordPolicyHint />
+                      </div>
+                        <div style={{ position: 'relative', minWidth: 0 }}>
                           <Input
+                            id="organizer-password"
                             aria-label="Mot de passe"
-                            style={{ ...inputStyle, paddingRight: 36 }}
+                            autoComplete="new-password"
+                            style={{ ...inputStyle, paddingRight: 44 }}
                             type={showRegPassword ? 'text' : 'password'}
                             value={regPassword}
                             onChange={(e) => setRegPassword(e.target.value)}
-                            placeholder="8+ car."
+                            placeholder="Ton mot de passe"
                           />
                           <Button
                             variant="ghost"
                             type="button"
+                            aria-label={showRegPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                            aria-pressed={showRegPassword}
                             onClick={() => setShowRegPassword((v) => !v)}
-                            style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', padding: 0, color: 'var(--text-muted)' }}
+                            style={{ position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)', width: 36, minHeight: 36, height: 36, padding: 4, color: 'var(--text-muted)' }}
                           >
                             <IconEye open={showRegPassword} size={13} />
                           </Button>
                         </div>
-                        <Input aria-label="Confirmation" style={{ ...inputStyle, flex: 1 }} type="password" value={regPasswordConfirm} onChange={(e) => setRegPasswordConfirm(e.target.value)} placeholder="Confirmer" />
-                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="organizer-password-confirm" style={{ ...labelStyle, minHeight: 28, display: 'flex', alignItems: 'center' }}>Confirmer le mot de passe {requiredMark}</Label>
+                      <Input id="organizer-password-confirm" aria-label="Confirmer le mot de passe" autoComplete="new-password" style={inputStyle} type="password" value={regPasswordConfirm} onChange={(e) => setRegPasswordConfirm(e.target.value)} placeholder="Répète ton mot de passe" />
                     </div>
                   </div>
                 </>
@@ -503,12 +506,12 @@ export default function OrganizerOnboardingWizard({
               <h2 style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>Tes revenus</h2>
               <p style={{ fontSize: 'var(--font-size-body-sm)', color: 'var(--text-muted)', margin: 0 }}>Comment tu seras payé</p>
               <p style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
-                LIVEINBLACK collecte les paiements via FadaPay (Mobile Money et cartes) avec répartition instantanée à chaque achat. L&apos;organisateur perçoit sa part directement sans délai — aucun versement différé ni attente à J+5.
+                LIVEINBLACK collecte les paiements via FedaPay (Mobile Money et cartes) avec répartition instantanée à chaque achat. L&apos;organisateur perçoit sa part directement sans délai — aucun versement différé ni attente à J+5.
               </p>
               {[
                 ['01', 'Dossier approuvé', 'Ton dossier est examiné et validé par notre équipe.'],
-                ['02', 'Connexion FadaPay', 'Tu relies ton compte de reversement via FadaPay.'],
-                ['03', 'Répartition instantanée', 'Ta part t&apos;est versée directement à chaque achat de billet, sans délai d&apos;attente.'],
+                ['02', 'Connexion FedaPay', 'Tu relies ton compte de reversement via FedaPay.'],
+                ['03', 'Répartition instantanée', "Ta part t'est versée directement à chaque achat de billet, sans délai d'attente."],
               ].map(([n, title, body]) => (
                 <div key={n} style={{ display: 'flex', gap: 12 }}>
                   <span style={{ fontSize: 'var(--font-size-callout)', fontWeight: 800, color: 'var(--primary)' }}>{n}</span>
@@ -519,7 +522,7 @@ export default function OrganizerOnboardingWizard({
                 </div>
               ))}
               <p style={{ fontSize: 'var(--font-size-caption-lg)', color: 'var(--text-faint)', margin: 0 }}>
-                Tes coordonnées de paiement ne transitent jamais par LIVEINBLACK. Les transactions sont sécurisées par FadaPay. Aucune information bancaire n&apos;est demandée ici — tu configureras ton compte de reversement après approbation.
+                Tes coordonnées de paiement ne transitent jamais par LIVEINBLACK. Les transactions sont sécurisées par FedaPay. Aucune information bancaire n&apos;est demandée ici — tu configureras ton compte de reversement après approbation.
               </p>
             </div>
           )}
@@ -528,14 +531,10 @@ export default function OrganizerOnboardingWizard({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <h2 style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>Documents justificatifs</h2>
               <p style={{ fontSize: 'var(--font-size-footnote-lg)', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
-                Ces documents nous permettent de vérifier ton identité et la légitimité de ton activité. Ils sont stockés de façon privée et accessibles uniquement à
+                Seule la pièce d&apos;identité du titulaire du compte est demandée. Elle est stockée de façon privée et accessible uniquement à
                 l&apos;équipe LIVEINBLACK. Formats acceptés : PDF, JPG, PNG — 10 Mo max par fichier.
               </p>
-              <DocUpload label="Pièce d'identité" required docKey="identity" documents={documents} onChange={handleFileChange} onRemove={removeDoc} />
-              <DocUpload label="Document officiel de l'entreprise (RCCM, attestation IFU, statuts…)" docKey="business_doc" documents={documents} onChange={handleFileChange} onRemove={removeDoc} />
-              {form.alcool && (
-                <DocUpload label="Licence / justificatif de débit de boissons" docKey="alcohol_license" documents={documents} onChange={handleFileChange} onRemove={removeDoc} />
-              )}
+              <DocUpload label="Pièce d'identité du titulaire du compte" required docKey="identity" documents={documents} onChange={handleFileChange} onRemove={removeDoc} />
               <div>
                 <Label style={labelStyle}>Message pour l&apos;équipe (optionnel)</Label>
                 <Textarea style={{ ...inputStyle, minHeight: 70 }} value={candidateNote} onChange={(e) => setCandidateNote(e.target.value)} />

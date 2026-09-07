@@ -42,16 +42,16 @@ const posts: SeedPost[] = [
     metaDescription: "Panorama des lieux et types de soirées qui font vibrer Cotonou en 2026 : rooftops, clubs, plein air, et conseils pour réserver sa place à temps.",
     publishedAt: daysAgo(21),
     content: `
-<p>Cotonou n'a jamais autant bougé la nuit. Entre les rooftops de la Haie Vive, les clubs du centre-ville et les soirées en plein air qui fleurissent à chaque saison sèche, la capitale béninoise est devenue l'une des scènes nightlife les plus dynamiques d'Afrique de l'Ouest. Voici un tour d'horizon de ce qui fait vibrer la ville en 2026, et quelques conseils pratiques pour ne rien manquer.</p>
+<p>Cotonou n'a jamais autant bougé la nuit. Entre les rooftops de la Haie Vive, les clubs du centre-ville et les soirées en plein air qui fleurissent à chaque saison sèche, la métropole béninoise est devenue l'une des scènes nightlife les plus dynamiques d'Afrique de l'Ouest. Voici un tour d'horizon de ce qui fait vibrer la ville en 2026, et quelques conseils pratiques pour ne rien manquer.</p>
 
 <h2>Les rooftops, nouvelle valeur sûre</h2>
-<p>Depuis deux ou trois ans, les rooftops se sont imposés comme le format préféré des jeunes actifs lomékains. Vue sur la lagune ou sur les toits du centre, cocktails soignés et programmation DJ pointue : ces lieux misent sur une ambiance plus feutrée en début de soirée avant de monter progressivement en intensité. Ils sont particulièrement prisés pour les after-works du vendredi qui se prolongent souvent bien après minuit.</p>
+<p>Depuis deux ou trois ans, les rooftops se sont imposés comme le format préféré des jeunes actifs cotonois. Vue sur la ville, cocktails soignés et programmation DJ pointue : ces lieux misent sur une ambiance plus feutrée en début de soirée avant de monter progressivement en intensité. Ils sont particulièrement prisés pour les after-works du vendredi qui se prolongent souvent bien après minuit.</p>
 
 <h2>Les clubs, toujours au cœur de l'action</h2>
-<p>Impossible de parler de nuit lomékaine sans évoquer les clubs emblématiques de la ville, où l'afrobeat, l'amapiano et le coupé-décalé se mélangent sur les mêmes pistes. Le samedi reste la soirée reine, avec des line-up qui alternent DJ résidents et artistes invités venus du Ghana, du Nigeria ou de Côte d'Ivoire. Les soirées à thème (all-white, années 2000, spéciales indépendance) rythment le calendrier et attirent souvent un public plus large que les soirées classiques.</p>
+<p>Impossible de parler de nuit cotonoise sans évoquer les clubs emblématiques de la ville, où l'afrobeat, l'amapiano et le coupé-décalé se mélangent sur les mêmes pistes. Le samedi reste la soirée reine, avec des line-up qui alternent DJ résidents et artistes invités venus du Bénin et de la sous-région. Les soirées à thème (all-white, années 2000, spéciales indépendance) rythment le calendrier et attirent souvent un public plus large que les soirées classiques.</p>
 
 <h2>Les événements en plein air, l'expérience qui monte</h2>
-<p>La saison sèche est propice aux grands rassemblements en extérieur : plages aménagées, jardins privés, esplanades. Ces événements demandent une organisation plus lourde (sonorisation, sécurité, restauration) mais offrent une expérience que les salles fermées ne peuvent pas égaler. Beaucoup d'organisateurs togolais y voient aujourd'hui le format le plus porteur pour les grosses soirées annuelles.</p>
+<p>La saison sèche est propice aux grands rassemblements en extérieur : plages aménagées, jardins privés, esplanades. Ces événements demandent une organisation plus lourde (sonorisation, sécurité, restauration) mais offrent une expérience que les salles fermées ne peuvent pas égaler. Beaucoup d'organisateurs béninois y voient aujourd'hui le format le plus porteur pour les grosses soirées annuelles.</p>
 
 <h2>Comment ne rien rater</h2>
 <p>Avec autant d'options, le vrai défi n'est plus de trouver une soirée, mais de savoir laquelle correspond à ses envies et, surtout, d'avoir sa place avant que les meilleures catégories de billets ne partent. C'est exactement pour ça que la billetterie en ligne de LIVEINBLACK existe : chaque organisateur y publie ses événements avec les tarifs, les places disponibles en temps réel et parfois des offres VIP ou des tables réservées. Plus besoin de compter sur le bouche-à-oreille ou de faire la queue à l'entrée en espérant qu'il reste des places.</p>
@@ -59,11 +59,11 @@ const posts: SeedPost[] = [
 <p>Si tu es plutôt du genre à préparer ta soirée à l'avance, pense aussi à suivre directement les organisateurs qui publient régulièrement sur la plateforme : tu seras averti dès qu'un nouvel événement est mis en ligne, souvent plusieurs semaines avant la date, quand les meilleurs tarifs sont encore disponibles.</p>
 
 <h2>En résumé</h2>
-<p>Lomé en 2026, c'est une scène nightlife à trois vitesses : des rooftops pour commencer la soirée en douceur, des clubs pour la faire vivre jusqu'au bout de la nuit, et des événements en plein air pour les grands rendez-vous. Quel que soit ton style, l'essentiel est de t'y prendre tôt pour sécuriser ta place aux meilleures conditions.</p>
+<p>Cotonou en 2026, c'est une scène nightlife à trois vitesses : des rooftops pour commencer la soirée en douceur, des clubs pour la faire vivre jusqu'au bout de la nuit, et des événements en plein air pour les grands rendez-vous. Quel que soit ton style, l'essentiel est de t'y prendre tôt pour sécuriser ta place aux meilleures conditions.</p>
 `,
   },
   {
-    slug: 'guide-organiser-soiree-reussie-togo',
+    slug: 'guide-organiser-soiree-reussie-benin',
     title: 'Guide : comment organiser une soirée réussie au Bénin',
     excerpt: "Budget, lieu, sécurité, billetterie : les étapes concrètes pour monter un événement nightlife qui marche, du premier brief au jour J.",
     coverImageUrl: '/images/live-in-black/auth/auth-organizer-backstage-ops.png',

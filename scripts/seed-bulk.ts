@@ -356,7 +356,7 @@ async function main() {
         eventId: String(event._id),
         position: randInt(1, 3),
         region: region.id,
-        price: 9.99,
+        price: 30000,
         days: 7,
         userId: organizer.userId,
         purchasedAt: now,

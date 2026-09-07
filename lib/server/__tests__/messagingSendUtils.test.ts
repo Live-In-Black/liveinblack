@@ -58,6 +58,7 @@ describe('messagingSendUtils', () => {
       name: 'Soirée',
       date: 'SAM 22 AOÛT',
       price: 15,
+      currency: 'XOF',
       image: 'https://img.test/event.jpg',
     })
   })

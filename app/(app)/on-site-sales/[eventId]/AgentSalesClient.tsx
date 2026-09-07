@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { fmtMoney } from '@/lib/shared/money'
-import { Button, Input, Select, Checkbox, Label, Card, ConfirmDialog } from '@/app/components/ui'
+import { computeGroupTicketFeeXOF, computeTicketFeeXOF, computeTicketFeeCents } from '@/lib/shared/fees'
+import { Button, Input, Select, Label, Card, ConfirmDialog } from '@/app/components/ui'
 import { useQueryParamState } from '@/lib/client/useQueryParamState'
 
 export interface PlaceView {
@@ -40,7 +41,6 @@ export default function AgentSalesClient({
   const [mode, setMode] = useQueryParamState<'onsite' | 'door'>('mode', 'onsite')
   const [placeId, setPlaceId] = useState(places[0]?.id || '')
   const [qty, setQty] = useState(1)
-  const [isTable, setIsTable] = useState(false)
   const [guestName, setGuestName] = useState('')
   const [contactEmail, setContactEmail] = useState('')
   const [contactPhone, setContactPhone] = useState('')
@@ -55,8 +55,14 @@ export default function AgentSalesClient({
   const [dashboard, setDashboard] = useState(initialDashboard)
 
   const selectedPlace = places.find((p) => p.id === placeId) || null
+  const isTable = selectedPlace?.groupType === 'group'
+  const invalidGroup = isTable && (!Number.isSafeInteger(selectedPlace?.groupMax) || (selectedPlace?.groupMax ?? 0) < 2)
   const effectiveQty = mode === 'onsite' && !isTable ? qty : 1
-  const saleAmount = selectedPlace ? selectedPlace.price * effectiveQty : 0
+  const facialAmount = selectedPlace ? selectedPlace.price * effectiveQty : 0
+  const serviceFee = !selectedPlace || invalidGroup ? 0 : currency === 'XOF'
+    ? isTable ? computeGroupTicketFeeXOF(Math.round(selectedPlace.price), selectedPlace.groupMax!) : computeTicketFeeXOF(selectedPlace.price, effectiveQty)
+    : computeTicketFeeCents(Math.round(selectedPlace.price * 100), effectiveQty) / 100
+  const saleAmount = facialAmount + serviceFee
 
   async function refreshDashboard() {
     const res = await fetch(`/api/agent-sales/${eventId}/dashboard`)
@@ -66,6 +72,10 @@ export default function AgentSalesClient({
 
   async function handleSubmit() {
     if (!placeId) return
+    if (invalidGroup || (mode === 'door' && isTable)) {
+      setResult({ kind: 'err', text: invalidGroup ? 'Le nombre d’entrées de ce groupe doit être corrigé.' : 'Utilise la vente standard pour une place de groupe.' })
+      return
+    }
     if (!contactEmail.trim() && !contactPhone.trim()) {
       setResult({ kind: 'err', text: 'Renseigne au moins un email ou un numéro de téléphone pour envoyer le billet.' })
       return
@@ -172,17 +182,13 @@ export default function AgentSalesClient({
             options={places.map((p) => ({
               value: p.id,
               label: `${p.type} — ${fmtMoney(p.price, currency)} (${p.available} restantes)`,
-              disabled: p.available <= 0,
+              disabled: p.available <= 0 || (mode === 'door' && p.groupType === 'group'),
             }))}
           />
         </div>
 
         {mode === 'onsite' && selectedPlace?.groupType === 'group' && (
-          <Checkbox
-            checked={isTable}
-            onChange={(e) => setIsTable(e.target.checked)}
-            label={`Vente de la place de groupe entière (forfait à prix fixe, ${selectedPlace.groupMin}-${selectedPlace.groupMax} pers.)`}
-          />
+          <p>Vente de la place de groupe entière : {selectedPlace.groupMax} entrées incluses.</p>
         )}
 
         {mode === 'onsite' && !isTable && (
@@ -271,7 +277,7 @@ export default function AgentSalesClient({
 
         <Button
           onClick={() => setConfirmOpen(true)}
-          disabled={!placeId}
+          disabled={!placeId || invalidGroup || (mode === 'door' && isTable)}
           loading={busy}
           loadingText="Traitement…"
           size="lg"
@@ -288,11 +294,12 @@ export default function AgentSalesClient({
         body={
           <>
             <p style={{ margin: 0, fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-              {selectedPlace ? `${selectedPlace.type} · ${effectiveQty} billet${effectiveQty > 1 ? 's' : ''}` : 'Vente en cours'}
+              {selectedPlace ? `${selectedPlace.type} · ${isTable ? selectedPlace.groupMax : effectiveQty} entrée(s)` : 'Vente en cours'}
             </p>
             <p style={{ margin: '4px 0 0', fontSize: 'var(--font-size-title-4)', fontWeight: 800, color: 'var(--gold)' }}>
               {fmtMoney(saleAmount, currency)}
             </p>
+            <p>Prix facial : {fmtMoney(facialAmount, currency)} · Frais LIB : {fmtMoney(serviceFee, currency)}</p>
             <p style={{ margin: '4px 0 0', fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', lineHeight: 1.6 }}>
               {method === 'cash'
                 ? `Paiement en espèces · ${settlementMode === 'agent_settles' ? 'règlement manuel par l’agent' : 'prélèvement immédiat sur le solde organisateur'}`
@@ -326,6 +333,8 @@ const SALE_ERROR_LABELS: Record<string, string> = {
   fedapay_error: 'La demande Mobile Money n’a pas pu être envoyée — réessaie ou passe en espèces.',
   place_not_found: 'Cette place n’existe plus — recharge la page.',
   not_a_group_place: 'Cette place n’est pas une place de groupe.',
+  group_place_requires_bundle: 'Cette place doit être vendue avec toutes ses entrées de groupe.',
+  place_changed: 'Cette offre a changé. Actualise la page pour vérifier le prix et le nombre d’entrées.',
   no_group_at_door: 'La vente de groupe n’est pas disponible en vente à l’entrée.',
   order_creation_failed: 'Impossible de créer la commande — réessaie.',
   organizer_unresolved: 'Organisateur introuvable pour cet événement — contacte le support.',

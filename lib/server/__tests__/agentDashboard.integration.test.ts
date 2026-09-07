@@ -150,8 +150,8 @@ describeIntegration('getAgentDashboardStats (intégration, vraie base) — #101 
       boostId: 'boost-1',
       eventId: String(event._id),
       position: 1,
-      region: 'togo',
-      price: 15,
+      region: 'benin',
+      price: 13000,
       days: 3,
       userId: organizer.id,
       purchasedAt: new Date(),
@@ -163,8 +163,8 @@ describeIntegration('getAgentDashboardStats (intégration, vraie base) — #101 
       boostId: 'boost-2',
       eventId: String(event._id),
       position: 2,
-      region: 'togo',
-      price: 15,
+      region: 'benin',
+      price: 13000,
       days: 3,
       userId: organizer.id,
       purchasedAt: new Date(),
@@ -178,8 +178,9 @@ describeIntegration('getAgentDashboardStats (intégration, vraie base) — #101 
     expect(stats.revenue.gmvTicketsEUR).toBeCloseTo(26.49, 2)
     expect(stats.revenue.ticketFeeRevenueXOF).toBe(450)
     expect(stats.revenue.gmvTicketsXOF).toBe(3450)
-    expect(stats.revenue.gmvBoosts).toBe(15)
-    expect(stats.revenue.platformRevenueEUR).toBeCloseTo(1.49 + 15, 2)
+    expect(stats.revenue.gmvBoosts).toBe(13000)
+    expect(stats.revenue.platformRevenueEUR).toBeCloseTo(1.49, 2)
+    expect(stats.revenue.platformRevenueXOF).toBe(13450)
   })
 
   it('compte les billets réellement émis (paid:true), exclut les billets gratuits/guestlist', async () => {

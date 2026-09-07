@@ -1,10 +1,10 @@
 import mongoose, { Schema, model, models, type InferSchemaType, type Model } from 'mongoose'
 
-// Remplace `users/{uid}` (Firestore) + Firebase Auth. Un compte peut porter
-// plusieurs rôles (décision de la réunion du 15/07/2026) : `roles` liste tout
-// ce que le compte a le droit d'utiliser, `activeRole` est l'interface
-// actuellement affichée. Les fonctions de lib/server/permissions.ts vérifient
-// toujours `activeRole`, jamais `roles` directement.
+// Remplace `users/{uid}` (Firestore) + Firebase Auth. Les comptes client,
+// organisateur et prestataire sont désormais des comptes séparés, chacun avec
+// un seul type et une adresse e-mail unique. `roles` reste un tableau pour
+// compatibilité avec les anciens documents et pour la permission agent, mais
+// les nouvelles créations ne portent qu'un rôle métier.
 export const ROLES = ['client', 'organisateur', 'prestataire', 'agent'] as const
 const STATUSES = ['active', 'pending', 'rejected'] as const
 const ROLE_APPROVAL_STATUSES = ['none', 'pending', 'active', 'rejected'] as const
@@ -61,12 +61,10 @@ const userSchema = new Schema(
     roles: { type: [String], enum: ROLES, default: ['client'] },
     activeRole: { type: String, enum: ROLES, default: 'client' },
     status: { type: String, enum: STATUSES, default: 'active' },
-    // Statut d'approbation PAR RÔLE (#7 phase organisateur) — distinct du
-    // `status` global ci-dessus. Nécessaire pour ne jamais reproduire le bug
-    // legacy déjà corrigé une fois (audit #7 de src/utils/applications.js) :
-    // un organisateur déjà actif qui candidate en plus comme prestataire ne
-    // doit PAS se retrouver bloqué de ses deux interfaces le temps de la
-    // review du second dossier. Voir lib/server/permissions.ts.
+    // Statut de validation propre au compte professionnel — distinct du
+    // `status` global ci-dessus. Les comptes organisateur et prestataire sont
+    // indépendants ; ces deux champs ne servent pas à ajouter un second rôle
+    // au compte courant.
     orgStatus: { type: String, enum: ROLE_APPROVAL_STATUSES, default: 'none' },
     prestStatus: { type: String, enum: ROLE_APPROVAL_STATUSES, default: 'none' },
     emailVerifiedAt: { type: Date, default: null },
@@ -112,14 +110,15 @@ const userSchema = new Schema(
       default: [],
     },
 
-    // Stripe Connect (organisateurs éligibles — pays EUR/Connect uniquement).
+    // Stripe Connect historique (anciens comptes organisateurs). Le lancement
+    // actif au Bénin utilise les versements FedaPay ci-dessous.
     // Écrit UNIQUEMENT par le webhook `account.updated`, jamais par le client.
     stripeAccountId: { type: String, default: null },
     stripeChargesEnabled: { type: Boolean, default: false },
     stripeCountry: { type: String, default: null },
 
-    // Numéros mobile money pour les versements FedaPay, par code pays ISO-2
-    // ('tg','bj',...) — un organisateur peut vendre dans plusieurs zones XOF.
+    // Numéros mobile money pour les versements FedaPay, par code pays ISO-2.
+    // Le lancement actif ne propose que le code Bénin `bj`.
     payoutMomos: { type: Map, of: String, default: {} },
 
     // Référence du sous-compte vendeur FedaPay Marketplace. Pour le lancement
@@ -134,10 +133,9 @@ const userSchema = new Schema(
     // Abonnement prestataire (#8 phase prestataire) — miroir de compte du
     // statut réellement détenu par `ProviderProfile` (source de vérité, voir
     // lib/models/ProviderProfile.ts), nécessaire pour les gates qui ne
-    // chargent que `User` (ex. changement de pays de facturation refusé tant
-    // qu'un abonnement est actif). `stripeCustomerId`/`stripeSubscriptionId`
-    // sont un Stripe BILLING classique (abonnement récurrent EUR), sans
-    // rapport avec `stripeAccountId` ci-dessus (Stripe CONNECT organisateur).
+    // chargent que `User`. `stripeCustomerId`/`stripeSubscriptionId` ne
+    // subsistent que pour annuler/nettoyer d'anciens abonnements externes lors
+    // d'une suppression de compte ; la V1 active est FedaPay/XOF.
     prestataireSubActive: { type: Boolean, default: false },
     prestataireSubStatus: { type: String, default: null },
     prestataireSubEnd: { type: Date, default: null },
@@ -152,12 +150,9 @@ const userSchema = new Schema(
     // fedapay_txns, voir lib/server/providerSubscriptions.ts).
     pendingFedapaySubTxnId: { type: String, default: null },
 
-    // Pays de FACTURATION prestataire (rail EUR/Stripe vs XOF/FedaPay) —
-    // délibérément séparé de `ProviderProfile.zonesIntervention` (marketing,
-    // multi-pays) : ne peut changer que hors abonnement actif, voir
-    // lib/server/providerBilling.ts. Remplace la collection Firestore
-    // `provider_billing/{uid}` — un champ suffit, pas besoin d'un document à
-    // part pour cette seule valeur.
+    // Pays de FACTURATION prestataire. Le lancement actif est Bénin/XOF ; les
+    // identifiants historiques restent lisibles pour les anciennes factures.
+    // Remplace la collection Firestore `provider_billing/{uid}`.
     providerBillingRegionId: { type: String, default: null },
   },
   { timestamps: true }

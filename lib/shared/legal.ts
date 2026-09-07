@@ -24,8 +24,8 @@ export const LEGAL = {
     name: 'Chady Hage',
   },
   // Contact
-  contactEmail: 'hagechady@liveinblack.com',
-  supportEmail: 'hagechady@liveinblack.com',
+  contactEmail: 'contact@liveinblack.com',
+  supportEmail: 'contact@liveinblack.com',
   phone: '', // optionnel
   // Site
   domain: 'liveinblack.com',
@@ -41,7 +41,6 @@ export const LEGAL = {
     { name: 'Vercel Inc.', purpose: 'Hébergement', country: 'USA', dpa: 'https://vercel.com/legal/dpa' },
     { name: 'MongoDB, Inc. (MongoDB Atlas)', purpose: 'Hébergement de la base de données (comptes, événements, messages, transactions)', country: 'USA / UE', dpa: 'https://www.mongodb.com/legal/data-processing-agreement' },
     { name: 'Cloudinary Ltd.', purpose: "Hébergement des images et documents (photos de profil, visuels d'événements, portfolios prestataires, justificatifs d'identité des candidatures)", country: 'USA', dpa: 'https://cloudinary.com/dpa' },
-    { name: 'Stripe Inc.', purpose: 'Paiements en ligne et reversements vendeurs (Stripe Connect)', country: 'USA / Irlande', dpa: 'https://stripe.com/legal/dpa' },
     { name: 'FedaPay S.A.', purpose: 'Paiements en FCFA (mobile money et cartes)', country: 'Bénin', dpa: 'https://www.fedapay.com/privacy-policies' },
     { name: 'Resend, Inc.', purpose: 'Envoi des emails transactionnels (validation de dossier, notifications)', country: 'USA', dpa: 'https://resend.com/legal/dpa' },
   ],

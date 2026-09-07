@@ -12,6 +12,7 @@ const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
 import { validateOrganizerFormData, type OrganizerFormData, validatePrestataireFormData, type PrestataireFormData, getRequiredDocs } from '@/lib/shared/applicationValidation'
 import { applicationApprovedEmail, applicationRejectedEmail, applicationNeedsChangesEmail } from '@/lib/server/emails'
 import { isPasswordPolicyCompliant } from '@/lib/shared/passwordPolicy'
+import { normalizeContactPhoneParts } from '@/lib/shared/contactPhone'
 import { createNotification } from '@/lib/server/notifications'
 import {
   APPLICATION_DOCUMENT_MAX_BYTES,
@@ -113,8 +114,15 @@ function toApplicationView(app: ApplicationDoc & { _id: unknown }): ApplicationV
   }
 }
 
+function hasDedicatedAccount(user: { roles: string[] }, type: 'organisateur' | 'prestataire'): boolean {
+  const businessRoles = user.roles.filter((role) => role !== 'agent')
+  return businessRoles.length === 1 && businessRoles[0] === type
+}
+
 export async function getMyApplication(caller: ApplicationCaller, type: 'organisateur' | 'prestataire'): Promise<ApplicationView | null> {
   await getDb()
+  const user = await User.findById(caller.id).select('roles activeRole').lean()
+  if (!user || !hasDedicatedAccount(user, type) || user.activeRole !== type) return null
   const app = await Application.findOne({ userId: caller.id, type }).lean()
   return app ? toApplicationView(app as ApplicationDoc & { _id: unknown }) : null
 }
@@ -125,6 +133,11 @@ export type SaveDraftResult = ErrResult | { ok: true }
 // équivalent serveur, voir le commentaire d'en-tête.
 export async function saveApplicationDraft(caller: ApplicationCaller, type: 'organisateur' | 'prestataire', formData: Record<string, unknown>): Promise<SaveDraftResult> {
   await getDb()
+
+  const user = await User.findById(caller.id).select('roles activeRole').lean()
+  if (!user || !hasDedicatedAccount(user, type) || user.activeRole !== type) {
+    return { ok: false, status: 403, error: 'separate_account_required' }
+  }
 
   const existing = await Application.findOne({ userId: caller.id, type })
   if (existing && !['draft', 'needs_changes'].includes(existing.status)) {
@@ -220,6 +233,9 @@ export async function submitOrganizerApplication(caller: ApplicationCaller, inpu
 
   const user = await User.findById(caller.id)
   if (!user) return { ok: false, status: 404, error: 'user_not_found' }
+  if (!hasDedicatedAccount(user, 'organisateur') || user.activeRole !== 'organisateur') {
+    return { ok: false, status: 403, error: 'separate_account_required' }
+  }
 
   let app = await Application.findOne({ userId: caller.id, type: 'organisateur' })
   const wasCorrection = app?.status === 'needs_changes'
@@ -242,12 +258,8 @@ export async function submitOrganizerApplication(caller: ApplicationCaller, inpu
   })
   await app.save()
 
-  // Bascule l'interface active sur organisateur, en attente de validation —
-  // fidèle au legacy (activeRole devient 'organisateur' dès la soumission,
-  // pas seulement à l'approbation). orgStatus (par-rôle, #7) reste isolé du
-  // statut global des autres rôles du compte.
-  if (!user.roles.includes('organisateur')) user.roles.push('organisateur')
-  user.activeRole = 'organisateur'
+  // Le compte organisateur est créé avec ce rôle dès l'inscription. Une
+  // candidature connectée ne peut jamais ajouter ce rôle à un autre compte.
   user.orgStatus = 'pending'
   await user.save()
 
@@ -280,22 +292,30 @@ export async function registerAndSubmitOrganizerApplication(input: RegisterAndSu
 
   const validation = validateOrganizerFormData(input.formData)
   if (!validation.ok) return { ok: false, status: 400, error: validation.error }
+  const contactPhone = normalizeContactPhoneParts(input.formData.telephoneProCode, input.formData.telephonePro)
+  if (!contactPhone) return { ok: false, status: 400, error: 'Numéro de téléphone professionnel invalide.' }
 
   const existing = await User.findOne({ email }).lean()
   if (existing) return { ok: false, status: 409, error: 'email_taken' }
 
   const passwordHash = await bcrypt.hash(input.password, 12)
-  const user = await User.create({
-    email,
-    passwordHash,
-    firstName: input.formData.nomCommercial || '',
-    lastName: '',
-    phone: '',
-    roles: ['organisateur'],
-    activeRole: 'organisateur',
-    status: 'active',
-    orgStatus: 'pending',
-  })
+  let user
+  try {
+    user = await User.create({
+      email,
+      passwordHash,
+      firstName: input.formData.nomCommercial || '',
+      lastName: '',
+      phone: contactPhone,
+      roles: ['organisateur'],
+      activeRole: 'organisateur',
+      status: 'active',
+      orgStatus: 'pending',
+    })
+  } catch (error) {
+    if ((error as { code?: number }).code === 11000) return { ok: false, status: 409, error: 'email_taken' }
+    throw error
+  }
 
   const app = new Application({ userId: String(user._id), type: 'organisateur', status: 'draft' })
   const docsResult = await uploadApplicationDocuments(String(user._id), String(app._id), input.documents, applicationUploadOwner())
@@ -348,6 +368,9 @@ export async function submitPrestataireApplication(caller: ApplicationCaller, in
 
   const user = await User.findById(caller.id)
   if (!user) return { ok: false, status: 404, error: 'user_not_found' }
+  if (!hasDedicatedAccount(user, 'prestataire') || user.activeRole !== 'prestataire') {
+    return { ok: false, status: 403, error: 'separate_account_required' }
+  }
 
   let app = await Application.findOne({ userId: caller.id, type: 'prestataire' })
   const wasCorrection = app?.status === 'needs_changes'
@@ -370,10 +393,8 @@ export async function submitPrestataireApplication(caller: ApplicationCaller, in
   })
   await app.save()
 
-  // orgStatus/prestStatus isolés par rôle (#7) : soumettre un dossier
-  // prestataire ne doit jamais affecter l'accès organisateur du même compte.
-  if (!user.roles.includes('prestataire')) user.roles.push('prestataire')
-  user.activeRole = 'prestataire'
+  // Le compte prestataire est créé avec ce rôle dès l'inscription. Une
+  // candidature connectée ne peut jamais ajouter ce rôle à un autre compte.
   user.prestStatus = 'pending'
   await user.save()
 
@@ -404,22 +425,30 @@ export async function registerAndSubmitPrestataireApplication(input: RegisterAnd
 
   const validation = validatePrestataireFormData(input.formData)
   if (!validation.ok) return { ok: false, status: 400, error: validation.error }
+  const contactPhone = normalizeContactPhoneParts(input.formData.telephoneCode, input.formData.telephone)
+  if (!contactPhone) return { ok: false, status: 400, error: 'Numéro de téléphone professionnel invalide.' }
 
   const existing = await User.findOne({ email }).lean()
   if (existing) return { ok: false, status: 409, error: 'email_taken' }
 
   const passwordHash = await bcrypt.hash(input.password, 12)
-  const user = await User.create({
-    email,
-    passwordHash,
-    firstName: input.formData.prenom || '',
-    lastName: input.formData.nom || '',
-    phone: input.formData.telephone ? `${input.formData.telephoneCode || ''}${input.formData.telephone}` : '',
-    roles: ['prestataire'],
-    activeRole: 'prestataire',
-    status: 'active',
-    prestStatus: 'pending',
-  })
+  let user
+  try {
+    user = await User.create({
+      email,
+      passwordHash,
+      firstName: input.formData.prenom || '',
+      lastName: input.formData.nom || '',
+      phone: contactPhone,
+      roles: ['prestataire'],
+      activeRole: 'prestataire',
+      status: 'active',
+      prestStatus: 'pending',
+    })
+  } catch (error) {
+    if ((error as { code?: number }).code === 11000) return { ok: false, status: 409, error: 'email_taken' }
+    throw error
+  }
 
   const app = new Application({ userId: String(user._id), type: 'prestataire', status: 'draft' })
   const docsResult = await uploadApplicationDocuments(String(user._id), String(app._id), input.documents, applicationUploadOwner())
@@ -656,6 +685,10 @@ export async function moderateApplication(
 
   const user = await User.findById(app.userId)
   if (!user) return { ok: false, status: 404, error: 'user_not_found' }
+
+  if (!hasDedicatedAccount(user, app.type)) {
+    return { ok: false, status: 403, error: 'separate_account_required' }
+  }
 
   const now = new Date()
   const isOrganisateur = app.type === 'organisateur'

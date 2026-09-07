@@ -67,9 +67,9 @@ describeIntegration('recommendation-inputs (intégration, vraie base) — compos
 
   it('remonte les préférences sauvegardées', async () => {
     const user = await seedUser()
-    await updatePreferences({ id: String(user._id) }, { musicStyles: ['amapiano'], budget: '10-20' })
+    await updatePreferences({ id: String(user._id) }, { musicStyles: ['amapiano'], budget: '5000-10000' })
     const profile = await getMyProfile({ id: String(user._id) })
-    expect(profile?.preferences).toEqual({ musicStyles: ['amapiano'], budget: '10-20' })
+    expect(profile?.preferences).toEqual({ musicStyles: ['amapiano'], budget: '5000-10000' })
   })
 
   it("remonte l'historique d'intérêt actif avec les styles musicaux de l'event", async () => {

@@ -23,6 +23,7 @@ import { useQueryParamState } from '@/lib/client/useQueryParamState'
 import styles from './AgentPaymentsClient.module.css'
 
 const PAGE_SIZE = 15
+const CASH_OPERATION_STORAGE_PREFIX = 'lib:cash-refund-operation:'
 
 // Port de la fusion des 3 onglets legacy 'reversements' / 'remboursements' /
 // 'paiements' (src/pages/AgentPage.jsx) en un seul panneau (#9 phase
@@ -32,15 +33,43 @@ const PAGE_SIZE = 15
 // d'attente et déclencher les 2-3 actions de règlement manuel, toujours
 // derrière une confirmation explicite (argent réel qui bouge).
 //
-// `amountDueCents`/`amountDueCents` ledger sont stockés en CENTIMES (comme le
-// legacy `seller_balances.amountDueCents`) — fmtMoney() attend un montant en
-// unité majeure, d'où la conversion /100 ci-dessous pour l'EUR (jamais pour
-// le XOF, qui n'a pas de sous-unité).
-function fmtEUR(amountDueCents: number): string {
-  return fmtMoney(amountDueCents / 100, 'EUR')
-}
 function fmtXOF(amountDueXOF: number): string {
   return fmtMoney(amountDueXOF, 'XOF')
+}
+
+function cashOperationStorageKey(refundId: string) {
+  return `${CASH_OPERATION_STORAGE_PREFIX}${refundId}`
+}
+
+function readStoredCashOperation(refundId: string): { code: string; operationId: string } | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.sessionStorage.getItem(cashOperationStorageKey(refundId))
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { code?: unknown; operationId?: unknown }
+    if (typeof parsed.code !== 'string' || typeof parsed.operationId !== 'string') return null
+    return { code: parsed.code, operationId: parsed.operationId }
+  } catch {
+    return null
+  }
+}
+
+function writeStoredCashOperation(refundId: string, value: { code: string; operationId: string }) {
+  if (typeof window === 'undefined') return
+  try {
+    window.sessionStorage.setItem(cashOperationStorageKey(refundId), JSON.stringify(value))
+  } catch {
+    // La reprise est une aide ergonomique ; le serveur reste la source de vérité.
+  }
+}
+
+function clearStoredCashOperation(refundId: string) {
+  if (typeof window === 'undefined') return
+  try {
+    window.sessionStorage.removeItem(cashOperationStorageKey(refundId))
+  } catch {
+    // Rien à faire si le stockage de session est indisponible.
+  }
 }
 
 interface FailedPayout {
@@ -62,7 +91,6 @@ interface PayoutRequestView {
   requestedAt: string
   amountDueCents: number
   amountDueXOF: number
-  payCents: number
   mismatch: boolean
 }
 
@@ -119,7 +147,7 @@ const ALERT_REASON_LABEL: Record<string, string> = {
   event_deleted_before_fulfillment: 'Paiement reçu pour un événement supprimé',
   group_membership_conflict: 'Conflit de place de groupe après paiement',
   sub_amount_mismatch: "Abonnement : montant payé différent du tarif",
-  stripe_refund_failed: 'Remboursement carte (Stripe) ÉCHOUÉ',
+  stripe_refund_failed: 'Remboursement carte historique à vérifier',
 }
 
 function fmtDate(iso: string): string {
@@ -127,8 +155,8 @@ function fmtDate(iso: string): string {
   return `${d.toLocaleDateString('fr-FR')} ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
 }
 
-// `details` vient de sources d'alerte hétérogènes (webhook Stripe/FedaPay,
-// cron de versement…) sans schéma commun exhaustif à mapper vers des
+// `details` vient de sources d'alerte hétérogènes (webhooks, cron de
+// versement…) sans schéma commun exhaustif à mapper vers des
 // libellés — on affiche donc chaque paire clé/valeur lisiblement (clé
 // humanisée, valeur brute) plutôt qu'un blob JSON.stringify() d'un bloc.
 function humanizeDetailKey(key: string): string {
@@ -151,12 +179,12 @@ interface ToastState {
 
 interface RefundCompletionInput {
   code: string
-  signatureUrl: string
+  signatureDataUrl: string
+  operationId: string
 }
 
 type ConfirmAction =
   | { type: 'markPayoutPaid'; eventId: string; label: string; who: string }
-  | { type: 'settle'; sellerUid: string; requestId: string | null; amount: number; currency: 'EUR' | 'XOF'; label: string; who: string }
   | { type: 'closeRequest'; requestId: string; who: string }
   | { type: 'completeRefund'; refundId: string; label: string; who: string }
   | { type: 'resolveAlert'; alertId: string; label: string }
@@ -292,25 +320,11 @@ export default function AgentPaymentsClient() {
           setFailedPayouts((prev) => prev.filter((p) => p.eventId !== confirm.eventId))
           showToast(`Versement de ${fmtXOF(data.paid)} marqué payé`, 'success')
         }
-      } else if (confirm.type === 'settle') {
-        const res = await fetch('/api/agent/payments/payouts/settle', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sellerUid: confirm.sellerUid, amount: confirm.amount, currency: confirm.currency, requestId: confirm.requestId }),
-        })
-        const data = await res.json()
-        if (!res.ok || !data.ok) {
-          showToast("Échec du règlement — rien n'a été décrémenté. Réessaie.", 'error')
-        } else {
-          if (confirm.requestId) setPayoutRequests((prev) => prev.filter((r) => r.requestId !== confirm.requestId))
-          else setBalancesNoReq((prev) => prev.filter((b) => b.sellerUid !== confirm.sellerUid))
-          showToast(data.paid > 0 ? `Reversement de ${fmtMoney(data.paid / 100, 'EUR')} marqué payé` : 'Demande close (solde déjà à zéro)', 'success')
-        }
       } else if (confirm.type === 'closeRequest') {
         const res = await fetch('/api/agent/payments/payouts/settle', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sellerUid: payoutRequests.find((r) => r.requestId === confirm.requestId)?.sellerUid, amount: 0, currency: 'EUR', requestId: confirm.requestId }),
+          body: JSON.stringify({ sellerUid: payoutRequests.find((r) => r.requestId === confirm.requestId)?.sellerUid, amount: 0, currency: 'XOF', requestId: confirm.requestId }),
         })
         const data = await res.json()
         if (!res.ok || !data.ok) {
@@ -330,7 +344,9 @@ export default function AgentPaymentsClient() {
           showToast('Impossible de marquer le remboursement. Réessaie.', 'error')
         } else {
           setRefunds((prev) => prev.filter((r) => r.id !== confirm.refundId))
+          clearStoredCashOperation(confirm.refundId)
           showToast('Remboursement marqué comme effectué', 'success')
+          setConfirm(null)
         }
       } else if (confirm.type === 'resolveAlert') {
         const res = await fetch(`/api/agent/payments/alerts/${confirm.alertId}/resolve`, { method: 'POST' })
@@ -342,7 +358,7 @@ export default function AgentPaymentsClient() {
           showToast('Alerte financière clôturée', 'success')
         }
       }
-      setConfirm(null)
+      if (confirm.type !== 'completeRefund') setConfirm(null)
     } finally {
       setBusy(false)
     }
@@ -350,7 +366,13 @@ export default function AgentPaymentsClient() {
 
   // 'boosts' n'a pas de compteur ici (AgentBoostsClient charge et affiche ses
   // propres totaux dans son panneau) — 0 fixe, jamais mis en avant en rose.
-  const counts = { payouts: failedPayouts.length + payoutRequests.length + balancesNoReq.length, refunds: refunds.length, points: refundPoints.filter((point) => point.active).length, alerts: alerts.length, boosts: 0 }
+  const counts = {
+    payouts: failedPayouts.length + balancesNoReq.filter((balance) => balance.amountDueXOF > 0).length,
+    refunds: refunds.length,
+    points: refundPoints.filter((point) => point.active).length,
+    alerts: alerts.length,
+    boosts: 0,
+  }
   const selectedSection = SECTIONS.find((item) => item.key === section) ?? SECTIONS[0]
 
   function handleSectionKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, index: number) {
@@ -502,19 +524,16 @@ function PayoutsSection({
   balancesNoReqPage: number
   setBalancesNoReqPage: (p: number) => void
 }) {
-  const empty = failedPayouts.length === 0 && payoutRequests.length === 0 && balancesNoReq.length === 0
+  const xofBalancesNoReq = useMemo(() => balancesNoReq.filter((balance) => balance.amountDueXOF > 0), [balancesNoReq])
+  const empty = failedPayouts.length === 0 && xofBalancesNoReq.length === 0
 
   const { pageItems: failedPayoutsPageItems, pageCount: failedPayoutsPageCount } = useMemo(
     () => pagedSlice(failedPayouts, failedPayoutsPage, PAGE_SIZE),
     [failedPayouts, failedPayoutsPage]
   )
-  const { pageItems: payoutRequestsPageItems, pageCount: payoutRequestsPageCount } = useMemo(
-    () => pagedSlice(payoutRequests, payoutRequestsPage, PAGE_SIZE),
-    [payoutRequests, payoutRequestsPage]
-  )
   const { pageItems: balancesNoReqPageItems, pageCount: balancesNoReqPageCount } = useMemo(
-    () => pagedSlice(balancesNoReq, balancesNoReqPage, PAGE_SIZE),
-    [balancesNoReq, balancesNoReqPage]
+    () => pagedSlice(xofBalancesNoReq, balancesNoReqPage, PAGE_SIZE),
+    [xofBalancesNoReq, balancesNoReqPage]
   )
 
   if (empty) {
@@ -529,7 +548,7 @@ function PayoutsSection({
         <div className={styles.guideIcon} aria-hidden="true"><CircleDollarSign size={21} /></div>
         <div>
           <strong>Filet de sécurité des reversements</strong>
-          <p>Les EUR transitent par Stripe Connect et les XOF par Mobile Money. Les opérations manuelles ci-dessous restent séparées par devise et doivent être confirmées après le transfert externe.</p>
+          <p>La V1 Bénin suit les montants FCFA et les règlements FedaPay/Mobile Money. Les anciens soldes hors périmètre ne sont pas proposés comme actions de lancement.</p>
         </div>
       </Card>
 
@@ -565,27 +584,15 @@ function PayoutsSection({
         </div>
       )}
 
-      {payoutRequests.length > 0 && (
+      {xofBalancesNoReq.length > 0 && (
         <div className={styles.queue}>
-          <QueueHeader icon={<Landmark size={18} aria-hidden="true" />} title="Demandes de virement" description="Demandes EUR initiées par les organisateurs." count={payoutRequests.length} />
-          <div className={styles.cardGrid}>
-            {payoutRequestsPageItems.map((r) => (
-              <PayoutCard key={r.requestId} sellerUid={r.sellerUid} sellerName={r.sellerName} sellerEmail={r.sellerEmail} amountDueCents={r.amountDueCents} amountDueXOF={r.amountDueXOF} payCents={r.payCents} requestId={r.requestId} requestedAt={r.requestedAt} mismatch={r.mismatch} setConfirm={setConfirm} />
-            ))}
-          </div>
-          <Pagination page={payoutRequestsPage} pageCount={payoutRequestsPageCount} onPageChange={setPayoutRequestsPage} totalItems={payoutRequests.length} pageSize={PAGE_SIZE} />
-        </div>
-      )}
-
-      {balancesNoReq.length > 0 && (
-        <div className={styles.queue}>
-          <QueueHeader icon={<Banknote size={18} aria-hidden="true" />} title="Soldes dus sans demande" description="Soldes disponibles qui n’ont pas encore fait l’objet d’une demande." count={balancesNoReq.length} tone="muted" />
+          <QueueHeader icon={<Banknote size={18} aria-hidden="true" />} title="Soldes XOF dus sans demande" description="Soldes FCFA disponibles qui n’ont pas encore fait l’objet d’une demande." count={xofBalancesNoReq.length} tone="muted" />
           <div className={styles.cardGrid}>
             {balancesNoReqPageItems.map((b) => (
-              <PayoutCard key={b.sellerUid} sellerUid={b.sellerUid} sellerName={b.sellerName} sellerEmail={b.sellerEmail} amountDueCents={b.amountDueCents} amountDueXOF={b.amountDueXOF} payCents={b.amountDueCents} requestId={null} requestedAt={null} mismatch={false} setConfirm={setConfirm} />
+              <PayoutCard key={b.sellerUid} sellerUid={b.sellerUid} sellerName={b.sellerName} sellerEmail={b.sellerEmail} amountDueCents={b.amountDueCents} amountDueXOF={b.amountDueXOF} requestId={null} requestedAt={null} mismatch={false} setConfirm={setConfirm} />
             ))}
           </div>
-          <Pagination page={balancesNoReqPage} pageCount={balancesNoReqPageCount} onPageChange={setBalancesNoReqPage} totalItems={balancesNoReq.length} pageSize={PAGE_SIZE} />
+          <Pagination page={balancesNoReqPage} pageCount={balancesNoReqPageCount} onPageChange={setBalancesNoReqPage} totalItems={xofBalancesNoReq.length} pageSize={PAGE_SIZE} />
         </div>
       )}
     </div>
@@ -611,7 +618,6 @@ function PayoutCard({
   sellerEmail,
   amountDueCents,
   amountDueXOF,
-  payCents,
   requestId,
   requestedAt,
   mismatch,
@@ -622,7 +628,6 @@ function PayoutCard({
   sellerEmail: string
   amountDueCents: number
   amountDueXOF: number
-  payCents: number
   requestId: string | null
   requestedAt: string | null
   mismatch: boolean
@@ -643,24 +648,17 @@ function PayoutCard({
 
       {requestedAt && <div className={styles.dateLine}><Clock3 size={14} aria-hidden="true" /> Demandé le {new Date(requestedAt).toLocaleDateString('fr-FR')}</div>}
       <div className={styles.amounts}>
-        {amountDueCents > 0 && <div><span>Solde EUR</span><strong>{fmtEUR(amountDueCents)}</strong></div>}
         {amountDueXOF > 0 && <div><span>Solde XOF</span><strong>{fmtXOF(amountDueXOF)}</strong></div>}
         {amountDueCents <= 0 && amountDueXOF <= 0 && <div><span>Solde disponible</span><strong>0</strong></div>}
       </div>
 
       {mismatch && <div className={styles.note} role="alert"><AlertTriangle size={15} aria-hidden="true" /><span><strong>Montant incohérent. </strong>La demande dépasse le solde réel. Seul le montant disponible sera réglé.</span></div>}
 
-      {payCents > 0 && (
-        <Button variant="primary" icon={<CheckCircle2 size={16} aria-hidden="true" />} className={styles.cardAction} aria-label={`Confirmer le versement de ${fmtEUR(payCents)} à ${sellerName}`} onClick={() => setConfirm({ type: 'settle', sellerUid, requestId, amount: payCents, currency: 'EUR', label: fmtEUR(payCents), who: sellerName })}>
-          Confirmer {fmtEUR(payCents)} versés
-        </Button>
-      )}
-
       {amountDueXOF > 0 && (
         <div className={`${styles.note} ${styles.infoNote}`}><Smartphone size={15} aria-hidden="true" /><span>{fmtXOF(amountDueXOF)} sont destinés au versement automatique Mobile Money.</span></div>
       )}
 
-      {requestId && payCents <= 0 && amountDueXOF <= 0 && (
+      {requestId && amountDueXOF <= 0 && (
         <Button variant="secondary" icon={<CheckCircle2 size={16} aria-hidden="true" />} className={styles.secondaryAction} aria-label={`Clore la demande à zéro de ${sellerName}`} onClick={() => setConfirm({ type: 'closeRequest', requestId, who: sellerName })}>
           Clore la demande à zéro
         </Button>
@@ -878,7 +876,7 @@ function AlertsSection({
     <div className={styles.sectionStack}>
       <Card accent="var(--primary-a32)" className={styles.guideCard} role="note">
         <div className={`${styles.guideIcon} ${styles.alertGuideIcon}`} aria-hidden="true"><ShieldCheck size={20} /></div>
-        <div><strong>Contrôle avant clôture</strong><p>Vérifiez la transaction dans Stripe ou FedaPay avant de rembourser, corriger ou clôturer une alerte.</p></div>
+        <div><strong>Contrôle avant clôture</strong><p>Vérifiez la transaction dans FedaPay ou le dossier de preuve avant de rembourser, corriger ou clôturer une alerte.</p></div>
       </Card>
       {alerts.length === 0 ? (
         <EmptyState title="Aucune anomalie à traiter" description="Les paiements signalés comme anormaux apparaîtront ici." />
@@ -919,46 +917,144 @@ function AlertsSection({
 function ConfirmModal({ action, busy, onCancel, onConfirm }: { action: ConfirmAction; busy: boolean; onCancel: () => void; onConfirm: (refundInput?: RefundCompletionInput) => void }) {
   const [refundCode, setRefundCode] = useState('')
   const [signatureUrl, setSignatureUrl] = useState('')
+  const [operationId, setOperationId] = useState('')
+  const [preparedAmount, setPreparedAmount] = useState<number | null>(null)
+  const [prepareBusy, setPrepareBusy] = useState(false)
+  const [prepareError, setPrepareError] = useState('')
+  const [releaseBusy, setReleaseBusy] = useState(false)
   let title = ''
   let helper = ''
   if (action.type === 'markPayoutPaid') {
     title = `Confirmer le versement de ${action.label} à ${action.who} ?`
     helper = "À faire APRÈS avoir envoyé l'argent sur son Mobile Money."
-  } else if (action.type === 'settle') {
-    title = `Confirmer le reversement de ${action.label} à ${action.who} ?`
-    helper = "À faire APRÈS avoir envoyé le virement."
   } else if (action.type === 'closeRequest') {
     title = `Clore la demande de virement de ${action.who} ?`
     helper = 'Le solde réel du ledger est déjà à zéro — aucun argent ne sera envoyé.'
   } else if (action.type === 'completeRefund') {
     title = `Confirmer le remboursement de ${action.label} à ${action.who} ?`
-    helper = "À faire APRÈS avoir validé le code, remis exactement les espèces et recueilli la signature numérique."
+    helper = preparedAmount == null
+      ? 'Validez le code avant de remettre les espèces.'
+      : "Code validé. Remettez exactement le montant confirmé, puis faites signer le bénéficiaire."
   } else {
     title = `Clôturer l'alerte « ${action.label} » ?`
-    helper = 'À faire seulement après vérification du paiement dans Stripe ou FedaPay.'
+    helper = 'À faire seulement après vérification du paiement dans FedaPay ou dans le dossier de preuve.'
+  }
+
+  function resetPreparedState() {
+    setPreparedAmount(null)
+    setPrepareError('')
+    setSignatureUrl('')
+    setOperationId('')
+  }
+
+  useEffect(() => {
+    if (action.type !== 'completeRefund') return
+    const stored = readStoredCashOperation(action.refundId)
+    if (!stored) return
+    setRefundCode(stored.code)
+    setOperationId(stored.operationId)
+    setPrepareBusy(true)
+    setPrepareError('')
+    fetch(`/api/agent/payments/refunds/${action.refundId}/prepare`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(stored),
+    })
+      .then(async (res) => ({ res, data: await res.json().catch(() => ({})) }))
+      .then(({ res, data }) => {
+        if (!res.ok || !data.ok) {
+          clearStoredCashOperation(action.refundId)
+          resetPreparedState()
+          setRefundCode('')
+          setPrepareError('Reprise impossible. Revalidez le code avant toute remise.')
+          return
+        }
+        setOperationId(data.operationId)
+        setPreparedAmount(Number(data.amountXOF))
+      })
+      .finally(() => setPrepareBusy(false))
+  }, [action])
+
+  async function prepareRefund() {
+    if (action.type !== 'completeRefund') return
+    const nextOperationId = crypto.randomUUID()
+    setPrepareBusy(true)
+    setPrepareError('')
+    try {
+      const res = await fetch(`/api/agent/payments/refunds/${action.refundId}/prepare`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: refundCode, operationId: nextOperationId }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) {
+        setPrepareError(data.error === 'invalid_or_already_redeemed_code' ? 'Code invalide ou déjà utilisé.' : 'Code non validé. Réessayez avant toute remise.')
+        return
+      }
+      setOperationId(data.operationId)
+      setPreparedAmount(Number(data.amountXOF))
+      writeStoredCashOperation(action.refundId, { code: refundCode.trim(), operationId: data.operationId })
+    } finally {
+      setPrepareBusy(false)
+    }
+  }
+
+  async function cancelWithRelease() {
+    if (action.type === 'completeRefund' && operationId && preparedAmount != null) {
+      setReleaseBusy(true)
+      setPrepareError('')
+      try {
+        const res = await fetch(`/api/agent/payments/refunds/${action.refundId}/release`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ operationId, noCashHanded: true }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok || !data.ok) {
+          setPrepareError("Impossible de libérer l'opération. Gardez cette fenêtre ouverte et actualisez avant toute remise.")
+          return
+        }
+        clearStoredCashOperation(action.refundId)
+      } finally {
+        setReleaseBusy(false)
+      }
+    }
+    onCancel()
   }
 
   return (
-    <Modal onClose={onCancel} hideClose dismissible={!busy} ariaLabel={title}>
+    <Modal onClose={cancelWithRelease} hideClose dismissible={!busy && !releaseBusy} ariaLabel={title}>
       <div className={styles.confirmIcon} aria-hidden="true"><ShieldCheck size={25} /></div>
       <h2 className={styles.confirmTitle}>{title}</h2>
       <p className={styles.confirmHelper}>{helper}</p>
       {action.type === 'completeRefund' && (
         <div className={styles.refundProofForm}>
-          <Input value={refundCode} onChange={(event) => setRefundCode(event.target.value)} placeholder="Code présenté par le client" disabled={busy} />
-          <SignaturePad disabled={busy} onChange={setSignatureUrl} />
+          <Input value={refundCode} onChange={(event) => { setRefundCode(event.target.value); resetPreparedState() }} placeholder="Code présenté par le client" disabled={busy || preparedAmount != null || releaseBusy} />
+          {prepareError && <p className={styles.confirmHelper} role="alert">{prepareError}</p>}
+          {preparedAmount == null ? (
+            <>
+              <Button variant="secondary" onClick={prepareRefund} disabled={busy || prepareBusy || refundCode.trim().length < 8} loading={prepareBusy} loadingText="Validation…">
+                Valider le code
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className={styles.confirmHelper}>Montant confirmé par le serveur : <strong>{fmtXOF(preparedAmount)}</strong></p>
+              <SignaturePad disabled={busy || releaseBusy} onChange={setSignatureUrl} />
+            </>
+          )}
         </div>
       )}
       <div className={styles.confirmWarning} role="note"><AlertTriangle size={16} aria-hidden="true" /><span>Cette confirmation modifie le suivi financier de façon immédiate.</span></div>
       <div className={styles.confirmActions}>
-        <Button variant="secondary" onClick={onCancel} disabled={busy}>
+        <Button variant="secondary" onClick={cancelWithRelease} disabled={busy || releaseBusy} loading={releaseBusy} loadingText="Libération…">
           Annuler
         </Button>
         <Button
           variant="primary"
           icon={<CheckCircle2 size={16} aria-hidden="true" />}
-          onClick={() => onConfirm(action.type === 'completeRefund' ? { code: refundCode, signatureUrl } : undefined)}
-          disabled={busy || (action.type === 'completeRefund' && (!refundCode.trim() || !signatureUrl.trim()))}
+          onClick={() => onConfirm(action.type === 'completeRefund' ? { code: refundCode, signatureDataUrl: signatureUrl, operationId } : undefined)}
+          disabled={busy || releaseBusy || (action.type === 'completeRefund' && (!refundCode.trim() || !signatureUrl.trim() || !operationId || preparedAmount == null))}
           loading={busy}
           loadingText="Confirmation…"
           aria-label={title}
@@ -1046,7 +1142,7 @@ function SignaturePad({ disabled, onChange }: { disabled: boolean; onChange: (da
   return (
     <div className={styles.signatureField}>
       <div className={styles.signatureHeader}>
-        <span>Signature du bénéficiaire</span>
+        <span>Signature du porteur du code</span>
         <Button variant="ghost" onClick={prepareCanvas} disabled={disabled || !hasSignature} className={styles.signatureClear}>
           Effacer
         </Button>
@@ -1054,13 +1150,13 @@ function SignaturePad({ disabled, onChange }: { disabled: boolean; onChange: (da
       <canvas
         ref={canvasRef}
         className={styles.signatureCanvas}
-        aria-label="Zone de signature du bénéficiaire"
+        aria-label="Zone de signature du porteur du code"
         onPointerDown={beginDraw}
         onPointerMove={draw}
         onPointerUp={endDraw}
-        onPointerCancel={endDraw}
+        onPointerCancel={prepareCanvas}
       />
-      <p className={styles.signatureHint}>{hasSignature ? 'Signature capturée.' : 'Le bénéficiaire signe ici avant la remise des espèces.'}</p>
+      <p className={styles.signatureHint}>{hasSignature ? 'Signature capturée.' : 'Le porteur du code signe ici avant la remise des espèces.'}</p>
     </div>
   )
 }

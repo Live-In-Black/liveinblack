@@ -131,7 +131,7 @@
 
 **Acces :** Web depuis `/events/[id]`, Mobile `/checkout/[eventId]`.  
 **Role concerne :** client.  
-**Description :** le client choisit ses places, applique eventuellement un code promo, selectionne les quantites et lance le paiement. Les paiements peuvent passer par Stripe ou FedaPay selon le contexte.  
+**Description :** le client choisit ses places, applique eventuellement un code promo, selectionne les quantites et lance le paiement via FedaPay pour le lancement Benin.
 **Valeur :** c'est le coeur commercial de la plateforme : convertir la decouverte en revenu.
 
 ### 2.8 Reservation temporaire de place
@@ -162,12 +162,12 @@
 **Description :** un acheteur peut inviter une autre personne sur une place, annuler l'invitation, reprendre la place, ou le destinataire peut accepter/refuser.  
 **Valeur :** cette feature rend les achats de groupe beaucoup plus pratiques.
 
-### 2.12 Revente de billet
+### 2.12 Revente exclue de la V1
 
-**Acces :** Web wallet + `/checkout/resale`, Mobile `/checkout/resale/[listingId]`.  
+**Acces :** aucun parcours actif de revente.
 **Role concerne :** client.  
-**Description :** l'utilisateur peut mettre un billet en vente, retirer cette vente ou acheter un billet remis en vente par quelqu'un d'autre.  
-**Valeur :** elle reduit la frustration des personnes qui ne peuvent plus venir et augmente la disponibilite pour les autres.
+**Description :** l'utilisateur ne peut pas mettre un billet en vente, retirer une vente ou acheter un billet remis en vente par quelqu'un d'autre pendant le lancement Benin.
+**Valeur :** cette fermeture evite de reintroduire une fonctionnalite explicitement exclue de la V1.
 
 ### 2.13 Demande de remboursement
 
@@ -366,7 +366,7 @@
 
 **Acces :** Web `/organizer-studio`, Mobile `/spaces/organizer/payouts`.  
 **Role concerne :** organisateur, agent finance.  
-**Description :** l'organisateur configure Stripe Connect ou Mobile Money, consulte son statut de paiement et demande ses versements.  
+**Description :** l'organisateur configure les informations Mobile Money/FedaPay utiles, consulte son statut de paiement et suit ses versements.
 **Valeur :** donne une lecture claire de l'argent du et reduit les traitements manuels.
 
 ## 5. Prestataire
@@ -556,6 +556,5 @@
 
 **Acces :** checkout billets, abonnements, boosts, versements.  
 **Role concerne :** clients, organisateurs, prestataires, agents.  
-**Description :** LIVE IN BLACK combine Stripe, FedaPay et Mobile Money selon les usages et regions.  
+**Description :** LIVE IN BLACK utilise FedaPay et Mobile Money pour les usages du lancement Benin.
 **Valeur :** rend la plateforme plus adaptee au contexte local et international.
-

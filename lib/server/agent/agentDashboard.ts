@@ -52,6 +52,7 @@ type DashboardRole = (typeof DASHBOARD_ROLES)[number]
 export interface DashboardStats {
   revenue: {
     platformRevenueEUR: number
+    platformRevenueXOF: number
     ticketFeeRevenueEUR: number
     ticketFeeRevenueXOF: number
     gmvBoosts: number
@@ -174,7 +175,8 @@ export async function getAgentDashboardStats(now: number = Date.now()): Promise<
   const gmvTicketsEUR = (eurRow?.gmvMinor ?? 0) / 100
   const gmvTicketsXOF = xofRow?.gmvMinor ?? 0
   const gmvBoosts = (boostAggRaw as { total: number }[])[0]?.total ?? 0
-  const platformRevenueEUR = ticketFeeRevenueEUR + gmvBoosts
+  const platformRevenueEUR = ticketFeeRevenueEUR
+  const platformRevenueXOF = ticketFeeRevenueXOF + gmvBoosts
 
   const upcoming = (activeEventsForTiming as EventLike[]).filter((ev) => {
     const end = getEventEndTimestamp(ev)
@@ -193,6 +195,7 @@ export async function getAgentDashboardStats(now: number = Date.now()): Promise<
   return {
     revenue: {
       platformRevenueEUR,
+      platformRevenueXOF,
       ticketFeeRevenueEUR,
       ticketFeeRevenueXOF,
       gmvBoosts,

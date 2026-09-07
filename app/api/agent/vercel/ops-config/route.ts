@@ -1300,6 +1300,9 @@ export async function PATCH(req: Request) {
   if (!writable) return NextResponse.json({ error: 'edge_config_write_not_configured' }, { status: 503 })
 
   const body = await req.json().catch(() => ({})) as PatchBody
+  if (body.ticketResaleEnabled === true) {
+    return NextResponse.json({ error: 'ticket_resale_v1_disabled' }, { status: 409 })
+  }
   const items = buildItems(body)
   if (items.length === 0) return NextResponse.json({ error: 'empty_patch' }, { status: 400 })
   const before = await getVercelOpsConfig()

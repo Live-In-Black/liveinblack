@@ -11,10 +11,11 @@ import RefundPoint from '@/lib/models/RefundPoint'
 import PayoutRequest from '@/lib/models/PayoutRequest'
 import SellerBalance from '@/lib/models/SellerBalance'
 import PaymentAlert from '@/lib/models/PaymentAlert'
-import { hashRefundPickupCode } from '@/lib/shared/refundPolicy'
+import { encryptRefundSensitiveValue, hashRefundPickupCode } from '@/lib/shared/refundPolicy'
+import { validateRefundSignature } from '../refunds/signatures'
 import type { RefundAuditContext } from '@/lib/server/refunds/refundCases'
 import { notifyUserById } from '@/lib/server/emails/notify'
-import { refundConfirmedEmail } from '@/lib/server/emails'
+import { cashRefundCollectedEmail } from '@/lib/server/emails'
 import { fmtMoney } from '@/lib/shared/money'
 
 // Port de la couche de supervision agent des 3 onglets legacy 'reversements'
@@ -365,94 +366,99 @@ function agentAuditMetadata(metadata: Record<string, unknown>, context?: RefundA
   return ip || userAgent ? { ...metadata, technical: { ip, userAgent } } : metadata
 }
 
-export async function completeManualRefund(agent: AgentCaller, refundId: string, input: { code?: string | null; signatureUrl?: string | null } = {}, auditContext?: RefundAuditContext): Promise<CompleteManualRefundResult> {
+export async function completeManualRefund(agent: AgentCaller, refundId: string, input: { code?: string | null; signatureDataUrl?: string | null; operationId?: string | null } = {}, auditContext?: RefundAuditContext): Promise<CompleteManualRefundResult> {
+  const code = input.code?.trim()
+  const signatureDataUrl = input.signatureDataUrl?.trim()
+  if (!code) return { ok: false, status: 400, error: 'code_required' }
+  if (!signatureDataUrl) return { ok: false, status: 400, error: 'signature_required' }
+  if (!await validateRefundSignature(signatureDataUrl)) return { ok: false, status: 400, error: 'invalid_signature' }
+  if (!mongoose.isValidObjectId(refundId)) return { ok: false, status: 409, error: 'invalid_or_already_redeemed_code' }
   await getDb()
 
-  const code = input.code?.trim()
-  const signatureUrl = input.signatureUrl?.trim()
-  if (!code) return { ok: false, status: 400, error: 'code_required' }
-  if (!signatureUrl) return { ok: false, status: 400, error: 'signature_required' }
-
-  const points = await RefundPoint.find({ active: true, agentIds: agent.id }).select('_id').lean()
-  const pointIds = points.map((point) => String(point._id))
-  if (pointIds.length === 0) return { ok: false, status: 403, error: 'agent_refund_point_required' }
-
-  const now = new Date()
-  const result = await RefundCase.findOneAndUpdate(
-    {
-      _id: refundId,
-      flow: 'cash_pickup',
-      status: 'code_active',
-      refundPointId: { $in: pointIds },
-      codeHash: hashRefundPickupCode(code),
-    },
-    {
-      $set: {
-        status: 'reimbursed',
-        codeRedeemedAt: now,
-        codeRedeemedByAgentId: agent.id,
-        signatureUrl,
-      },
-      $push: {
-        auditTrail: {
-          at: now,
-          actorId: agent.id,
-          actorRole: 'agent',
-          action: 'cash_redeemed',
+  const session = await mongoose.startSession()
+  let outcome
+  try {
+    outcome = await session.withTransaction(async () => {
+      const points = await RefundPoint.find({ active: true, agentIds: agent.id }).select('_id').session(session).lean()
+      const pointIds = points.map(point => String(point._id))
+      if (!pointIds.length) return { ok: false, status: 403, error: 'agent_refund_point_required' } as const
+      const refund = await RefundCase.findOne({
+        _id: refundId, flow: 'cash_pickup', refundPointId: { $in: pointIds },
+      }).select('+codeHash +cashOperationId').session(session).lean()
+      if (refund?.cashOperationId && (refund.cashOperationId !== input.operationId || refund.cashOperationAgentId !== agent.id)) {
+        return { ok: false, status: 409, error: 'cash_operation_in_progress' } as const
+      }
+      if (input.operationId && refund?.cashOperationId !== input.operationId) {
+        return { ok: false, status: 409, error: 'cash_operation_required' } as const
+      }
+      if (!refund || refund.status !== 'code_active' || refund.codeCancelledAt || refund.codeRedeemedAt) {
+        return { ok: false, status: refund?.codeLockedAt ? 429 : 409, error: refund?.codeLockedAt ? 'refund_code_locked' : 'invalid_or_already_redeemed_code' } as const
+      }
+      const attempts = refund.codeAttemptCount ?? 0
+      if (!Number.isSafeInteger(attempts) || attempts < 0 || attempts >= MAX_REFUND_CODE_ATTEMPTS || refund.codeLockedAt) {
+        return { ok: false, status: 429, error: 'refund_code_locked' } as const
+      }
+      // Writing the assigned point serializes authorization with mission removal.
+      const authorized = await RefundPoint.updateOne(
+        { _id: refund.refundPointId, active: true, agentIds: agent.id },
+        { $inc: { refundOperationRevision: 1 } }, { session }
+      )
+      if (authorized.matchedCount !== 1) throw new Error('refund_point_access_changed')
+      const now = new Date()
+      if (refund.codeHash !== hashRefundPickupCode(code)) {
+        const count = attempts + 1
+        const locked = count >= MAX_REFUND_CODE_ATTEMPTS
+        const entries = [{
+          at: now, actorId: agent.id, actorRole: 'agent', action: 'cash_code_failed',
+          metadata: agentAuditMetadata({ refundPointId: refund.refundPointId }, auditContext),
+        }, ...(locked ? [{
+          at: now, actorId: agent.id, actorRole: 'agent', action: 'cash_code_locked',
+          metadata: agentAuditMetadata({ attemptCount: count }, auditContext),
+        }] : [])]
+        const failedAttempt = await RefundCase.updateOne({ _id: refund._id, status: 'code_active' }, {
+          $set: { codeAttemptCount: count, codeLastAttemptAt: now, ...(locked ? { status: 'technical_failure', codeLockedAt: now } : {}) },
+          $push: { auditTrail: { $each: entries } },
+        }, { session })
+        if (failedAttempt.matchedCount !== 1) throw new Error('refund_state_changed')
+        return { ok: false, status: locked ? 429 : 409, error: locked ? 'refund_code_locked' : 'invalid_or_already_redeemed_code' } as const
+      }
+      if (refund.currency !== 'XOF' || !Number.isSafeInteger(refund.refundableMinor) || refund.refundableMinor <= 0) {
+        return { ok: false, status: 409, error: 'refund_amount_invalid' } as const
+      }
+      const redeemed = await RefundCase.updateOne({ _id: refund._id, status: 'code_active' }, {
+        $set: {
+          status: 'reimbursed', codeRedeemedAt: now, codeRedeemedByAgentId: agent.id,
+          signatureUrl: `/api/refund-signatures/${refundId}`,
+          encryptedSignature: encryptRefundSensitiveValue(JSON.stringify({ refundId, pointId: refund.refundPointId, agentId: agent.id, dataUrl: signatureDataUrl })),
+        },
+        $push: { auditTrail: {
+          at: now, actorId: agent.id, actorRole: 'agent', action: 'cash_redeemed',
           before: { status: 'code_active', codeActive: true },
           after: { status: 'reimbursed', codeActive: false },
-          metadata: agentAuditMetadata({ refundPointIds: pointIds }, auditContext),
-        },
-      },
-    },
-    { new: true }
-  )
-  if (!result) {
-    const failed = await RefundCase.findOneAndUpdate(
-      { _id: refundId, flow: 'cash_pickup', status: 'code_active', refundPointId: { $in: pointIds } },
-      {
-        $inc: { codeAttemptCount: 1 },
-        $set: { codeLastAttemptAt: now },
-        $push: {
-          auditTrail: {
-            at: now,
-            actorId: agent.id,
-            actorRole: 'agent',
-            action: 'cash_code_failed',
-            metadata: agentAuditMetadata({ refundPointIds: pointIds }, auditContext),
-          },
-        },
-      },
-      { new: true }
-    )
-    if (failed && failed.codeAttemptCount >= MAX_REFUND_CODE_ATTEMPTS) {
-      await RefundCase.updateOne(
-        { _id: failed._id, status: 'code_active' },
-        {
-          $set: { status: 'technical_failure', codeLockedAt: now },
-          $push: {
-            auditTrail: {
-              at: now,
-              actorId: agent.id,
-              actorRole: 'agent',
-              action: 'cash_code_locked',
-              before: { status: 'code_active', attemptCount: failed.codeAttemptCount },
-              after: { status: 'technical_failure', codeLockedAt: now.toISOString() },
-              metadata: agentAuditMetadata({ attemptCount: failed.codeAttemptCount }, auditContext),
-            },
-          },
-        }
+          metadata: agentAuditMetadata({ refundPointId: refund.refundPointId }, auditContext),
+        } },
+      }, { session })
+      if (redeemed.matchedCount !== 1) throw new Error('refund_state_changed')
+      const cash = await RefundPoint.updateOne(
+        { _id: refund.refundPointId, active: true, agentIds: agent.id },
+        { $inc: { cashDisbursedMinor: refund.refundableMinor, cashDisbursementCount: 1 } }, { session }
       )
-      return { ok: false, status: 429, error: 'refund_code_locked' }
-    }
-    return { ok: false, status: 409, error: 'invalid_or_already_redeemed_code' }
+      if (cash.matchedCount !== 1) throw new Error('refund_point_access_changed')
+      return { ok: true, eventId: refund.eventId, buyerId: refund.buyerId, amount: refund.refundableMinor } as const
+    })
+  } catch (error) {
+    if (error instanceof Error && error.message === 'refund_point_access_changed') return { ok: false, status: 403, error: 'agent_refund_point_required' }
+    if (error instanceof Error && error.message === 'refund_state_changed') return { ok: false, status: 409, error: 'invalid_or_already_redeemed_code' }
+    throw error
+  } finally {
+    await session.endSession()
   }
-  await RefundPoint.updateOne({ _id: result.refundPointId }, { $inc: { cashDisbursedMinor: result.refundableMinor, cashDisbursementCount: 1 } })
+  if (!outcome.ok) return outcome
   try {
-    const event = await Event.findById(result.eventId).select('name').lean()
-    await notifyUserById(result.buyerId, () => refundConfirmedEmail(event?.name || 'Ton événement', fmtMoney(result.refundableMinor, 'XOF'), 'dans les meilleurs délais'))
-  } catch (err) {
-    console.error('[agentPayments] cash refund notification failed:', err)
+    const event = await Event.findById(outcome.eventId).select('name').lean()
+    await notifyUserById(outcome.buyerId, () => cashRefundCollectedEmail(event?.name || 'Ton événement', fmtMoney(outcome.amount, 'XOF')))
+  } catch {
+    console.warn('[agentPayments] cash refund notification failed after commit')
   }
   return { ok: true }
 }

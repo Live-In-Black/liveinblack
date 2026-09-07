@@ -1,6 +1,6 @@
 // Tests d'INTÉGRATION (vraie base MongoDB) pour lib/server/providerSubscriptions.ts
-// — abonnement prestataire, rail EUR (Stripe Billing, récurrent) + rail XOF
-// (FedaPay, renouvellement manuel). Stripe et FedaPay sont mockés (aucune
+// — abonnement prestataire V1 XOF/FedaPay, avec rail Stripe historique ferme.
+// Stripe et FedaPay sont mockés (aucune
 // vraie clé de test dans cet environnement, même convention que
 // organizerPayouts.integration.test.ts) ; l'envoi d'email est mocké pour
 // vérifier le comptage sans dépendre de RESEND_API_KEY.
@@ -95,101 +95,48 @@ describeIntegration('getMySubscriptionOverview', () => {
   it('reflète un compte sans abonnement', async () => {
     const user = await seedUser()
     const overview = await getMySubscriptionOverview({ id: user.id })
-    expect(overview.currency).toBe('EUR')
+    expect(overview.currency).toBe('XOF')
     expect(overview.prestataireSubActive).toBe(false)
     expect(overview.prestataireSubRail).toBeNull()
   })
 })
 
-describeIntegration('createStripeSubscriptionCheckout (rail EUR)', () => {
-  it('refuse si le pays de facturation est XOF', async () => {
+describeIntegration('createStripeSubscriptionCheckout (historique ferme V1)', () => {
+  it('refuse toujours sans creer de session Stripe', async () => {
     const user = await seedUser({ providerBillingRegionId: 'togo' })
     const result = await createStripeSubscriptionCheckout({ id: user.id, email: user.email })
     expect(result.ok).toBe(false)
     if (result.ok) return
-    expect(result.error).toBe('wrong_rail_use_fedapay')
+    expect(result.status).toBe(410)
+    expect(result.error).toBe('stripe_subscription_disabled_v1')
+    expect(checkoutSessionsCreate).not.toHaveBeenCalled()
   })
 
-  it('renvoie alreadyActive si déjà abonné', async () => {
+  it('ne reactualise pas un ancien abonnement Stripe actif', async () => {
     const user = await seedUser({ prestataireSubActive: true, prestataireSubStatus: 'active' })
     const result = await createStripeSubscriptionCheckout({ id: user.id, email: user.email })
-    expect(result.ok).toBe(true)
-    if (!result.ok || !('alreadyActive' in result)) throw new Error('expected alreadyActive')
-    expect(result.status).toBe('active')
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.error).toBe('stripe_subscription_disabled_v1')
     expect(checkoutSessionsCreate).not.toHaveBeenCalled()
-  })
-
-  it('crée une session Checkout et ne mute pas prestataireSubActive avant paiement', async () => {
-    const user = await seedUser()
-    checkoutSessionsCreate.mockResolvedValue({ url: 'https://checkout.stripe.test/session_abc' })
-
-    const result = await createStripeSubscriptionCheckout({ id: user.id, email: user.email })
-    expect(result.ok).toBe(true)
-    if (!result.ok || 'alreadyActive' in result) throw new Error('expected url result')
-    expect(result.url).toBe('https://checkout.stripe.test/session_abc')
-
-    const args = checkoutSessionsCreate.mock.calls[0][0]
-    expect(args.mode).toBe('subscription')
-    expect(args.metadata).toEqual({ uid: user.id, type: 'prestataire_subscription' })
-
-    const fresh = await User.findById(user.id).lean()
-    expect(fresh?.prestataireSubActive).toBe(false)
-    // Le verrou anti-double-clic est bien libéré après l'appel.
-    expect(await CronLock.findById(`sub_checkout_${user.id}`).lean()).toBeNull()
-  })
-
-  it('mirror actif si un stripeSubscriptionId existant est toujours actif côté Stripe', async () => {
-    const user = await seedUser({ stripeSubscriptionId: 'sub_existing' })
-    subscriptionsRetrieve.mockResolvedValue({ id: 'sub_existing', status: 'active', customer: 'cus_1', items: { data: [{ current_period_end: 1893456000 }] } })
-
-    const result = await createStripeSubscriptionCheckout({ id: user.id, email: user.email })
-    expect(result.ok).toBe(true)
-    if (!result.ok || !('alreadyActive' in result)) throw new Error('expected alreadyActive')
-    expect(checkoutSessionsCreate).not.toHaveBeenCalled()
-
-    const fresh = await User.findById(user.id).lean()
-    expect(fresh?.prestataireSubActive).toBe(true)
-    expect(fresh?.prestataireSubStatus).toBe('active')
   })
 })
 
-describeIntegration('confirmStripeSubscriptionCheckout', () => {
-  it('refuse si le propriétaire de la session ne correspond pas', async () => {
+describeIntegration('confirmStripeSubscriptionCheckout (historique ferme V1)', () => {
+  it('refuse toujours sans interroger Stripe', async () => {
     const user = await seedUser()
-    checkoutSessionsRetrieve.mockResolvedValue({
-      mode: 'subscription', payment_status: 'paid',
-      metadata: { type: 'prestataire_subscription', uid: 'someone-else' },
-      client_reference_id: 'someone-else', subscription: 'sub_1',
-    })
     const result = await confirmStripeSubscriptionCheckout({ id: user.id }, 'cs_test_1')
     expect(result.ok).toBe(false)
     if (result.ok) return
-    expect(result.error).toBe('forbidden')
-  })
-
-  it('active l’abonnement quand la session est payée et la subscription active', async () => {
-    const user = await seedUser()
-    checkoutSessionsRetrieve.mockResolvedValue({
-      mode: 'subscription', payment_status: 'paid',
-      metadata: { type: 'prestataire_subscription', uid: user.id },
-      client_reference_id: user.id, subscription: 'sub_1', customer: 'cus_1',
-    })
-    subscriptionsRetrieve.mockResolvedValue({ id: 'sub_1', status: 'active', customer: 'cus_1', items: { data: [{ current_period_end: 1893456000 }] } })
-
-    const result = await confirmStripeSubscriptionCheckout({ id: user.id }, 'cs_test_1')
-    expect(result.ok).toBe(true)
-    if (!result.ok) return
-    expect(result.status).toBe('active')
-
-    const fresh = await User.findById(user.id).lean()
-    expect(fresh?.prestataireSubActive).toBe(true)
-    expect(fresh?.prestataireSubRail).toBe('stripe')
-    expect(fresh?.stripeSubscriptionId).toBe('sub_1')
+    expect(result.status).toBe(410)
+    expect(result.error).toBe('stripe_subscription_disabled_v1')
+    expect(checkoutSessionsRetrieve).not.toHaveBeenCalled()
+    expect(subscriptionsRetrieve).not.toHaveBeenCalled()
   })
 })
 
-describeIntegration('webhook Stripe — checkout.session.completed (abonnement)', () => {
-  it('active immédiatement au retour de checkout, avant customer.subscription.*', async () => {
+describeIntegration('webhook Stripe abonnement historique', () => {
+  it('ignore checkout.session.completed sans activer le prestataire', async () => {
     const user = await seedUser()
     await handleStripeSubscriptionCheckoutCompleted({
       id: 'cs_1', metadata: { uid: user.id, type: 'prestataire_subscription' },
@@ -198,14 +145,11 @@ describeIntegration('webhook Stripe — checkout.session.completed (abonnement)'
     } as any)
 
     const fresh = await User.findById(user.id).lean()
-    expect(fresh?.prestataireSubActive).toBe(true)
-    expect(fresh?.prestataireSubStatus).toBe('active')
-    expect(fresh?.stripeSubscriptionId).toBe('sub_1')
+    expect(fresh?.prestataireSubActive).not.toBe(true)
+    expect(fresh?.stripeSubscriptionId).toBeUndefined()
   })
-})
 
-describeIntegration('webhook Stripe — customer.subscription.*', () => {
-  it('customer.subscription.deleted désactive et mirrore ProviderProfile si présent', async () => {
+  it('ignore customer.subscription.deleted sans muter le profil', async () => {
     const user = await seedUser({ prestataireSubActive: true, prestataireSubRail: 'stripe', stripeSubscriptionId: 'sub_1' })
     await ProviderProfile.create({ userId: user.id, name: 'DJ Test', subscriptionActive: true, subscriptionStatus: 'active' })
 
@@ -215,22 +159,25 @@ describeIntegration('webhook Stripe — customer.subscription.*', () => {
     )
 
     const freshUser = await User.findById(user.id).lean()
-    expect(freshUser?.prestataireSubActive).toBe(false)
-    expect(freshUser?.prestataireSubStatus).toBe('canceled')
+    expect(freshUser?.prestataireSubActive).toBe(true)
+    expect(freshUser?.prestataireSubStatus).toBeUndefined()
 
     const freshProfile = await ProviderProfile.findOne({ userId: user.id }).lean()
-    expect(freshProfile?.subscriptionActive).toBe(false)
-    expect(freshProfile?.subscriptionStatus).toBe('expired')
+    expect(freshProfile?.subscriptionActive).toBe(true)
+    expect(freshProfile?.subscriptionStatus).toBe('active')
   })
 })
 
 describeIntegration('createFedapaySubscriptionCheckout (rail XOF)', () => {
-  it('refuse si le pays de facturation est EUR', async () => {
+  it('accepte meme si une ancienne region EUR est stockee, car la V1 force Benin/XOF', async () => {
     const user = await seedUser({ providerBillingRegionId: 'france' })
+    createTransaction.mockResolvedValue({ id: 998, status: 'pending', amount: PROVIDER_SUB.price })
+    createToken.mockResolvedValue({ url: 'https://fedapay.test/pay/998', token: 'tok' })
+
     const result = await createFedapaySubscriptionCheckout({ id: user.id, email: user.email })
-    expect(result.ok).toBe(false)
-    if (result.ok) return
-    expect(result.error).toBe('wrong_rail_use_stripe')
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.url).toBe('https://fedapay.test/pay/998')
   })
 
   it('crée une transaction FedaPay et pose le registre pendingFedapaySubTxnId', async () => {
@@ -295,7 +242,7 @@ describeIntegration('handleFedapaySubscriptionPayment', () => {
 })
 
 describeIntegration('historique Stripe', () => {
-  it('enregistre invoice.paid une seule fois et l’expose au propriétaire', async () => {
+  it('ignore invoice.paid pour ne plus activer de registre Stripe V1', async () => {
     const user = await seedUser({ stripeSubscriptionId: 'sub_history_1' })
     const invoice = {
       id: 'in_history_1', amount_paid: 999, created: Math.floor(Date.now() / 1000), currency: 'eur', invoice_pdf: 'https://stripe.test/receipt.pdf', hosted_invoice_url: null,
@@ -305,9 +252,7 @@ describeIntegration('historique Stripe', () => {
     await handleStripeSubscriptionInvoicePaid(invoice as never)
     await handleStripeSubscriptionInvoicePaid(invoice as never)
     const overview = await getMySubscriptionOverview({ id: user.id })
-    expect(overview.payments).toHaveLength(1)
-    expect(overview.payments[0].amountMinor).toBe(999)
-    expect(overview.payments[0].receiptUrl).toBe('https://stripe.test/receipt.pdf')
+    expect(overview.payments).toHaveLength(0)
   })
 })
 

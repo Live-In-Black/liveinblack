@@ -1,7 +1,6 @@
 // Port TypeScript de src/utils/eventDiscovery.js
 import { eventStartMs, isEventEnded } from './event-time'
 import type { EventLike } from './event-types'
-import { normalizeRegionId } from './locations'
 
 export function isPlaceholderEvent(event: EventLike | null | undefined): boolean {
   const name = String(event?.name || event?.title || '').trim()
@@ -13,7 +12,6 @@ export function isClientDiscoverableEvent(event: EventLike | null | undefined, n
   if (!event?.id || event.cancelled === true) return false
   if (event.isDemo === true || event.demoLabel) return false
   if (isPlaceholderEvent(event)) return false
-  if (normalizeRegionId(event.region) !== 'benin') return false
   if (event.publishAt && new Date(event.publishAt).getTime() > now) return false
   if (isEventEnded(event, now)) return false
   return eventStartMs(event) > 0

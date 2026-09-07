@@ -7,7 +7,7 @@ import { signOut } from 'next-auth/react'
 import { ArrowLeft, CircleHelp, Heart, KeyRound, LifeBuoy, Mail, Search, Settings, ShieldCheck, Ticket, UserRound } from 'lucide-react'
 import PreferencesModal, { summarizePreferences, type Preferences } from './PreferencesWizard'
 import { getPasswordStrength } from '@/lib/shared/ticketExtras'
-import { regions } from '@/lib/shared/regions'
+import { phoneCallingCodeOptions } from '@/lib/shared/phoneCallingCodes'
 import { getPasswordPolicyErrors } from '@/lib/shared/passwordPolicy'
 import { Eye, EyeOff } from 'lucide-react'
 import { Button, Input, Select, Switch, Badge, Label, Slider, Card, Accordion, ConfirmDialog, Modal } from '@/app/components/ui'
@@ -709,7 +709,7 @@ function IdentityCard({ user, setUser }: { user: ProfilUser; setUser: (u: Profil
           <div className="settings-personal-body">
             <Label>Numéro</Label>
             <div className="settings-phone-fields">
-              <Select aria-label="Indicatif téléphonique" value={dialCode} onChange={setDialCode} options={regions.map((r) => ({ value: r.dial, label: `${r.flag} ${r.dial}` }))} size="sm" />
+              <Select aria-label="Indicatif téléphonique" value={dialCode} onChange={setDialCode} options={phoneCallingCodeOptions} size="sm" />
               <Input aria-label="Numéro de téléphone" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Numéro" />
             </div>
             <p className="settings-personal-note">Visible uniquement par les professionnels avec qui tu échanges.</p>

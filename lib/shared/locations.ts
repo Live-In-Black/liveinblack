@@ -12,6 +12,9 @@ export const REGION_OPTIONS: RegionOption[] = [
 
 const LEGACY_CITY_REGION = new Map<string, string>(
   Object.entries({
+    paris: 'france', lyon: 'france', marseille: 'france', lille: 'france', bordeaux: 'france',
+    toulouse: 'france', nice: 'france', strasbourg: 'france', montpellier: 'france', rennes: 'france',
+    lome: 'togo', kara: 'togo', sokode: 'togo', kpalime: 'togo', atakpame: 'togo',
     cotonou: 'benin', 'porto novo': 'benin', 'abomey calavi': 'benin', parakou: 'benin', abomey: 'benin',
   })
 )
@@ -21,6 +24,8 @@ const LEGACY_CITY_REGION = new Map<string, string>(
 const LEGACY_REGION_IDS = new Map([
   ['france', 'france'], ['fr', 'france'], ['togo', 'togo'], ['tg', 'togo'],
   ['cote d ivoire', 'cote-ivoire'], ['ci', 'cote-ivoire'], ['senegal', 'senegal'], ['sn', 'senegal'],
+  ['burkina faso', 'burkina-faso'], ['bf', 'burkina-faso'], ['mali', 'mali'], ['ml', 'mali'],
+  ['niger', 'niger'], ['ne', 'niger'], ['guinee bissau', 'guinee-bissau'], ['gw', 'guinee-bissau'],
 ])
 
 export function normalizeGeoText(value: unknown = ''): string {
@@ -42,6 +47,10 @@ export function normalizeRegionId(value: RegionLike): string {
 
   const legacyId = LEGACY_REGION_IDS.get(token)
   if (legacyId) return legacyId
+
+  for (const [alias, id] of LEGACY_REGION_IDS) {
+    if (token.endsWith(` ${alias}`)) return id
+  }
 
   const exact = regions.find((region) =>
     [region.id, region.code, region.name, region.country].some((candidate) => normalizeGeoText(candidate) === token)

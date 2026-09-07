@@ -9,7 +9,7 @@ import { createTransaction, createToken, isFedapayConfigured } from '@/lib/serve
 import { fedapayMarketplaceCommissions } from '@/lib/server/payments/fedapayMarketplace'
 
 // Blocage de place (acompte) — rail FedaPay/XOF. Miroir de /api/seat-holds
-// (Stripe) et de /api/checkout/resale/fedapay.
+// (anciens rails Stripe/revente exclus de la V1).
 const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
 const MIN_XOF = 100
 

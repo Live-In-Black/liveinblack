@@ -48,6 +48,15 @@ const conversationSchema = new Schema(
     // conversation) : ici directement sur la conversation, plus simple à lire
     // et à mettre à jour en une seule écriture au marquage "lu".
     lastReadAt: { type: Map, of: Date, default: {} },
+    // Dernier digest e-mail envoyé PAR DESTINATAIRE. Le champ sert à
+    // réclamer atomiquement un digest après le seuil de messages non lus,
+    // jamais à envoyer un e-mail pour chaque message.
+    messageDigestSentAt: { type: Map, of: Date, default: {} },
+    messageDigestNextCheckAt: { type: Date, default: null },
+    messageDigestRevision: { type: Number, default: 0 },
+    messageDigestLeaseUntil: { type: Date, default: null },
+    messageDigestLeaseToken: { type: String, default: null },
+    messageDigestRecipientCursor: { type: String, default: null },
     // Personnalisation PAR PARTICIPANT de la conversation elle-même
     // (épinglée/masquée dans SA liste, notifications coupées POUR LUI) —
     // jamais partagée entre participants, contrairement à mutedUserIds
@@ -66,6 +75,7 @@ const conversationSchema = new Schema(
 )
 
 conversationSchema.index({ participantIds: 1, updatedAt: -1 })
+conversationSchema.index({ messageDigestNextCheckAt: 1, messageDigestLeaseUntil: 1 })
 // MongoDB interdit un index composé qui contient plusieurs champs tableaux
 // ("parallel arrays"). participantIds est le prédicat sélectif commun aux
 // lectures de conversations ; hiddenByUserIds/pinnedByUserIds sont filtrés ou

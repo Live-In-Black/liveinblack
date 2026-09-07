@@ -3,7 +3,6 @@ import Event from '@/lib/models/Event'
 import EventOrder from '@/lib/models/EventOrder'
 import Ticket from '@/lib/models/Ticket'
 import User from '@/lib/models/User'
-import ResaleListing from '@/lib/models/ResaleListing'
 import { computeEventStats, computeDemographics, buildEventInsights, type StatsFilters, type StatsTicket } from '@/lib/shared/eventStats'
 import { eventCurrency } from '@/lib/shared/money'
 
@@ -43,9 +42,7 @@ export interface EventStatsView {
   insights: ReturnType<typeof buildEventInsights>
   demographics: ReturnType<typeof computeDemographics>
   placeOptions: string[]
-  // Lecture seule, agrégats uniquement — jamais l'identité vendeur/acheteur,
-  // jamais un contrôle sur un listing précis (règle explicite de la spec de
-  // revente : l'organisateur ne doit ni connaître le vendeur ni intervenir).
+  // Compatibility field only: resale is disabled in the Benin V1.
   resaleStats: ResaleStatsView
   updatedAt: string
 }
@@ -101,22 +98,16 @@ export async function getEventStats(caller: StatsCaller, eventId: string, filter
   const stats = computeEventStats(event, tickets, { filters })
   const insights = buildEventInsights(stats)
 
-  const holderIds = [...new Set(tickets.map((t) => t.userId).filter(Boolean))] as string[]
+  const holderIds = [...new Set(stats.tickets.map((t) => t.userId).filter(Boolean))] as string[]
   const holders = holderIds.length ? await User.find({ _id: { $in: holderIds } }).select('birthYear gender').lean() : []
   const usersById: Record<string, { birthYear?: number | null; gender?: string | null }> = {}
   for (const h of holders) usersById[String(h._id)] = { birthYear: h.birthYear, gender: h.gender }
-  const demographics = computeDemographics(tickets, usersById, event.minAge ?? 0)
+  const demographics = computeDemographics(stats.tickets, usersById, event.minAge ?? 0)
 
   // Union des catégories DÉFINIES sur l'événement et de celles vues sur des
   // billets (une place retirée après-coup doit rester filtrable si des
   // billets existent encore dessus) — fidèle au legacy.
   const placeOptions = [...new Set([...(event.places || []).map((p) => p.type), ...tickets.map((t) => t.place || 'Standard')])].filter(Boolean)
-
-  const [activeCount, soldCount, suspendedCount] = await Promise.all([
-    ResaleListing.countDocuments({ eventId, status: 'active' }),
-    ResaleListing.countDocuments({ eventId, status: 'sold' }),
-    ResaleListing.countDocuments({ eventId, status: 'suspended' }),
-  ])
 
   return {
     ok: true,
@@ -126,7 +117,7 @@ export async function getEventStats(caller: StatsCaller, eventId: string, filter
       insights,
       demographics,
       placeOptions,
-      resaleStats: { active: activeCount, sold: soldCount, suspended: suspendedCount },
+      resaleStats: { active: 0, sold: 0, suspended: 0 },
       updatedAt: new Date().toISOString(),
     },
   }

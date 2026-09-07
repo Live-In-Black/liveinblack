@@ -7,8 +7,7 @@ import { auth } from '@/auth'
 import { getCachedPublicOrganizersDirectory } from '@/lib/server/publicCache'
 import { hasAuthSessionCookie } from '@/lib/server/authSessionCookie'
 import { listMyFollowedOrganizers } from '@/lib/server/organizer/organizerFollows'
-import { getEntityRegionIds, getRegionName } from '@/lib/shared/locations'
-import { regions } from '@/lib/shared/regions'
+import { getEntityRegionIds, getRegionName, normalizeRegionId } from '@/lib/shared/locations'
 import { reliablePhotoUrl } from '@/lib/shared/placeholderImage'
 import OrganizerFollowButtonClient from '@/app/components/features/organizer/OrganizerFollowButtonClient'
 import FilterSelect from '../_components/FilterSelect'
@@ -34,11 +33,12 @@ export const metadata: Metadata = {
 type DirectoryParams = { q?: string; region?: string; upcoming?: string; sort?: string; page?: string }
 
 export default async function PublicOrganizersPage({ searchParams }: { searchParams: Promise<DirectoryParams> }) {
-  const [{ q, region = '', upcoming, sort = 'popular', page: pageParam }, cookieStore] = await Promise.all([
+  const [{ q, region: rawRegion = '', upcoming, sort = 'popular', page: pageParam }, cookieStore] = await Promise.all([
     searchParams,
     cookies(),
   ])
   const search = (q || '').trim()
+  const region = normalizeRegionId(rawRegion) === 'benin' ? 'benin' : ''
   const upcomingOnly = upcoming === '1'
   const requestedPage = Math.max(1, Number(pageParam) || 1)
   const hasSessionCookie = hasAuthSessionCookie(cookieStore.getAll())
@@ -106,7 +106,7 @@ export default async function PublicOrganizersPage({ searchParams }: { searchPar
             <Search size={22} aria-hidden="true" />
             <Input type="search" name="q" defaultValue={search} placeholder="Nom, ville ou événement" aria-label="Rechercher un organisateur" containerStyle={{ flex: 1, minWidth: 0 }} style={{ border: 0, background: 'transparent', boxShadow: 'none' }} />
           </div>
-          <FilterSelect name="region" defaultValue={region} ariaLabel="Filtrer par région" options={[{ value: '', label: 'Toutes les régions' }, ...regions.map((item) => ({ value: item.id, label: `${item.flag} ${item.name}` }))]} style={{ minHeight: 36, borderRadius: 15, background: 'var(--field-bg)', borderColor: 'var(--border)', fontSize: 'var(--font-size-body)', padding: '0 12px' }} />
+          <FilterSelect name="region" defaultValue="benin" ariaLabel="Périmètre du lancement" options={[{ value: 'benin', label: '🇧🇯 Bénin uniquement' }]} style={{ minHeight: 36, borderRadius: 15, background: 'var(--field-bg)', borderColor: 'var(--border)', fontSize: 'var(--font-size-body)', padding: '0 12px' }} />
           <FilterSelect name="sort" defaultValue={sort} ariaLabel="Trier les organisateurs" options={[{ value: 'popular', label: 'Plus populaires' }, { value: 'recent', label: 'Plus récents' }]} style={{ minHeight: 36, borderRadius: 15, background: 'var(--field-bg)', borderColor: 'var(--border)', fontSize: 'var(--font-size-body)', padding: '0 12px' }} />
           <div className={styles.upcomingFilter}><Checkbox name="upcoming" value="1" defaultChecked={upcomingOnly} label="Événement à venir" style={{ minHeight: 36, fontSize: 'var(--font-size-body)', color: 'var(--text-muted)' }} /></div>
           <Button type="submit" className={styles.submitButton} style={{ minHeight: 36, borderRadius: 14, background: 'var(--primary)', color: 'var(--primary-ink)', fontSize: 'var(--font-size-body-sm)' }}>Appliquer</Button>
@@ -119,7 +119,7 @@ export default async function PublicOrganizersPage({ searchParams }: { searchPar
           <p className={styles.resultCount}>{total} profil{total > 1 ? 's' : ''}</p>
         </div>
 
-        {hasFilters && <div className={styles.activeFilters}><p>Résultats selon vos critères</p><Link href="/organizers"><X size={17} aria-hidden="true" /> Effacer les filtres</Link></div>}
+        {hasFilters && <div className={styles.activeFilters}><p>Résultats selon vos critères · périmètre Bénin</p><Link href="/organizers"><X size={17} aria-hidden="true" /> Effacer les filtres</Link></div>}
 
         {organizers.length > 0 ? (
           <div className={styles.grid}>
@@ -153,7 +153,7 @@ export default async function PublicOrganizersPage({ searchParams }: { searchPar
             })}
           </div>
         ) : (
-          <div className={styles.empty}><Mascot mood="search" size={250} /><h3>Aucun organisateur trouvé</h3><p>Élargissez la région ou essayez une autre recherche.</p><Link href="/organizers">Voir tous les organisateurs</Link></div>
+          <div className={styles.empty}><Mascot mood="search" size={250} /><h3>Aucun organisateur trouvé</h3><p>Essayez une autre recherche dans le catalogue Bénin.</p><Link href="/organizers">Voir tous les organisateurs</Link></div>
         )}
 
         <PageLinks page={requestedPage} pageCount={totalPages} makeHref={makeHref} totalItems={total} pageSize={pageSize} />

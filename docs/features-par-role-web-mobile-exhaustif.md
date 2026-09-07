@@ -105,7 +105,7 @@ Objectif du document: presenter au client, sans vocabulaire technique, toutes le
 
 **Emails de compte.** Lien: serveur emails `templates/account.ts`, `templates/auth.ts`. Les emails accompagnent les moments importants: verification, reinitialisation, securite et changements de compte. Ils rendent les parcours autonomes.
 
-**Emails de billetterie.** Lien: serveur emails `templates/tickets.ts`, `templates/resale.ts`, `templates/refunds.ts`. Ces emails confirment les billets, les transferts, les reventes et les remboursements. Ils securisent l'apres-achat.
+**Emails de billetterie.** Lien: serveur emails `templates/tickets.ts`, `templates/refunds.ts`. Ces emails confirment les billets, les transferts autorises et les remboursements. Les modeles de revente restent historiques et hors V1.
 
 **Emails organisateur et staff.** Lien: serveur emails `templates/organizerEvents.ts`, `templates/staff.ts`, `templates/payouts.ts`. Ces emails accompagnent les organisateurs et equipes terrain. Ils rappellent les actions a faire et les informations operationnelles.
 
@@ -115,11 +115,11 @@ Objectif du document: presenter au client, sans vocabulaire technique, toutes le
 
 **Achat standard de billet.** Lien: API `/api/checkout`, `/api/checkout/fedapay`, Mobile `/checkout/[eventId]`. L'utilisateur peut acheter un billet pour un evenement. Le parcours connecte l'evenement, le paiement et la generation du billet final.
 
-**Achat gratuit.** Lien: API `/api/checkout/free`. Cette fonctionnalite gere les evenements ou billets gratuits. Elle permet de produire un billet sans paiement tout en gardant un suivi propre des participants.
+**Evenements gratuits exclus V1.** Lien: aucun parcours public actif. Les invitations et guestlists ne doivent pas etre confondues avec une billetterie gratuite.
 
 **Paiement FedaPay.** Lien: API `/api/checkout/fedapay`, `/api/webhooks/fedapay`, serveur `fedapayClient.ts`. FedaPay permet de traiter les paiements adaptes au marche local. Les webhooks confirment automatiquement les paiements pour finaliser les billets ou commandes.
 
-**Paiement Stripe.** Lien: API `/api/stripe-webhook`, `/api/webhooks/stripe`, serveur `stripeClient.ts`. Stripe sert aux paiements et abonnements selon les cas. Les confirmations automatiques permettent d'eviter les validations manuelles.
+**Stripe historique hors V1.** Lien: anciens endpoints techniques uniquement. Stripe ne doit pas servir de parcours actif de paiement ou d'abonnement au lancement Benin.
 
 **Page succes paiement.** Lien: Web `/payment-success`. Apres un paiement, l'utilisateur arrive sur une page claire de confirmation. Cela rassure et le guide vers ses billets ou la suite du parcours.
 
@@ -145,11 +145,11 @@ Objectif du document: presenter au client, sans vocabulaire technique, toutes le
 
 **Traitement des remboursements client.** Lien: serveur `clientRefunds.ts`, agent paiements. Le systeme suit les demandes, les statuts et le traitement des remboursements. Cela donne a l'equipe une vue claire pour agir proprement.
 
-**Revente de billet.** Lien: API `/api/tickets/resell`, `/api/resale-listings/[listingId]`, Mobile `/checkout/resale/[listingId]`. Un utilisateur peut proposer un billet a la revente, et un autre peut l'acheter. Cela cree un marche secondaire controle par la plateforme.
+**Revente de billet exclue V1.** Lien: aucun endpoint actif. Un utilisateur ne peut pas proposer ni acheter un billet en revente pendant le lancement Benin.
 
-**Liste de revente par evenement.** Lien: API `/api/events/[eventId]/resale-listings`. La fiche evenement peut afficher les billets disponibles a la revente. Cela evite les reventes sauvages et garde la transaction dans LIVE IN BLACK.
+**Absence de liste de revente par evenement.** Lien: aucun endpoint actif. La fiche evenement ne doit pas afficher de billets remis en vente.
 
-**Expiration des reventes.** Lien: API `/api/cron/resale-expiry`. Les annonces de revente peuvent expirer automatiquement. Cela garde le marche propre et evite les offres obsoletes.
+**Cron revente absent.** Lien: aucun cron actif. La V1 ne cree pas d'annonces de revente a expirer.
 
 **Reservation de place ou blocage temporaire.** Lien: API `/api/seat-holds`, Mobile `/checkout/seat-hold/[eventId]`. L'utilisateur peut bloquer une place temporairement avant finalisation. C'est utile pour les paiements en plusieurs etapes ou les decisions de groupe.
 
@@ -467,7 +467,7 @@ Objectif du document: presenter au client, sans vocabulaire technique, toutes le
 
 **Cron abonnements.** Lien: API `/api/cron/subscriptions`. Les abonnements prestataires ou autres statuts recurrents peuvent etre controles automatiquement. Cela evite les droits actifs alors que le paiement ne suit plus.
 
-**Webhooks paiement.** Lien: API `/api/webhooks/fedapay`, `/api/webhooks/stripe`. Les plateformes de paiement informent LIVE IN BLACK des changements de statut. Cela evite de dependre d'une validation manuelle.
+**Webhooks paiement.** Lien: API `/api/webhooks/fedapay`. FedaPay informe LIVE IN BLACK des changements de statut. Cela evite de dependre d'une validation manuelle.
 
 **Controle de sante.** Lien: API `/api/health`. Cette route permet de verifier que le service repond. Elle est utile pour l'exploitation et la surveillance.
 
@@ -509,10 +509,10 @@ Ce document couvre les pages publiques Web: accueil, a propos, contact, evenemen
 
 Il couvre les pages connectees Web: profil, parametres, billets, evenements interesses, organisateurs suivis, notifications, messages, candidature, missions staff, evenements organisateur, statistiques, studio organisateur, playlist, scanner, ventes sur place, aide et tous les espaces agent visibles.
 
-Il couvre les modules API: compte, authentification, profil, preferences, notifications, push, recherche, evenements, checkout, paiements Stripe et FedaPay, billets, invitations, revente, reservations de places, remboursements, commandes evenementielles, playlist, amis, utilisateurs, conversations, groupes, sondages, organisateurs, prestataires, candidatures, uploads, avis, abonnements, webhooks, cron jobs, agent, ventes agent et sante du service.
+Il couvre les modules API: compte, authentification, profil, preferences, notifications, push, recherche, evenements, checkout, paiements FedaPay, billets, invitations, reservations de places, remboursements, commandes evenementielles, playlist, amis, utilisateurs, conversations, groupes, sondages, organisateurs, prestataires, candidatures, uploads, avis, abonnements, webhooks, cron jobs, agent, ventes agent et sante du service. Les anciens modules Stripe/revente sont hors V1.
 
-Il couvre les ecrans Mobile: accueil, recherche, billets, messages, profil, connexion, verification email, changement email, mot de passe oublie, pages legales, evenement, organisateur, prestataire, checkout standard, checkout revente, reservation de place, solde de reservation, billet/commande, conversations, parametres de conversation, amis, groupes, evenements interesses, organisateurs suivis, messages favoris, utilisateurs bloques, preferences, candidature, missions, scanner, vente agent, playlist, espaces organisateur, prestataire et agent.
+Il couvre les ecrans Mobile: accueil, recherche, billets, messages, profil, connexion, verification email, changement email, mot de passe oublie, pages legales, evenement, organisateur, prestataire, checkout standard, reservation de place, solde de reservation, billet/commande, conversations, parametres de conversation, amis, groupes, evenements interesses, organisateurs suivis, messages favoris, utilisateurs bloques, preferences, candidature, missions, scanner, vente agent, playlist, espaces organisateur, prestataire et agent.
 
 ## 17. Lecture simple pour le client
 
-LIVE IN BLACK n'est pas seulement une application de billetterie. Le produit couvre la decouverte d'evenements, l'achat, le controle a l'entree, la revente, les remboursements, les messages, les groupes, les playlists, les commandes sur place, les espaces organisateurs, les espaces prestataires, l'administration interne, les paiements, les reversements, les candidatures, la moderation, les notifications et les automatisations. Le travail realise pose donc une plateforme complete: experience public, operations terrain, back-office, finance, contenu et mobile.
+LIVE IN BLACK n'est pas seulement une application de billetterie. Le produit couvre la decouverte d'evenements, l'achat, le controle a l'entree, les remboursements, les messages, les groupes, les playlists, les commandes sur place, les espaces organisateurs, les espaces prestataires, l'administration interne, les paiements, les reversements, les candidatures, la moderation, les notifications et les automatisations. La revente est explicitement exclue de la V1. Le travail realise pose donc une plateforme complete: experience public, operations terrain, back-office, finance, contenu et mobile.

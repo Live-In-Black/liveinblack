@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Input, SlideOverModal, Avatar } from '@/app/components/ui'
 import { stripDiacritics } from '@/lib/shared/diacritics'
+import { normalizeBudgetId } from '@/lib/shared/recommendations'
 
 // Port de src/components/PreferencesEditor.jsx ("Mes goûts", #6 phase
 // profil) — mêmes 8 étapes, mêmes intitulés et mêmes options. Les artistes et
@@ -329,7 +330,7 @@ export default function PreferencesModal({
   onSaved: (next: Preferences) => void
 }) {
   const [done, setDone] = useState(false)
-  const [prefs, setPrefs] = useState<Preferences>({ ...EMPTY_PREFERENCES, ...(initialPreferences || {}) })
+  const [prefs, setPrefs] = useState<Preferences>({ ...EMPTY_PREFERENCES, ...(initialPreferences || {}), budget: normalizeBudgetId(initialPreferences?.budget) })
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)

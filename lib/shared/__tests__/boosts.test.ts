@@ -82,8 +82,9 @@ describe('boosts', () => {
   })
 
   it('le prix est déterminé par le catalogue serveur', () => {
-    expect(getBoostPlan(2, 7)?.tier.price).toBe(34.99)
+    expect(getBoostPlan(2, 7)?.tier.price).toBe(20000)
+    expect(getBoostPlan(1, 2)?.tier.price).toBe(9000)
     expect(getBoostPlan(99, 1)).toBeNull()
-    expect(getBoostPlan(1, 2)).toBeNull()
+    expect(getBoostPlan(1, 8)).toBeNull()
   })
 })

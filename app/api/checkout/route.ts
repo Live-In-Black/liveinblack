@@ -2,25 +2,16 @@ export const maxDuration = 60;
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { auth } from '@/auth'
-import { createOrder, releaseOrder } from '@/lib/server/events/orders'
 import { getDb } from '@/lib/db/mongoose'
 import { runObservedRoute } from '@/lib/server/observability'
-import Event from '@/lib/models/Event'
-import User from '@/lib/models/User'
 import Order from '@/lib/models/Order'
 import Ticket from '@/lib/models/Ticket'
-import stripe from '@/lib/server/payments/stripeClient'
+import Event from '@/lib/models/Event'
 import { getVercelOpsConfig } from '@/lib/server/vercelEdgeConfig'
 
-// Remplace api/checkout.js (Stripe, rail EUR). Corrige :
-//  - C06 : les préco n'ont plus de prix côté client, résolues serveur dans
-//    createOrder() depuis le menu de l'événement.
-//  - H06 : URL de retour depuis PUBLIC_SITE_URL, jamais Origin/Host du client.
-//  - H07 : createOrder() bloque déjà event annulé/terminé/non publié.
-//  - H08 : maxPerAccount appliqué serveur dans createOrder().
-//  - H09 : clé d'idempotence Stripe = id de l'Order.
-//  - H10 : email/nom pris de la session vérifiée, jamais du corps de requête.
-const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
+// Route historique Stripe/EUR. V1 Bénin : le checkout actif est
+// /api/checkout/fedapay ; cette route reste uniquement pour relire un ancien
+// retour Stripe/free et refuser explicitement toute nouvelle création.
 
 const preorderItemSchema = z.object({
   name: z.string().trim().min(1).max(160),
@@ -51,109 +42,9 @@ export async function POST(req: Request) {
 
     const parsed = bodySchema.safeParse(await req.json().catch(() => null))
     if (!parsed.success) return NextResponse.json({ error: 'invalid_body', details: parsed.error.flatten() }, { status: 400 })
-    const { eventId, placeId, qty, isTable, promoCode, preorders, ticketPreorders, cancellationProtection } = parsed.data
+    void parsed.data
 
-    await getDb()
-    const event = await Event.findById(eventId).lean()
-    if (!event) return NextResponse.json({ error: 'event_not_found' }, { status: 404 })
-
-    const orderResult = await createOrder({
-      userId: session.user.id,
-      eventId,
-      placeId,
-      qty,
-      isTable,
-      promoCode,
-      preorders,
-      ticketPreorders,
-      rail: 'stripe',
-      cancellationProtection,
-    })
-    if (!orderResult.ok) return NextResponse.json({ error: orderResult.error }, { status: orderResult.status })
-    const order = orderResult.order
-    const orderId = order._id.toString()
-
-    const seatCount = isTable ? 1 : qty
-    const lineItems: Array<{
-      price_data: { currency: string; product_data: { name: string }; unit_amount: number }
-      quantity: number
-    }> = []
-
-    if (order.unitPriceMinor > 0) {
-      lineItems.push({
-        price_data: {
-          currency: 'eur',
-          product_data: {
-            name: isTable ? `${event.name} — ${order.placeType} (table ${order.tableSeats} pers.)` : `${event.name} — ${order.placeType}`,
-          },
-          unit_amount: order.unitPriceMinor,
-        },
-        quantity: seatCount,
-      })
-    }
-
-    for (const item of order.preorders) {
-      lineItems.push({
-        price_data: { currency: 'eur', product_data: { name: `${item.name} (précommande)` } , unit_amount: item.price },
-        quantity: item.qty,
-      })
-    }
-
-    if (order.feeMinor > 0) {
-      lineItems.push({
-        price_data: { currency: 'eur', product_data: { name: 'Frais de service LIVEINBLACK' }, unit_amount: order.feeMinor },
-        quantity: 1,
-      })
-    }
-
-    if (order.cancellationProtectionPurchased && order.cancellationProtectionFeeMinor > 0) {
-      lineItems.push({
-        price_data: { currency: 'eur', product_data: { name: "Option d'annulation" }, unit_amount: order.cancellationProtectionFeeMinor },
-        quantity: 1,
-      })
-    }
-
-    if (lineItems.length === 0) {
-      await releaseOrder(orderId, session.user.id)
-      return NextResponse.json({ error: 'nothing_to_pay' }, { status: 400 })
-    }
-
-    let paymentIntentData: { transfer_data: { destination: string }; application_fee_amount: number; metadata: Record<string, string> } | undefined
-    if (order.connectMode === 'auto' && order.sellerUid && order.feeMinor > 0) {
-      const seller = await User.findById(order.sellerUid).select('stripeAccountId').lean()
-      if (seller?.stripeAccountId) {
-        paymentIntentData = {
-          transfer_data: { destination: seller.stripeAccountId },
-          application_fee_amount: order.feeMinor,
-          metadata: { sellerUid: order.sellerUid, feeCents: String(order.feeMinor) },
-        }
-      }
-    }
-
-    try {
-      const stripeSession = await stripe.checkout.sessions.create(
-        {
-          mode: 'payment',
-          payment_method_types: ['card'],
-          line_items: lineItems,
-          ...(paymentIntentData ? { payment_intent_data: paymentIntentData } : {}),
-          customer_email: session.user.email || undefined,
-          success_url: `${SITE}/payment-success?session_id={CHECKOUT_SESSION_ID}&order_id=${orderId}`,
-          cancel_url: `${SITE}/payment-success?cancelled=1&event_id=${encodeURIComponent(eventId)}`,
-          metadata: { orderId },
-          locale: 'fr',
-        },
-        { idempotencyKey: `checkout-${orderId}` }
-      )
-
-      await Order.updateOne({ _id: orderId }, { $set: { stripeSessionId: stripeSession.id } })
-
-      return NextResponse.json({ url: stripeSession.url })
-    } catch (err) {
-      console.error('[checkout] Stripe session creation failed, releasing order:', err)
-      await releaseOrder(orderId, session.user.id)
-      return NextResponse.json({ error: 'stripe_error' }, { status: 502 })
-    }
+    return NextResponse.json({ error: 'stripe_checkout_disabled_v1' }, { status: 410 })
   })
 }
 
@@ -181,13 +72,12 @@ export async function GET(req: Request) {
     let currency: string | null = null
 
     if (sessionId) {
-      const stripeSession = await stripe.checkout.sessions.retrieve(sessionId)
-      if (stripeSession.metadata?.orderId == null) return NextResponse.json({ error: 'not_found' }, { status: 404 })
-      order = await Order.findById(stripeSession.metadata.orderId).lean()
-      paid = stripeSession.payment_status === 'paid'
-      paymentStatus = stripeSession.payment_status
-      amountTotal = stripeSession.amount_total
-      currency = stripeSession.currency
+      order = await Order.findOne({ stripeSessionId: sessionId }).lean()
+      if (!order) return NextResponse.json({ error: 'not_found' }, { status: 404 })
+      paid = order.status === 'paid'
+      paymentStatus = order.status
+      amountTotal = null
+      currency = order.currency
     } else {
       order = await Order.findById(orderId).lean()
       // order_id n'est un identifiant valide que pour une commande rail='free'

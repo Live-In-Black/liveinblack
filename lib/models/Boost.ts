@@ -18,6 +18,7 @@ const boostSchema = new Schema(
     purchasedAt: { type: Date, required: true },
     expiresAt: { type: Date, required: true }, // index TTL déclaré plus bas (pas de `index:true` ici, sinon doublon)
     stripeSessionId: { type: String, default: null },
+    fedapayTxnId: { type: String, default: null },
     finalizedBy: { type: String, default: 'webhook' },
     status: { type: String, enum: ['active', 'refunded_conflict', 'refund_failed', 'cancelled'], default: 'active' },
     conflict: { type: Boolean, default: false },

@@ -120,7 +120,7 @@ export default function AgentBoostsClient({ embedded = false }: { embedded?: boo
               {[
                 { label: 'Boosts actifs', value: String(data.active.length), color: 'var(--primary)' },
                 { label: 'Conflits à traiter', value: String(data.conflicts.length), color: data.conflicts.length > 0 ? 'var(--danger)' : 'var(--text-muted)' },
-                { label: 'Revenus boosts', value: fmtMoney(data.totalRevenue, 'EUR'), color: 'var(--gold)' },
+                { label: 'Revenus boosts', value: fmtMoney(data.totalRevenue, 'XOF'), color: 'var(--gold)' },
               ].map((k) => (
                 <Card key={k.label} style={{ padding: 14, textAlign: 'center' }}>
                   <p style={{ fontSize: 'var(--font-size-title-2)', fontWeight: 800, color: k.color, margin: 0 }}>{k.value}</p>
@@ -188,7 +188,7 @@ function BoostCard({ b }: { b: AgentBoostView }) {
             {b.status === 'refund_failed' ? 'REMBOURSEMENT ÉCHOUÉ' : 'CONFLIT DE CRÉNEAU'}
           </span>
         )}
-        <span style={{ marginLeft: 'auto', fontWeight: 800, fontSize: 'var(--font-size-headline)', color: 'var(--gold)' }}>{fmtMoney(b.price, 'EUR')}</span>
+        <span style={{ marginLeft: 'auto', fontWeight: 800, fontSize: 'var(--font-size-headline)', color: 'var(--gold)' }}>{fmtMoney(b.price, 'XOF')}</span>
       </div>
       <p style={{ fontSize: 'var(--font-size-body-lg)', fontWeight: 700, color: 'var(--text)', margin: 0 }}>
         {b.eventName}
@@ -200,10 +200,10 @@ function BoostCard({ b }: { b: AgentBoostView }) {
       {b.conflict && (
         <p style={{ fontSize: 'var(--font-size-footnote)', color: 'rgba(var(--danger-muted-rgb), .9)', margin: 0, lineHeight: 1.5 }}>
           {b.status === 'refunded_conflict'
-            ? 'Conflit de créneau : ce boost a été remboursé AUTOMATIQUEMENT par le webhook. Rien à faire — ne pas re-rembourser dans Stripe.'
+            ? 'Conflit de créneau : ce boost a été marqué remboursé automatiquement. Rien à faire sans vérifier le dossier FedaPay.'
             : b.status === 'refund_failed'
-              ? "Conflit de créneau : le remboursement automatique a ÉCHOUÉ. Rembourse manuellement dans Stripe dès que possible, l'acheteur n'a pas reçu son boost."
-              : 'Deux organisateurs ont payé ce créneau. Vérifie dans Stripe si le remboursement automatique est passé avant toute action manuelle.'}
+              ? "Conflit de créneau : le remboursement automatique a ÉCHOUÉ. Traite le dossier via FedaPay/support avant toute clôture."
+              : 'Deux organisateurs ont payé ce créneau. Vérifie le dossier FedaPay avant toute action manuelle.'}
         </p>
       )}
     </Card>

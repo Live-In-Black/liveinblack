@@ -35,30 +35,14 @@ import {
 const BLOG_CATEGORY_IDS = [
   'actualite',
   'guide',
-  'togo',
   'benin',
-  'cote-ivoire',
-  'senegal',
-  'burkina-faso',
-  'mali',
-  'niger',
-  'guinee-bissau',
-  'france',
 ] as const
 type BlogCategoryId = (typeof BLOG_CATEGORY_IDS)[number]
 
 const CATEGORY_LABELS: Record<BlogCategoryId, string> = {
   actualite: 'Actualité',
   guide: 'Guide',
-  togo: 'Togo',
   benin: 'Bénin',
-  'cote-ivoire': "Côte d'Ivoire",
-  senegal: 'Sénégal',
-  'burkina-faso': 'Burkina Faso',
-  mali: 'Mali',
-  niger: 'Niger',
-  'guinee-bissau': 'Guinée-Bissau',
-  france: 'France',
 }
 
 interface Post {
@@ -576,7 +560,7 @@ export default function AgentBlogClient() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 'var(--font-size-body-sm)' }}>
-                    Titre de l'article <span style={{ color: 'var(--primary)' }}>*</span>
+                    Titre de l&apos;article <span style={{ color: 'var(--primary)' }}>*</span>
                   </label>
                   <Input
                     value={draft.title}
@@ -625,7 +609,7 @@ export default function AgentBlogClient() {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                     <label style={{ fontWeight: 600, fontSize: 'var(--font-size-body-sm)' }}>
-                      Corps de l'article <span style={{ color: 'var(--primary)' }}>*</span>
+                      Corps de l&apos;article <span style={{ color: 'var(--primary)' }}>*</span>
                     </label>
                     <span style={{ fontSize: 'var(--font-size-caption)', color: 'var(--text-muted)' }}>
                       Supporte le HTML (&lt;p&gt;, &lt;h2&gt;, &lt;strong&gt;, etc.)
@@ -680,7 +664,7 @@ export default function AgentBlogClient() {
                       onChange={(e) => patch({ publishedAt: e.target.value })}
                     />
                     <span style={{ fontSize: 'var(--font-size-caption)', color: 'var(--text-muted)', marginTop: 4, display: 'block' }}>
-                      Une date future programme l'article automatiquement.
+                      Une date future programme l&apos;article automatiquement.
                     </span>
                   </div>
                   <div>
@@ -701,7 +685,7 @@ export default function AgentBlogClient() {
 
                 <div>
                   <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 'var(--font-size-body-sm)' }}>
-                    Nom de l'auteur
+                    Nom de l&apos;auteur
                   </label>
                   <Input
                     value={draft.authorName}
@@ -816,7 +800,7 @@ export default function AgentBlogClient() {
           }
         >
           <p style={{ margin: 0, color: 'var(--text-muted)', lineHeight: 1.6, fontSize: 'var(--font-size-body-sm)' }}>
-            Cet article sera définitivement retiré du blog public et de l'index des moteurs de recherche. Cette action est irréversible.
+            Cet article sera définitivement retiré du blog public et de l&apos;index des moteurs de recherche. Cette action est irréversible.
           </p>
         </Modal>
       )}

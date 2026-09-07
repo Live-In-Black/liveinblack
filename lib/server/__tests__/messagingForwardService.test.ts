@@ -3,6 +3,12 @@ import Conversation from '@/lib/models/Conversation'
 import Message from '@/lib/models/Message'
 import { forwardMessageForCaller, forwardMessageToConversations, resolveForwardConversationLabel } from '../messaging/messagingForwardService'
 
+const transaction = vi.hoisted(() => ({
+  withTransaction: vi.fn(async (work: () => Promise<unknown>) => work()),
+  endSession: vi.fn(),
+}))
+vi.mock('mongoose', () => ({ default: { startSession: async () => transaction } }))
+
 vi.mock('../../models/Conversation', () => ({
   default: {
     updateOne: vi.fn(),
@@ -18,6 +24,7 @@ vi.mock('../../models/Message', () => ({
 describe('messagingForwardService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(Conversation.updateOne).mockResolvedValue({ matchedCount: 1 } as never)
   })
 
   it('résout le libellé d’une conversation source directe ou groupe', async () => {
@@ -87,7 +94,7 @@ describe('messagingForwardService', () => {
       _id: 'c1',
       toObject: vi.fn().mockReturnValue({ _id: 'c1', type: 'direct', participantIds: ['u1', 'u3'], createdAt: new Date().toISOString() }),
     }
-    vi.mocked(Message.create).mockResolvedValue({
+    vi.mocked(Message.create).mockResolvedValue([{
       createdAt: new Date('2026-08-20T10:00:00.000Z'),
       toObject: vi.fn().mockReturnValue({
         _id: 'm2',
@@ -107,7 +114,7 @@ describe('messagingForwardService', () => {
         starredByUserIds: [],
         forwardedFrom: { senderName: 'Alice A', convName: 'Bob B' },
       }),
-    } as never)
+    }] as never)
 
     const result = await forwardMessageForCaller(
       { id: 'u1' },
@@ -134,7 +141,7 @@ describe('messagingForwardService', () => {
       _id: 'c1',
       toObject: vi.fn().mockReturnValue({ _id: 'c1', type: 'direct', participantIds: ['u1', 'u3'], createdAt: new Date().toISOString() }),
     }
-    vi.mocked(Message.create).mockResolvedValue({
+    vi.mocked(Message.create).mockResolvedValue([{
       createdAt: new Date('2026-08-20T10:00:00.000Z'),
       toObject: vi.fn().mockReturnValue({
         _id: 'm1',
@@ -154,7 +161,7 @@ describe('messagingForwardService', () => {
         starredByUserIds: [],
         forwardedFrom: { senderName: 'Alice A', convName: 'Bob B' },
       }),
-    } as never)
+    }] as never)
 
     const result = await forwardMessageToConversations(
       { id: 'u1' },
@@ -174,8 +181,12 @@ describe('messagingForwardService', () => {
     if (!result.ok) return
     expect(result.messages).toHaveLength(1)
     expect(Conversation.updateOne).toHaveBeenCalledWith(
-      { _id: 'c1' },
-      { $set: { lastMessage: 'Salut', lastMessageAt: new Date('2026-08-20T10:00:00.000Z'), lastSenderId: 'u1' } },
+      { _id: 'c1', participantIds: 'u1' },
+      {
+        $set: { lastMessage: 'Salut', lastMessageAt: new Date('2026-08-20T10:00:00.000Z'), lastSenderId: 'u1', messageDigestNextCheckAt: expect.any(Date) },
+        $inc: { messageDigestRevision: 1 },
+      },
+      { session: transaction },
     )
   })
 })

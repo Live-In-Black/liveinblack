@@ -2,6 +2,8 @@
 
 import NextImage from 'next/image'
 import { placeholderPhotoUrl } from '@/lib/shared/placeholderImage'
+import { readMessageEventSnapshot } from '@/lib/shared/messageEventSnapshot'
+import { parseCatalogItemShare } from '@/lib/shared/catalogItemShare'
 import { useEffect, useRef, useState, type TouchEvent } from 'react'
 import { ArrowDown, Check, CheckCheck, CornerUpRight, Hourglass, Pause, Play, Star } from 'lucide-react'
 import { Button, ImmersiveDialog } from '@/app/components/ui'
@@ -596,20 +598,18 @@ function StoryCard({ content }: { content: string | null }) {
   )
 }
 
-function EventCard({ content }: { content: string | null }) {
-  let event: { id?: string; name?: string; date?: string; price?: number; image?: string } = {}
-  try {
-    event = content ? JSON.parse(content) : {}
-  } catch {
+export function EventCard({ content }: { content: string | null }) {
+  const event = readMessageEventSnapshot(content)
+  if (!event) {
     return <span style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--gold)' }}>Événement</span>
   }
 
   const clickable = Boolean(event.id)
-  const priceLabel = event.price == null ? null : Number(event.price) <= 0 ? 'Gratuit' : `dès ${event.price}€`
+  const priceLabel = event.priceLabel
 
   return (
     <a
-      href={clickable ? `/events/${event.id}` : undefined}
+      href={clickable ? `/events/${encodeURIComponent(event.id!)}` : undefined}
       style={{ display: 'block', width: 240, borderRadius: 10, overflow: 'hidden', background: 'var(--surface-2)', textDecoration: 'none', cursor: clickable ? 'pointer' : 'default' }}
     >
       <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
@@ -634,11 +634,9 @@ function EventCard({ content }: { content: string | null }) {
   )
 }
 
-function CatalogItemCard({ content }: { content: string | null }) {
-  let item: { providerId?: string; name?: string; category?: string; image?: string } = {}
-  try {
-    item = content ? JSON.parse(content) : {}
-  } catch {
+export function CatalogItemCard({ content }: { content: string | null }) {
+  const item = parseCatalogItemShare(content)
+  if (!item) {
     return <span style={{ fontSize: 'var(--font-size-caption)', color: 'var(--gold)' }}>Offre prestataire</span>
   }
 
@@ -661,6 +659,7 @@ function CatalogItemCard({ content }: { content: string | null }) {
       <div style={{ padding: '10px 12px' }}>
         <p style={{ fontSize: 'var(--font-size-body-sm)', color: 'var(--text)', margin: '0 0 3px', fontWeight: 600 }}>{item.name || 'Offre'}</p>
         {item.category ? <p style={{ fontSize: 'var(--font-size-caption-2-lg)', color: 'var(--text-faint)', margin: 0, textTransform: 'uppercase' }}>{item.category}</p> : null}
+        {item.priceLabel ? <p style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--gold)', margin: '6px 0 0' }}>{item.priceLabel}{item.unit ? ` / ${item.unit}` : ''}</p> : null}
       </div>
     </a>
   )

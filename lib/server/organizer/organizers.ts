@@ -3,8 +3,9 @@ import OrganizerProfile, { type OrganizerProfileDoc } from '@/lib/models/Organiz
 import Event from '@/lib/models/Event'
 import { isPlaceholderEvent } from '@/lib/shared/eventDiscovery'
 import { isEventEnded } from '@/lib/shared/event-time'
-import { normalizeGeoText } from '@/lib/shared/locations'
-import type { SortOrder } from 'mongoose'
+import { normalizeGeoText, normalizeRegionId } from '@/lib/shared/locations'
+import type { PipelineStage, SortOrder } from 'mongoose'
+import { directoryEventPipeline } from './directoryEventPipeline'
 import type { PublicEvent } from '../events/events'
 
 export type PublicOrganizer = OrganizerProfileDoc & { userId: string; slug: string }
@@ -42,130 +43,36 @@ export type PublicOrganizerDirectoryResult = {
 
 const PUBLIC_DIRECTORY_PAGE_SIZE = 20
 const MAX_DIRECTORY_PAGE = 4_000
-const MAX_TOTAL_COUNT_CACHE_ENTRIES = 200
 const ORGANIZER_FIELDS =
   'userId slug publicName shortDescription longDescription city country regionId avatarUrl bannerUrl status isVerified followersCount totalEventsCount viewsCount eventClicksCount mediaViewsCount createdAt updatedAt'
 
-const ORGANIZER_TOTAL_TTL_MS = 30_000
+const BENIN_EVENT_NAMES = ['Bénin', 'Benin']
+const BENIN_REGION_VALUES = ['benin', 'Bénin', 'Benin', 'BJ']
 
-type CachedCount = {
-  value: number
-  expiresAt: number
-}
-
-const countCache = new Map<string, CachedCount>()
-const inFlightCount = new Map<string, Promise<number>>()
-
-function pruneCountCache(nowMs = Date.now()) {
-  for (const [key, value] of countCache.entries()) {
-    if (value.expiresAt <= nowMs) countCache.delete(key)
+function beninOrganizerClause(): Record<string, unknown> {
+  return {
+    $and: [
+      {
+        $or: [
+          { regionId: 'benin' },
+          { zonesIntervention: { $in: BENIN_REGION_VALUES } },
+          { country: { $in: ['Bénin', 'Benin', 'BJ'] } },
+        ],
+      },
+      { $or: [{ regionId: { $in: ['', 'benin'] } }, { regionId: { $exists: false } }] },
+      { $or: [{ country: { $in: ['', 'Bénin', 'Benin', 'BJ'] } }, { country: { $exists: false } }] },
+      {
+        $or: [
+          { zonesIntervention: { $exists: false } },
+          { zonesIntervention: { $not: { $elemMatch: { $nin: BENIN_REGION_VALUES } } } },
+        ],
+      },
+    ],
   }
-
-  if (countCache.size <= MAX_TOTAL_COUNT_CACHE_ENTRIES) return
-
-  const sorted = [...countCache.entries()].sort((a, b) => b[1].expiresAt - a[1].expiresAt)
-  for (let index = MAX_TOTAL_COUNT_CACHE_ENTRIES; index < sorted.length; index += 1) {
-    countCache.delete(sorted[index][0])
-  }
 }
 
-function getTotalCacheKey({
-  filter,
-  upcoming,
-  sort,
-  nowDay,
-}: {
-  filter: Record<string, unknown>
-  upcoming: boolean
-  sort: string
-  nowDay: string
-}) {
-  return JSON.stringify({
-    t: 'organizers',
-    filter,
-    upcoming,
-    sort,
-    nowDay,
-  })
-}
-
-function getCachedTotalCount(
-  filter: Record<string, unknown>,
-  upcoming: boolean,
-  sortKey: string,
-): Promise<number> {
-  const nowMs = Date.now()
-  pruneCountCache(nowMs)
-  const nowDay = new Date(nowMs).toISOString().slice(0, 10)
-  const key = getTotalCacheKey({ filter, upcoming, sort: sortKey, nowDay })
-  const cached = countCache.get(key)
-  if (cached && cached.expiresAt > nowMs) return Promise.resolve(cached.value)
-
-  const existing = inFlightCount.get(key)
-  if (existing) return existing
-
-  const computePromise = (async () => {
-    const total = await (upcoming
-      ? OrganizerProfile.aggregate<{ total: number }>([
-          { $match: filter },
-          {
-            $lookup: {
-              from: 'events',
-              let: { organizerUserId: '$userId' },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: { $eq: ['$organizerId', '$$organizerUserId'] },
-                  },
-                },
-                {
-                  $match: {
-                    cancelled: { $ne: true },
-                    isDemo: { $ne: true },
-                    $and: [
-                      {
-                        $or: [
-                          { publishAt: { $exists: false } },
-                          { publishAt: null },
-                          { publishAt: { $lte: new Date() } },
-                        ],
-                      },
-                      {
-                        $or: [
-                          { closingDate: { $exists: false } },
-                          { closingDate: null },
-                          { closingDate: { $gte: new Date() } },
-                        ],
-                      },
-                    ],
-                    date: { $gte: new Date().toISOString().slice(0, 10) },
-                  },
-                },
-                { $limit: 1 },
-              ],
-              as: 'upcomingEvents',
-            },
-          },
-          { $match: { upcomingEvents: { $ne: [] } } },
-          { $count: 'total' },
-        ] as const)
-      : OrganizerProfile.countDocuments(filter)
-    ).then((rows) => {
-      const value = Array.isArray(rows) ? (rows[0]?.total || 0) : rows
-      return Number(value)
-    })
-
-    countCache.set(key, { value: total, expiresAt: Date.now() + ORGANIZER_TOTAL_TTL_MS })
-    inFlightCount.delete(key)
-    return total
-  })()
-    .catch((error) => {
-      inFlightCount.delete(key)
-      throw error
-    })
-
-  inFlightCount.set(key, computePromise)
-  return computePromise
+function beninEventClause(): Record<string, unknown> {
+  return { region: { $in: BENIN_EVENT_NAMES }, currency: 'XOF' }
 }
 
 function buildOrganizerFilters(params: PublicOrganizerDirectoryParams) {
@@ -174,10 +81,15 @@ function buildOrganizerFilters(params: PublicOrganizerDirectoryParams) {
   const normalizedSearch = normalizeGeoText(search)
 
   const filter: Record<string, unknown> = { status: 'public' }
-  const andClauses: Record<string, unknown>[] = []
+  const andClauses: Record<string, unknown>[] = [beninOrganizerClause()]
 
   if (region) {
-    andClauses.push({ $or: [{ regionId: region }, { zonesIntervention: region }] })
+    const regionId = normalizeRegionId(region)
+    andClauses.push(
+      regionId === 'benin'
+        ? beninOrganizerClause()
+        : { regionId: '__unsupported_launch_region__' },
+    )
   }
 
   if (search) {
@@ -209,80 +121,6 @@ function organizerSort(sort: PublicOrganizerDirectoryParams['sort'] = 'popular')
   return { followersCount: -1 }
 }
 
-function attachNextEvents(
-  profiles: PublicOrganizer[]
-): Promise<PublicOrganizerDirectoryEntry[]> {
-  if (profiles.length === 0) return Promise.resolve([])
-
-  const organizerIds = profiles.map((profile) => profile.userId)
-  const now = new Date()
-  const nowDay = now.toISOString().slice(0, 10)
-
-  return Event.aggregate<{
-    _id: string
-    nextEvent: {
-      _id: string
-      name: string
-      date: string
-      dateDisplay?: string
-      city?: string
-      region?: string
-      publishAt?: string | Date | null
-      cancelled?: boolean
-      time?: string
-    }
-  }>([
-    {
-      $match: {
-        organizerId: { $in: organizerIds },
-        cancelled: { $ne: true },
-        isDemo: { $ne: true },
-        $and: [
-          {
-            $or: [
-              { publishAt: { $exists: false } },
-              { publishAt: null },
-              { publishAt: { $lte: now } },
-            ],
-          },
-          { $or: [{ closingDate: { $exists: false } }, { closingDate: null }, { closingDate: { $gte: now } }] },
-        ],
-        date: { $gte: nowDay },
-      },
-    },
-    { $sort: { organizerId: 1, date: 1, time: 1 } },
-    {
-      $group: {
-        _id: '$organizerId',
-        nextEvent: { $first: '$$ROOT' },
-      },
-    },
-  ]).then((rows) => {
-    const nowMs = Date.now()
-    const eventsByOrganizer = new Map<string, OrganizerDirectoryEvent>()
-
-    for (const row of rows) {
-      const event = row.nextEvent
-      if (!event || isPlaceholderEvent(event) || isEventEnded(event, nowMs)) continue
-      if (event.publishAt && new Date(event.publishAt).getTime() > nowMs) continue
-
-      eventsByOrganizer.set(String(row._id), {
-        id: String(event._id),
-        name: event.name,
-        date: event.date,
-        dateDisplay: event.dateDisplay || event.date,
-        city: event.city || '',
-        region: event.region || '',
-      })
-    }
-
-    return profiles.map((profile) => ({
-      ...profile,
-      nextEvent: eventsByOrganizer.get(profile.userId) || null,
-    })) as PublicOrganizerDirectoryEntry[]
-  })
-}
-
 /**
  * Legacy: retourne tous les profils organisateurs publics. Conserver pour
  * usages spécifiques (sitemap, exports), la route annuaire doit utiliser la
@@ -290,7 +128,7 @@ function attachNextEvents(
  */
 export async function listPublicOrganizers(): Promise<PublicOrganizer[]> {
   await getDb()
-  return OrganizerProfile.find({ status: 'public' })
+  return OrganizerProfile.find(buildOrganizerFilters({}))
     .select(ORGANIZER_FIELDS)
     .sort({ followersCount: -1 })
     .lean()
@@ -300,7 +138,7 @@ export type OrganizerSitemapEntry = { slug: string; updatedAt?: Date | string | 
 
 export async function countPublicOrganizersForSitemap(): Promise<number> {
   await getDb()
-  return OrganizerProfile.estimatedDocumentCount().maxTimeMS(2_000)
+  return OrganizerProfile.countDocuments(buildOrganizerFilters({})).maxTimeMS(2_000)
 }
 
 export async function listPublicOrganizersForSitemapPage(params: { offset: number; limit: number }): Promise<OrganizerSitemapEntry[]> {
@@ -325,61 +163,67 @@ export async function listPublicOrganizersDirectory(
   params: PublicOrganizerDirectoryParams = {}
 ): Promise<PublicOrganizerDirectoryResult> {
   await getDb()
-  const page = Math.max(1, Number(params.page) || 1)
-  const cappedPage = Math.min(Math.max(1, page), MAX_DIRECTORY_PAGE)
-  const pageSize = Math.max(12, Math.min(200, Number(params.pageSize) || PUBLIC_DIRECTORY_PAGE_SIZE))
+  const page = Math.min(MAX_DIRECTORY_PAGE, Math.max(1, Math.floor(Number(params.page) || 1)))
+  const pageSize = Math.max(12, Math.min(200, Math.floor(Number(params.pageSize) || PUBLIC_DIRECTORY_PAGE_SIZE)))
   const includeTotal = params.includeTotal !== false
-  const sort = organizerSort(params.sort)
-  const isUpcoming = Boolean(params.upcoming)
+  const upcoming = params.upcoming === true || params.upcoming === 'true' || params.upcoming === '1'
   const normalizedSearch = normalizeGeoText(params.q || '').trim()
-  const usesTextSearch = normalizedSearch.length > 1
-  const hasUnsupportedSearch = params.q?.trim() ? normalizedSearch.length > 0 && normalizedSearch.length < 2 : false
-
-  if (hasUnsupportedSearch) {
-    return {
-      organizers: [],
-      total: 0,
-      page: cappedPage,
-      pageSize,
-      totalPages: 1,
-    }
+  if (params.q?.trim() && normalizedSearch.length === 1) {
+    return { organizers: [], total: 0, page, pageSize, totalPages: 1 }
   }
-  const filter = buildOrganizerFilters(params)
-
-  const totalPromise = includeTotal
-    ? getCachedTotalCount(filter, isUpcoming, params.sort === 'recent' ? 'recent' : 'popular')
-    : Promise.resolve(0)
-
-  const [profiles, rawTotal] = await Promise.all([
-    (() => {
-    const query = OrganizerProfile.find(filter).select(ORGANIZER_FIELDS).skip((cappedPage - 1) * pageSize).limit(pageSize).lean()
-      if (usesTextSearch) {
-      return query
-        .select({ score: { $meta: 'textScore' } })
-        .sort({ score: { $meta: 'textScore' }, ...sort, createdAt: -1 })
-    }
-      return query.sort(sort)
-    })(),
-    totalPromise,
-  ])
-
-  const organizersWithEvents = await attachNextEvents(profiles as PublicOrganizer[])
-  const filtered = params.upcoming
-    ? organizersWithEvents.filter((entry) => Boolean(entry.nextEvent))
-    : organizersWithEvents
-
-  const total = includeTotal ? rawTotal : filtered.length
-
-  const effectiveTotal = includeTotal ? total : filtered.length
-  const sorted = filtered
-
-  return {
-    organizers: sorted,
-    total: effectiveTotal,
-    page: cappedPage,
-    pageSize,
-    totalPages: includeTotal ? Math.max(1, Math.ceil(effectiveTotal / pageSize)) : 1,
+  const lookup: PipelineStage = {
+    $lookup: {
+      from: 'events',
+      let: { organizerUserId: '$userId' },
+      pipeline: [
+        { $match: { $expr: { $eq: ['$organizerId', '$$organizerUserId'] } } },
+        ...directoryEventPipeline(new Date()),
+      ] as Exclude<PipelineStage, PipelineStage.Merge | PipelineStage.Out>[],
+      as: '_nextEvents',
+    },
   }
+  const selection: PipelineStage[] = [
+    lookup,
+    { $set: { nextEvent: { $arrayElemAt: ['$_nextEvents', 0] } } },
+  ]
+  const sort: Record<string, 1 | -1> = {
+    ...(normalizedSearch.length > 1 ? { _score: -1 as const } : {}),
+    ...organizerSort(params.sort) as Record<string, 1 | -1>,
+    _id: 1,
+  }
+  const projection = Object.fromEntries(ORGANIZER_FIELDS.split(' ').map(field => [field, 1]))
+  const pipeline: PipelineStage[] = [
+    { $match: buildOrganizerFilters(params) },
+    ...(normalizedSearch.length > 1 ? [{ $set: { _score: { $meta: 'textScore' } } }] : []),
+    ...(upcoming ? [...selection, { $match: { 'nextEvent._id': { $exists: true } } }] : []),
+    { $sort: sort },
+    { $facet: {
+      organizers: [
+        { $skip: (page - 1) * pageSize },
+        { $limit: pageSize },
+        ...(upcoming ? [] : selection),
+        { $project: { ...projection, nextEvent: 1 } },
+      ] as PipelineStage.Facet['$facet'][string],
+      ...(includeTotal ? { totals: [{ $count: 'value' }] } : {}),
+    } },
+  ]
+  const [result] = await OrganizerProfile.aggregate<{
+    organizers: Array<PublicOrganizer & { nextEvent?: { _id: unknown; name: string; date: string; dateDisplay?: string; city?: string; region?: string } }>
+    totals?: { value: number }[]
+  }>(pipeline)
+  const organizers = (result?.organizers || []).map(profile => ({
+    ...profile,
+    nextEvent: profile.nextEvent ? {
+      id: String(profile.nextEvent._id),
+      name: profile.nextEvent.name,
+      date: profile.nextEvent.date,
+      dateDisplay: profile.nextEvent.dateDisplay || profile.nextEvent.date,
+      city: profile.nextEvent.city || '',
+      region: profile.nextEvent.region || '',
+    } : null,
+  }))
+  const total = includeTotal ? result?.totals?.[0]?.value || 0 : organizers.length
+  return { organizers, total, page, pageSize, totalPages: includeTotal ? Math.max(1, Math.ceil(total / pageSize)) : 1 }
 }
 
 // Pas de bypass "isSelf" ici (contrairement aux prestataires) : fidèle au
@@ -387,7 +231,7 @@ export async function listPublicOrganizersDirectory(
 // le propriétaire devant passer par son studio pour prévisualiser.
 export async function getOrganizerBySlug(slug: string): Promise<PublicOrganizer | null> {
   await getDb()
-  const doc = await OrganizerProfile.findOne({ slug, status: 'public' }).lean()
+  const doc = await OrganizerProfile.findOne({ ...buildOrganizerFilters({}), slug }).lean()
   return (doc as PublicOrganizer) || null
 }
 
@@ -396,7 +240,7 @@ export async function getOrganizerBySlug(slug: string): Promise<PublicOrganizer 
 // event.organizerName, comme le faisait déjà le legacy).
 export async function getPublicOrganizerByUserId(userId: string): Promise<PublicOrganizer | null> {
   await getDb()
-  const doc = await OrganizerProfile.findOne({ userId, status: 'public' }).lean()
+  const doc = await OrganizerProfile.findOne({ ...buildOrganizerFilters({}), userId }).lean()
   return (doc as PublicOrganizer) || null
 }
 
@@ -404,7 +248,11 @@ export async function getOrganizerEvents(organizerId: string): Promise<{ upcomin
   await getDb()
   const docs = await Event.find({
     organizerId,
+    ...beninEventClause(),
     cancelled: { $ne: true },
+    isDemo: { $ne: true },
+    demoLabel: { $in: [null, ''] },
+    isPrivate: { $ne: true },
   })
     .sort({ date: -1 })
     .lean()

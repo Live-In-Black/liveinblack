@@ -10,7 +10,7 @@ export function payoutInitiatedEmail(context: string, amountLabel: string, delay
   const inner = `
     ${heading('Ton versement est en cours')}
     ${paragraph(`Ton versement de <strong style="color:inherit;">${amountLabel}</strong> pour <strong style="color:inherit;">${escapeHtml(context)}</strong> est en cours de traitement.`)}
-    ${note(`Il devrait arriver sous ${delayLabel}.`)}
+    ${note(`Suivi FedaPay : ${escapeHtml(delayLabel)}.`)}
   `
   return {
     subject: `Ton versement pour ${context} est en cours`,

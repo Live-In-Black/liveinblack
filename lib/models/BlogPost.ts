@@ -1,13 +1,12 @@
 import { Schema, model, models, type InferSchemaType, type Model } from 'mongoose'
 
-// Contenu éditorial public (articles de blog) — aligné sur les régions XOF/EUR
-// de lib/shared/regions.ts pour la catégorisation géographique, plus deux
+// Contenu éditorial public du lancement : Bénin uniquement, plus deux
 // catégories transverses ('guide', 'actualite') non liées à une région.
 // `content` est une chaîne HTML-in-string (pas de markdown lib dans ce repo,
 // voir package.json) : les articles sont écrits/seedés directement en HTML
 // simple (paragraphes, titres), rendu via dangerouslySetInnerHTML côté page
 // article — contenu 100% interne (seed/agent), jamais saisi par un visiteur.
-export const BLOG_CATEGORY_IDS = ['togo', 'benin', 'cote-ivoire', 'senegal', 'burkina-faso', 'mali', 'niger', 'guinee-bissau', 'france', 'guide', 'actualite'] as const
+export const BLOG_CATEGORY_IDS = ['benin', 'guide', 'actualite'] as const
 export type BlogCategoryId = (typeof BLOG_CATEGORY_IDS)[number]
 
 const blogPostSchema = new Schema(

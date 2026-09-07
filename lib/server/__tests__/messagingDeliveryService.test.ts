@@ -4,15 +4,24 @@ import Message from '@/lib/models/Message'
 import User from '@/lib/models/User'
 import { deliverMessageForConversation } from '../messaging/messagingDeliveryService'
 
+const transaction = vi.hoisted(() => ({
+  withTransaction: vi.fn(async (work: () => Promise<unknown>) => work()),
+  endSession: vi.fn(),
+}))
+vi.mock('mongoose', () => ({ default: { startSession: async () => transaction } }))
+
 vi.mock('../../models/Conversation', () => ({
   default: {
     updateOne: vi.fn(),
+    findById: vi.fn(),
   },
 }))
 
 vi.mock('../../models/Message', () => ({
   default: {
     create: vi.fn(),
+    countDocuments: vi.fn(),
+    findOne: vi.fn(),
   },
 }))
 
@@ -38,16 +47,22 @@ describe('messagingDeliveryService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(Message.findOne).mockReturnValue({ select: () => ({ lean: async () => ({ createdAt: new Date('2026-08-20'), readBy: {}, deletedForUserIds: [], type: 'text', content: 'Salut', senderName: 'Alice A' }) }) } as never)
+    vi.mocked(Conversation.findById).mockReturnValue({ lean: vi.fn().mockResolvedValue({
+      participantIds: ['u1', 'u2', 'u3'], mutedConversationByUserIds: [], hiddenByUserIds: [], lastReadAt: {},
+    }) } as never)
   })
 
   it('persiste le message, met à jour la conversation et notifie les destinataires', async () => {
-    vi.mocked(Message.create).mockResolvedValue({
+    vi.mocked(Message.create).mockResolvedValue([{
       createdAt: new Date('2026-08-20T21:00:00.000Z'),
       toObject: vi.fn().mockReturnValue({ _id: 'm1', content: 'Salut', senderId: 'u1', conversationId: 'conv-1', type: 'text', createdAt: '2026-08-20T21:00:00.000Z' }),
-    } as never)
+    }] as never)
+    vi.mocked(Message.countDocuments).mockResolvedValue(10)
+    vi.mocked(Conversation.updateOne).mockResolvedValue({ matchedCount: 1, modifiedCount: 1 } as never)
     vi.mocked(User.find).mockReturnValue({
       select: vi.fn().mockReturnValue({
-        lean: vi.fn().mockResolvedValue([{ _id: 'u2', lastSeenAt: null }, { _id: 'u3', lastSeenAt: new Date('2026-08-20T20:00:00.000Z') }]),
+        lean: vi.fn().mockResolvedValue([{ _id: 'u1', blockedUserIds: [] }, { _id: 'u2', blockedUserIds: [], lastSeenAt: null }, { _id: 'u3', blockedUserIds: [], lastSeenAt: new Date('2026-08-20T20:00:00.000Z') }]),
       }),
     } as never)
 
@@ -56,35 +71,42 @@ describe('messagingDeliveryService', () => {
       conversation,
       { type: 'text', content: 'Salut', replyToMessageId: null, senderName: 'Alice A' },
       { site: 'https://liveinblack.com' },
-      { upsertMessageNotification, notifyUserById, newMessageDigestEmail, sendPushToUser, toMessageView },
+      { upsertMessageNotification, sendPushToUser, toMessageView },
     )
 
     expect(result.ok).toBe(true)
-    expect(Message.create).toHaveBeenCalledWith({
+    expect(Message.create).toHaveBeenCalledWith([{
       conversationId: 'conv-1',
       senderId: 'u1',
       senderName: 'Alice A',
       type: 'text',
       content: 'Salut',
       replyToMessageId: null,
-    })
+    }], { session: transaction })
     expect(Conversation.updateOne).toHaveBeenCalledWith(
-      { _id: 'conv-1' },
-      { $set: { lastMessage: 'Salut', lastMessageAt: expect.any(Date), lastSenderId: 'u1' } },
+      { _id: 'conv-1', participantIds: 'u1' },
+      {
+        $set: { lastMessage: 'Salut', lastMessageAt: expect.any(Date), lastSenderId: 'u1', messageDigestNextCheckAt: expect.any(Date) },
+        $inc: { messageDigestRevision: 1 },
+      },
+      { session: transaction },
     )
     expect(upsertMessageNotification).toHaveBeenCalledTimes(2)
-    expect(notifyUserById).toHaveBeenCalledTimes(2)
+    expect(notifyUserById).not.toHaveBeenCalled()
+    expect(newMessageDigestEmail).not.toHaveBeenCalled()
     expect(sendPushToUser).toHaveBeenCalledTimes(2)
   })
 
   it('respecte deferSideEffects pour les notifications offline', async () => {
-    vi.mocked(Message.create).mockResolvedValue({
+    vi.mocked(Message.create).mockResolvedValue([{
       createdAt: new Date('2026-08-20T21:00:00.000Z'),
       toObject: vi.fn().mockReturnValue({ _id: 'm1', content: 'Salut', senderId: 'u1', conversationId: 'conv-1', type: 'text', createdAt: '2026-08-20T21:00:00.000Z' }),
-    } as never)
+    }] as never)
+    vi.mocked(Message.countDocuments).mockResolvedValue(10)
+    vi.mocked(Conversation.updateOne).mockResolvedValue({ matchedCount: 1, modifiedCount: 1 } as never)
     vi.mocked(User.find).mockReturnValue({
       select: vi.fn().mockReturnValue({
-        lean: vi.fn().mockResolvedValue([{ _id: 'u2', lastSeenAt: null }]),
+        lean: vi.fn().mockResolvedValue([{ _id: 'u1', blockedUserIds: [] }, { _id: 'u2', blockedUserIds: [], lastSeenAt: null }]),
       }),
     } as never)
     const deferSideEffects = vi.fn(async (work: () => Promise<void>) => {
@@ -96,7 +118,7 @@ describe('messagingDeliveryService', () => {
       conversation,
       { type: 'text', content: 'Salut', replyToMessageId: null, senderName: 'Alice A' },
       { site: 'https://liveinblack.com', deferSideEffects },
-      { upsertMessageNotification, notifyUserById, newMessageDigestEmail, sendPushToUser, toMessageView },
+      { upsertMessageNotification, sendPushToUser, toMessageView },
     )
 
     expect(deferSideEffects).toHaveBeenCalledTimes(1)

@@ -1,8 +1,6 @@
 // Tests d'INTÉGRATION (vraie base MongoDB) pour lib/server/organizerPayouts.ts
-// (#7 phase organisateur — port de api/connect.js + PayoutPanel.jsx, côté
-// Stripe Connect EUR uniquement). Stripe est mocké : aucune vraie clé de test
-// n'est configurée dans cet environnement (même convention que Cloudinary
-// ailleurs dans cette suite).
+// V1 Bénin : l'ancien Stripe Connect organisateur et la demande manuelle de
+// reversement sont refusés. FedaPay Marketplace est configuré via payout-momos.
 import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest'
 import mongoose from 'mongoose'
 
@@ -18,21 +16,12 @@ vi.mock('../payments/stripeClient', () => ({
 
 import { getPayoutStatus, startStripeConnectOnboarding, requestManualPayout } from '../organizer/organizerPayouts'
 import User from '@/lib/models/User'
-import Application from '@/lib/models/Application'
 import SellerBalance from '@/lib/models/SellerBalance'
 import PayoutRequest from '@/lib/models/PayoutRequest'
 
 const RUN_INTEGRATION = Boolean(process.env.MONGODB_URI)
 const describeIntegration = describe.skipIf(!RUN_INTEGRATION)
 const TEST_URI = process.env.MONGODB_URI || ''
-const EXPECTED_SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
-
-function connectReturnUrl(path: string, status: 'refresh' | 'done') {
-  const url = new URL(path, EXPECTED_SITE)
-  url.searchParams.set('connect', status)
-  return url.toString()
-}
-
 beforeAll(async () => {
   if (!RUN_INTEGRATION) return
   await mongoose.connect(TEST_URI)
@@ -47,7 +36,6 @@ afterAll(async () => {
 beforeEach(async () => {
   if (!RUN_INTEGRATION) return
   await User.deleteMany({})
-  await Application.deleteMany({})
   await SellerBalance.deleteMany({})
   await PayoutRequest.deleteMany({})
   accountsCreate.mockReset()
@@ -65,7 +53,7 @@ async function seedUser(overrides: Partial<Record<string, unknown>> = {}) {
   return String(user._id)
 }
 
-describeIntegration('organizerPayouts (intégration, vraie base) — Stripe Connect + statut (#7)', () => {
+describeIntegration('organizerPayouts (intégration, vraie base) — V1 Bénin sans Stripe Connect', () => {
   it('renvoie mode "none" pour un compte sans pays ni compte Stripe connu', async () => {
     const userId = await seedUser()
     const result = await getPayoutStatus({ id: userId })
@@ -76,153 +64,62 @@ describeIntegration('organizerPayouts (intégration, vraie base) — Stripe Conn
     expect(result.view.amountDueCents).toBe(0)
   })
 
-  it('crée un compte Stripe Express pour un pays éligible, sans jamais écrire chargesEnabled', async () => {
-    const userId = await seedUser()
-    await Application.create({ userId, type: 'organisateur', status: 'approved', formData: { pays: 'France' } })
+  it('ignore les anciens champs Stripe Connect dans le statut V1', async () => {
+    const userId = await seedUser({ stripeAccountId: 'acct_legacy', stripeCountry: 'FR', stripeChargesEnabled: true })
+    await SellerBalance.create({ sellerUid: userId, amountDueCents: 5000, amountDueXOF: 12000 })
+
+    const result = await getPayoutStatus({ id: userId })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.view).toMatchObject({
+      mode: 'none',
+      connected: false,
+      chargesEnabled: false,
+      country: 'FR',
+      amountDueCents: 5000,
+      amountDueXOF: 12000,
+    })
+  })
+
+  it('refuse la création Stripe Connect, même pour un ancien pays éligible', async () => {
+    const userId = await seedUser({ stripeCountry: 'FR' })
     accountsCreate.mockResolvedValue({ id: 'acct_123' })
     accountLinksCreate.mockResolvedValue({ url: 'https://connect.stripe.test/onboarding/acct_123' })
 
     const result = await startStripeConnectOnboarding({ id: userId }, {})
-    expect(result.ok).toBe(true)
-    if (!result.ok || 'manual' in result) return
-    expect(result.url).toBe('https://connect.stripe.test/onboarding/acct_123')
-    expect(accountsCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'express', country: 'FR', metadata: { uid: userId }, business_type: 'individual' })
-    )
-    expect(accountLinksCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        refresh_url: connectReturnUrl('/my-events', 'refresh'),
-        return_url: connectReturnUrl('/my-events', 'done'),
-      })
-    )
-
-    const user = await User.findById(userId).lean()
-    expect(user?.stripeAccountId).toBe('acct_123')
-    expect(user?.stripeCountry).toBe('FR')
-    // Jamais écrit ici — réservé au webhook account.updated.
-    expect(user?.stripeChargesEnabled).toBe(false)
-
-    const status = await getPayoutStatus({ id: userId })
-    expect(status.ok).toBe(true)
-    if (status.ok) expect(status.view.mode).toBe('connect')
-  })
-
-  it('bascule en mode manuel pour un pays hors zone Stripe, sans jamais appeler Stripe', async () => {
-    const userId = await seedUser()
-    await Application.create({ userId, type: 'organisateur', status: 'approved', formData: { pays: 'Togo' } })
-
-    const result = await startStripeConnectOnboarding({ id: userId }, {})
-    expect(result.ok).toBe(true)
-    if (!result.ok || !('manual' in result)) return
-    expect(result.manual).toBe(true)
-    expect(result.country).toBe('TG')
+    expect(result).toEqual({ ok: false, status: 410, error: 'stripe_connect_disabled_v1' })
     expect(accountsCreate).not.toHaveBeenCalled()
-
-    const user = await User.findById(userId).lean()
-    expect(user?.stripeAccountId).toBeFalsy()
-    expect(user?.stripeCountry).toBe('TG')
-
-    const status = await getPayoutStatus({ id: userId })
-    expect(status.ok).toBe(true)
-    if (status.ok) expect(status.view.mode).toBe('manual')
-  })
-
-  it("réutilise le compte Stripe existant pour reprendre l'onboarding (nouveau lien, pas un second compte)", async () => {
-    const userId = await seedUser({ stripeAccountId: 'acct_existing', stripeCountry: 'FR' })
-    accountLinksCreate.mockResolvedValue({ url: 'https://connect.stripe.test/resume' })
-
-    const result = await startStripeConnectOnboarding({ id: userId }, { returnPath: '/organizer-studio' })
-    expect(result.ok).toBe(true)
-    if (!result.ok || 'manual' in result) return
-    expect(result.url).toBe('https://connect.stripe.test/resume')
-    expect(accountsCreate).not.toHaveBeenCalled()
-    expect(accountLinksCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        account: 'acct_existing',
-        refresh_url: connectReturnUrl('/organizer-studio', 'refresh'),
-        return_url: connectReturnUrl('/organizer-studio', 'done'),
-      })
-    )
-  })
-
-  it('ignore un returnPath externe et retombe sur /my-events', async () => {
-    const userId = await seedUser({ stripeAccountId: 'acct_existing', stripeCountry: 'FR' })
-    accountLinksCreate.mockResolvedValue({ url: 'https://connect.stripe.test/resume' })
-
-    const result = await startStripeConnectOnboarding({ id: userId }, { returnPath: 'https://evil.example/steal' })
-    expect(result.ok).toBe(true)
-    if (!result.ok || 'manual' in result) return
-    expect(result.url).toBe('https://connect.stripe.test/resume')
-    expect(accountLinksCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        refresh_url: connectReturnUrl('/my-events', 'refresh'),
-        return_url: connectReturnUrl('/my-events', 'done'),
-      })
-    )
-  })
-
-  it('renvoie stripe_unavailable si Stripe refuse de recréer un lien de reprise sur un compte existant', async () => {
-    const userId = await seedUser({ stripeAccountId: 'acct_existing', stripeCountry: 'FR' })
-    accountLinksCreate.mockRejectedValue(new Error('stripe down'))
-
-    const result = await startStripeConnectOnboarding({ id: userId }, { returnPath: '/organizer-studio' })
-    expect(result).toEqual({
-      ok: false,
-      status: 502,
-      error: 'stripe_unavailable',
-    })
-    expect(accountsCreate).not.toHaveBeenCalled()
-  })
-
-  it('renvoie stripe_unavailable si Stripe échoue à créer le compte Connect initial', async () => {
-    const userId = await seedUser()
-    await Application.create({ userId, type: 'organisateur', status: 'approved', formData: { pays: 'France' } })
-    accountsCreate.mockRejectedValue(new Error('stripe down'))
-
-    const result = await startStripeConnectOnboarding({ id: userId }, {})
-    expect(result).toEqual({
-      ok: false,
-      status: 502,
-      error: 'stripe_unavailable',
-    })
     expect(accountLinksCreate).not.toHaveBeenCalled()
 
     const user = await User.findById(userId).lean()
     expect(user?.stripeAccountId).toBeFalsy()
-    expect(user?.stripeCountry).toBeFalsy()
+    expect(user?.stripeCountry).toBe('FR')
   })
 
-  it('refuse une demande de reversement manuel si rien n’est dû', async () => {
-    const userId = await seedUser()
-    const result = await requestManualPayout({ id: userId })
-    expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.error).toBe('nothing_due')
+  it("refuse la reprise d'un ancien compte Stripe existant", async () => {
+    const userId = await seedUser({ stripeAccountId: 'acct_existing', stripeCountry: 'FR' })
+    accountLinksCreate.mockResolvedValue({ url: 'https://connect.stripe.test/resume' })
+
+    const result = await startStripeConnectOnboarding({ id: userId }, { returnPath: '/organizer-studio' })
+    expect(result).toEqual({ ok: false, status: 410, error: 'stripe_connect_disabled_v1' })
+    expect(accountsCreate).not.toHaveBeenCalled()
+    expect(accountLinksCreate).not.toHaveBeenCalled()
   })
 
-  it('crée une demande de reversement à partir du solde AUTORITATIF (jamais un montant fourni par le client)', async () => {
+  it('refuse une demande de reversement manuel organisateur en V1', async () => {
     const userId = await seedUser()
-    await SellerBalance.create({ sellerUid: userId, amountDueCents: 5000, amountDueXOF: 0 })
+    const result = await requestManualPayout({ id: userId })
+    expect(result).toEqual({ ok: false, status: 410, error: 'manual_payout_request_disabled_v1' })
+  })
+
+  it('ne crée pas de demande manuelle même si un solde historique existe', async () => {
+    const userId = await seedUser()
+    await SellerBalance.create({ sellerUid: userId, amountDueCents: 5000, amountDueXOF: 12000 })
 
     const result = await requestManualPayout({ id: userId })
-    expect(result.ok).toBe(true)
-    if (!result.ok) return
-    expect(result.amountDueCents).toBe(5000)
+    expect(result).toEqual({ ok: false, status: 410, error: 'manual_payout_request_disabled_v1' })
 
     const requests = await PayoutRequest.find({ sellerUid: userId }).lean()
-    expect(requests).toHaveLength(1)
-    expect(requests[0].status).toBe('pending')
-    expect(requests[0].amountDueCents).toBe(5000)
-  })
-
-  it('refuse une seconde demande tant qu’une demande est déjà en attente', async () => {
-    const userId = await seedUser()
-    await SellerBalance.create({ sellerUid: userId, amountDueCents: 5000, amountDueXOF: 0 })
-
-    const first = await requestManualPayout({ id: userId })
-    expect(first.ok).toBe(true)
-
-    const second = await requestManualPayout({ id: userId })
-    expect(second.ok).toBe(false)
-    if (!second.ok) expect(second.error).toBe('request_already_pending')
+    expect(requests).toHaveLength(0)
   })
 })

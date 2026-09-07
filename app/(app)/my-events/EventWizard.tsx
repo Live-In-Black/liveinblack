@@ -3,7 +3,7 @@
 import NextImage from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { regions } from '@/lib/shared/regions'
-import { regionToCurrency, currencySymbol, payRailLabel } from '@/lib/shared/money'
+import { currencySymbol, payRailLabel } from '@/lib/shared/money'
 import ImageCropperModal from '@/app/components/ui/ImageCropperModal'
 import MenuItemEditor, { emptyMenuItem, type MenuItemRow } from './MenuItemEditor'
 import { uploadPublicMedia } from '@/lib/client/publicMediaUpload'
@@ -478,7 +478,7 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
     setVenueName((parsedVenueName || '').trim())
     setAddress(parsedAddressParts.join(',').trim())
     setCity(ev.city || '')
-    setRegion(ev.region || '')
+    setRegion(LAUNCH_EVENT_REGIONS.some((item) => item.name === ev.region) ? ev.region : DEFAULT_LAUNCH_REGION)
     setPlaylist(!!ev.playlist)
     setPreorder(!!ev.preorder)
     setMenuItems(ev.menu && ev.menu.length > 0 ? ev.menu.map((item) => ({ ...item, available: item.available !== false })) : [emptyMenuItem()])
@@ -800,7 +800,7 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
     )
   }
 
-  const currency = regionToCurrency(region)
+  const currency: 'XOF' = 'XOF'
 
   return (
     <main style={{ width: '100%', padding: 'var(--space-6) var(--page-gutter) 100px', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>

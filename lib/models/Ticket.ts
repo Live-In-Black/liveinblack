@@ -48,6 +48,7 @@ const ticketSchema = new Schema(
     guestName: { type: String, default: null },
     revoked: { type: Boolean, default: false },
     paid: { type: Boolean, default: false },
+    consumptionRevision: { type: Number, default: 0 },
     source: { type: String, default: 'paid' }, // 'paid' | 'free' | 'guestlist'
     // Revente officielle (lib/server/resale.ts) : non-null tant qu'une mise en
     // vente est active pour ce billet — le QR du détenteur devient inutilisable

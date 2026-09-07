@@ -63,6 +63,15 @@ describe('ticketPrice', () => {
 })
 
 describe('computeEventStats', () => {
+  it('regroupe les ventes par jour beninois sans creer une vente datee de 1970', () => {
+    const stats = computeEventStats(EVENT, [
+      ticket({ bookedAt: '2026-09-06T22:59:00Z' }),
+      ticket({ bookedAt: '2026-09-06T23:01:00Z' }),
+      ticket({ bookedAt: null }),
+    ])
+    expect(stats.assignedTickets).toBe(3)
+    expect(stats.salesSeries.map(point => [point.date, point.tickets])).toEqual([['2026-09-06', 1], ['2026-09-07', 1]])
+  })
   it('calcule billets émis, revenus, taux de remplissage et de présence', () => {
     const tickets = [
       ticket({ paid: true, placePrice: 20 }),
@@ -112,6 +121,19 @@ describe('computeEventStats', () => {
   it('checkInReliable est vrai si l’événement est passé, même sans scan', () => {
     const stats = computeEventStats(EVENT, [ticket()])
     expect(stats.checkInReliable).toBe(true) // EVENT.date est en 2020
+  })
+
+  it('ne compte pas les precommandes non payees ou rattachees a un billet revoque', () => {
+    const preorders = [{ name: 'Repas', price: 5000, qty: 2 }]
+    const stats = computeEventStats(EVENT, [
+      ticket({ paid: false, preorders }),
+      ticket({ paid: true, revoked: true, preorders }),
+      ticket({ paid: true, preorders: [{ name: 'Boisson', price: 1000, qty: 1 }] }),
+    ])
+    expect(stats.assignedTickets).toBe(2)
+    expect(stats.freeTickets).toBe(1)
+    expect(stats.preorderRevenue).toBe(1000)
+    expect(stats.preorderItems).toEqual([{ name: 'Boisson', quantity: 1, revenue: 1000 }])
   })
 
   it('checkInReliable est faux pour un événement futur sans aucun scan', () => {

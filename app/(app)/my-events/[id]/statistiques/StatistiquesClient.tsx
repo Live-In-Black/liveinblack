@@ -235,29 +235,6 @@ export default function StatistiquesClient({ eventId, initialView }: { eventId: 
               </div>
             </section>
 
-            {(view.resaleStats.active + view.resaleStats.sold + view.resaleStats.suspended) > 0 && (
-              <section style={{ marginBottom: 20 }}>
-                <h2 style={{ font: '600 11px var(--font-open-sans)', letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--text-muted)', margin: '0 0 10px' }}>Revente officielle</h2>
-                <p style={{ fontSize: 'var(--font-size-caption)', color: 'var(--text-faint)', margin: '0 0 10px', lineHeight: 1.5 }}>
-                  Vue d&apos;ensemble uniquement — l&apos;identité des vendeurs/acheteurs n&apos;est jamais communiquée à l&apos;organisateur.
-                </p>
-                <div className="lb-responsive-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                  <Card style={{ padding: '10px 14px', textAlign: 'center' }}>
-                    <p style={{ fontSize: 'var(--font-size-title-5)', fontWeight: 800, color: 'var(--violet)', margin: 0 }}>{view.resaleStats.active}</p>
-                    <p style={{ fontSize: 'var(--font-size-caption)', color: 'var(--text-faint)', margin: '2px 0 0' }}>En cours</p>
-                  </Card>
-                  <Card style={{ padding: '10px 14px', textAlign: 'center' }}>
-                    <p style={{ fontSize: 'var(--font-size-title-5)', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>{view.resaleStats.sold}</p>
-                    <p style={{ fontSize: 'var(--font-size-caption)', color: 'var(--text-faint)', margin: '2px 0 0' }}>Terminées</p>
-                  </Card>
-                  <Card style={{ padding: '10px 14px', textAlign: 'center' }}>
-                    <p style={{ fontSize: 'var(--font-size-title-5)', fontWeight: 800, color: 'var(--gold)', margin: 0 }}>{view.resaleStats.suspended}</p>
-                    <p style={{ fontSize: 'var(--font-size-caption)', color: 'var(--text-faint)', margin: '2px 0 0' }}>Suspendues</p>
-                  </Card>
-                </div>
-              </section>
-            )}
-
             {stats.preorderItems.length > 0 && (
               <section style={{ marginBottom: 20 }}>
                 <h2 style={{ font: '600 11px var(--font-open-sans)', letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--text-muted)', margin: '0 0 10px' }}>Précommandes consommées</h2>

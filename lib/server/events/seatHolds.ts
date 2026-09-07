@@ -44,6 +44,7 @@ export async function createSeatHold(
   rail: 'stripe' | 'fedapay'
 ): Promise<CreateSeatHoldResult> {
   await getDb()
+  if (rail === 'stripe') return { ok: false, status: 410, error: 'stripe_seat_hold_disabled_v1' }
 
   const event = await Event.findById(input.eventId)
   if (!event) return { ok: false, status: 404, error: 'event_not_found' }
@@ -55,7 +56,8 @@ export async function createSeatHold(
   if (place.groupType === 'group') return { ok: false, status: 400, error: 'group_place_not_holdable' }
   if (!place.price || place.price <= 0) return { ok: false, status: 400, error: 'free_place_not_holdable' }
 
-  const currency = (event.currency || 'EUR') as 'EUR' | 'XOF'
+  const currency = (event.currency || 'XOF') as 'EUR' | 'XOF'
+  if (currency !== 'XOF') return { ok: false, status: 409, error: 'xof_required_v1' }
   const minorPerMajor = currency === 'XOF' ? 1 : 100
   const unitPriceMinor = Math.round(Number(place.price) * minorPerMajor)
   const depositMinor = computeSeatHoldDepositMinor(unitPriceMinor, currency, input.tier)
@@ -210,13 +212,13 @@ export type CompleteSeatHoldResult = ErrResult | { ok: true; order: OrderDoc & {
 
 export async function completeSeatHoldOrder(caller: SeatHoldCaller, seatHoldId: string, rail: 'stripe' | 'fedapay'): Promise<CompleteSeatHoldResult> {
   await getDb()
+  if (rail === 'stripe') return { ok: false, status: 410, error: 'stripe_seat_hold_disabled_v1' }
 
   const hold = await SeatHold.findById(seatHoldId)
   if (!hold) return { ok: false, status: 404, error: 'seat_hold_not_found' }
   if (hold.userId !== caller.id) return { ok: false, status: 403, error: 'forbidden' }
   if (hold.status !== 'active') return { ok: false, status: 409, error: 'seat_hold_not_active' }
   if (!hold.expiresAt || Date.now() > hold.expiresAt.getTime()) return { ok: false, status: 409, error: 'seat_hold_expired' }
-  if (rail === 'stripe' && hold.currency !== 'EUR') return { ok: false, status: 400, error: 'wrong_rail_for_currency' }
   if (rail === 'fedapay' && hold.currency !== 'XOF') return { ok: false, status: 400, error: 'wrong_rail_for_currency' }
 
   const balanceMinor = Math.max(0, hold.unitPriceMinor - hold.depositMinor)

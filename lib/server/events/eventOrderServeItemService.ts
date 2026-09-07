@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 import EventOrder, { type OrderItem } from '@/lib/models/EventOrder'
+import Ticket from '@/lib/models/Ticket'
 import type { EventOrderItemView } from './eventOrders'
 import type { EventContextResult } from './eventOrderCoreService'
 import type { MessagingErrorResult } from '../messaging/messagingServiceTypes'
@@ -74,6 +75,14 @@ export async function serveEventOrderItem(
       if (!order || !item) return { kind: 'error', status: 404, error: 'item_not_found' }
       if (item.status === 'cancelled') return { kind: 'error', status: 409, error: 'item_cancelled' }
       if (item.servedAt) return { kind: 'already' }
+
+      // Conflict with a concurrent revocation instead of trusting a cached ticket.
+      const ticket = await Ticket.findOneAndUpdate(
+        { ticketCode: item.ticketId, eventId, paid: true, revoked: { $ne: true } },
+        { $inc: { consumptionRevision: 1 } },
+        { session, returnDocument: 'after' },
+      )
+      if (!ticket) return { kind: 'error', status: 409, error: 'ticket_unavailable' }
 
       item.servedAt = new Date()
       item.servedBy = caller.id

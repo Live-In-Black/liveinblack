@@ -23,7 +23,7 @@ const LOCKED_STATUSES = ['submitted', 'under_review', 'resubmitted', 'approved',
 export default async function InscriptionPrestatairePage() {
   const session = await auth()
 
-  if (session?.user) {
+  if (session?.user?.activeRole === 'prestataire' && session.user.roles.includes('prestataire')) {
     const application = await getMyApplication({ id: session.user.id }, 'prestataire')
     if (application && LOCKED_STATUSES.includes(application.status)) redirect('/my-application')
 

@@ -9,6 +9,7 @@ import { sendEmail } from '@/lib/server/email'
 import { runObservedRoute } from '@/lib/server/observability'
 import { checkRateLimit, getRequestIp } from '@/lib/server/rateLimit'
 import { isPasswordPolicyCompliant } from '@/lib/shared/passwordPolicy'
+import { normalizeStoredContactPhone } from '@/lib/shared/contactPhone'
 
 const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
 const currentYear = new Date().getFullYear()
@@ -22,12 +23,6 @@ const bodySchema = z.object({
   birthYear: z.number().int().min(currentYear - 80).max(currentYear - 13).nullable().optional(),
   gender: z.enum(['femme', 'homme', 'autre']).nullable().optional(),
 })
-
-// Normalise un numéro de téléphone pour comparaison (garde uniquement les
-// chiffres) — même logique que normalizePhone() dans old/src/utils/accounts.js.
-function normalizePhone(phone: string) {
-  return phone.replace(/\D/g, '')
-}
 
 export async function POST(req: Request) {
   return runObservedRoute(req, { route: '/api/auth/register', operation: 'auth_register' }, async () => {
@@ -50,6 +45,11 @@ export async function POST(req: Request) {
       )
     }
 
+    const contactPhone = phone ? normalizeStoredContactPhone(phone) : ''
+    if (phone && !contactPhone) {
+      return NextResponse.json({ error: 'invalid_phone', message: 'Numéro de téléphone invalide. Utilise le format international avec indicatif.' }, { status: 400 })
+    }
+
     await getDb()
 
     const existing = await User.findOne({ email }).lean()
@@ -57,35 +57,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'email_taken' }, { status: 409 })
     }
 
-    // Doublon téléphone : fidèle à doEmailRegister (old/src/pages/LoginPage.jsx)
-    // — le blocage ne s'applique QUE si le compte détenteur du numéro est
-    // vérifié (emailVerifiedAt posé). Un ghost account (jamais vérifié) ne doit
-    // pas verrouiller un numéro pour toujours.
-    const normalizedPhone = phone ? normalizePhone(phone) : ''
-    if (normalizedPhone.length >= 6) {
-      const verifiedWithPhone = await User.find(
-        { phone: { $exists: true, $ne: '' }, emailVerifiedAt: { $ne: null } },
-        { phone: 1 }
-      ).lean()
-      const phoneTaken = verifiedWithPhone.some((u) => normalizePhone(u.phone || '') === normalizedPhone)
-      if (phoneTaken) {
-        return NextResponse.json({ error: 'phone_taken' }, { status: 409 })
-      }
-    }
-
     const passwordHash = await bcrypt.hash(password, 12)
-    const user = await User.create({
-      email,
-      passwordHash,
-      firstName,
-      lastName,
-      phone: phone || '',
-      birthYear: birthYear ?? null,
-      gender: gender ?? null,
-      roles: ['client'],
-      activeRole: 'client',
-      status: 'active',
-    })
+    let user
+    try {
+      user = await User.create({
+        email,
+        passwordHash,
+        firstName,
+        lastName,
+        phone: contactPhone || '',
+        birthYear: birthYear ?? null,
+        gender: gender ?? null,
+        roles: ['client'],
+        activeRole: 'client',
+        status: 'active',
+      })
+    } catch (error) {
+      if ((error as { code?: number }).code === 11000) {
+        return NextResponse.json({ error: 'email_taken' }, { status: 409 })
+      }
+      throw error
+    }
 
     const token = await issueVerificationToken(String(user._id), email, 'verify-email')
     const verifyLink = `${SITE}/verify-email?email=${encodeURIComponent(email)}&token=${token}`

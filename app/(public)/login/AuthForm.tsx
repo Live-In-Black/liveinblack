@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { getSession, signIn, useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { regions } from '@/lib/shared/regions'
+import { phoneCallingCodeOptions } from '@/lib/shared/phoneCallingCodes'
 import { getPasswordPolicyErrors } from '@/lib/shared/passwordPolicy'
+import PasswordPolicyHint from '@/app/components/ui/PasswordPolicyHint'
 import { isValidPhone } from '@/lib/shared/applicationValidation'
 import { safeInternalPath } from '@/lib/shared/safeNavigation'
 import { dashboardHrefForRole } from '@/lib/shared/dashboardRoutes'
@@ -353,8 +354,10 @@ export default function AuthForm() {
       const body = await res.json().catch(() => ({}))
       if (body?.error === 'phone_taken') {
         setRegError('Ce numéro de téléphone est déjà utilisé par un compte actif.')
+      } else if (body?.error === 'invalid_phone') {
+        setRegError('Numéro de téléphone invalide. Utilise le format international avec indicatif.')
       } else if (res.status === 409 || body?.error === 'email_taken') {
-        setRegError('Cet email est déjà utilisé par un compte actif.')
+        setRegError('Cette adresse e-mail est déjà associée à un compte. Veuillez utiliser une autre adresse pour créer ce compte.')
       } else if (res.status === 400) {
         setRegError('Le mot de passe doit contenir au moins 8 caractères.')
       } else {
@@ -648,7 +651,7 @@ export default function AuthForm() {
                       value={dialCode}
                       onChange={(value) => setDialCode(value)}
                       disabled={regLoading}
-                      options={regions.map((r) => ({ value: r.dial, label: `${r.flag} ${r.dial}` }))}
+                      options={phoneCallingCodeOptions}
                       style={{ minHeight: 38, padding: '0 8px' }}
                     />
                   </div>
@@ -668,14 +671,17 @@ export default function AuthForm() {
               </div>
 
               <div>
-                <Label htmlFor="reg-password" style={{ marginBottom: 2, fontSize: 'var(--font-size-footnote)' }}>Mot de passe</Label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Label htmlFor="reg-password" style={{ marginBottom: 2, fontSize: 'var(--font-size-footnote)' }}>Mot de passe</Label>
+                  <PasswordPolicyHint />
+                </div>
                 <div style={{ position: 'relative' }}>
                   <Input
                     id="reg-password"
                     name="new-password"
                     type={showRegPwd ? 'text' : 'password'}
                     autoComplete="new-password"
-                    placeholder="8+ car., 1 maj., 1 chif."
+                    placeholder="Ton mot de passe"
                     disabled={regLoading}
                     value={regPwd}
                     onChange={(e) => setRegPwd(e.target.value)}
@@ -792,7 +798,7 @@ export default function AuthForm() {
                     ref={forgotEmailRef}
                     id="forgot-email"
                     name="email"
-                    type="text"
+                    type="email"
                     inputMode="email"
                     autoComplete="email"
                     placeholder="ton@email.com"

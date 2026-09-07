@@ -66,12 +66,6 @@ export function useMessagingPresence({
   }, [activeId, apiFetch])
 
   useEffect(() => {
-    void sendPresenceHeartbeat(apiFetch)
-    const interval = setInterval(() => void sendPresenceHeartbeat(apiFetch), 20000)
-    return () => clearInterval(interval)
-  }, [apiFetch])
-
-  useEffect(() => {
     if (!presenceIdsKey) return
     const ids = presenceIdsKey.split(',')
     let cancelled = false

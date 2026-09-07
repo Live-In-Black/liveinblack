@@ -1,17 +1,23 @@
 import mongoose, { type ClientSession, type HydratedDocument } from 'mongoose'
+import { createHash } from 'node:crypto'
 import Event, { type EventDoc } from '@/lib/models/Event'
 import Order, { type OrderDoc } from '@/lib/models/Order'
 import Ticket from '@/lib/models/Ticket'
-import User from '@/lib/models/User'
 import RefundCase from '@/lib/models/RefundCase'
+import RefundProof from '@/lib/models/RefundProof'
 import RefundPoint, { type RefundPointDoc } from '@/lib/models/RefundPoint'
 import { getDb } from '@/lib/db/mongoose'
 import { notifyUserById } from '@/lib/server/emails/notify'
-import { eventCancelledCashPickupEmail, refundConfirmedEmail } from '@/lib/server/emails'
+import { eventCancelledCashPickupEmail, refundDeclaredEmail } from '@/lib/server/emails'
 import { fmtMoney } from '@/lib/shared/money'
+import { clientRefundEligibility } from './clientEligibility'
+import { releaseRefundedOptionStock } from './stockRelease'
+import { refundBusinessHistory } from './publicAudit'
+import { decodePrivateRefundProof } from './privateProofs'
 import {
   computeRefundableMinor,
   decryptRefundPickupCode,
+  decryptRefundSensitiveValue,
   encryptRefundPickupCode,
   encryptRefundSensitiveValue,
   generateRefundPickupCode,
@@ -106,7 +112,6 @@ export async function createRefundCaseForOrder(
 
   const event = await Event.findById(order.eventId).session(opts.session ?? null)
   if (!event) return { ok: false, status: 404, error: 'event_not_found' }
-  const buyer = await User.findById(order.userId).select('phone').session(opts.session ?? null).lean()
 
   const flow: RefundCaseFlow = opts.flow ?? (cause === 'cancellation_option' ? 'individual' : 'cash_pickup')
   const facialMinor = orderFacialMinor(order)
@@ -122,9 +127,8 @@ export async function createRefundCaseForOrder(
     if (!point) return { ok: false, status: 409, error: 'refund_point_required' }
     pickupCode = generateRefundPickupCode()
   }
-  const lockedPhone = order.contactPhone || buyer?.phone || null
-  const individualDestinationType = flow === 'individual' ? (order.rail === 'fedapay' && lockedPhone ? 'locked_mobile_money' : 'bank_account') : null
-  const originalPaymentDestinationMasked = individualDestinationType === 'locked_mobile_money' ? maskPaymentDestination(lockedPhone) : null
+  // FedaPay identifies the rail, not the funding account. Contact details
+  // are not evidence of the original payment destination.
 
   const [created] = await RefundCase.create(
     [
@@ -142,9 +146,9 @@ export async function createRefundCaseForOrder(
         optionFeeMinor,
         refundableMinor,
         paymentRail: order.rail === 'cash' ? 'cash' : order.rail === 'fedapay' ? 'fedapay' : 'unknown',
-        individualDestinationType,
-        originalPaymentDestinationMasked,
-        encryptedIndividualDestination: individualDestinationType === 'locked_mobile_money' && lockedPhone ? encryptRefundSensitiveValue(lockedPhone) : null,
+        individualDestinationType: null,
+        originalPaymentDestinationMasked: null,
+        encryptedIndividualDestination: null,
         refundPointId: point ? String(point._id) : null,
         refundPointName: point?.name ?? null,
         refundPointAddress: point?.address ?? null,
@@ -188,6 +192,20 @@ export async function createClientInitiatedRefundCase(
         result = { ok: false, status: 404, error: 'order_not_found' }
         return
       }
+      const event = await Event.findById(lockedOrder.eventId).session(session)
+      if (!event) {
+        result = { ok: false, status: 404, error: 'event_not_found' }
+        return
+      }
+      const eligibility = clientRefundEligibility(lockedOrder, event)
+      if (!eligibility.ok) {
+        result = eligibility
+        return
+      }
+      if (eligibility.cause !== cause) {
+        result = { ok: false, status: 409, error: 'refund_conditions_changed' }
+        return
+      }
       const anyCheckedIn = await Ticket.exists({ orderId: String(lockedOrder._id), checkedInAt: { $ne: null } }).session(session)
       if (anyCheckedIn) {
         result = { ok: false, status: 409, error: 'ticket_already_checked_in' }
@@ -198,11 +216,12 @@ export async function createClientInitiatedRefundCase(
         result = { ok: false, status: 409, error: 'ticket_listed_for_resale' }
         return
       }
+      result = await createRefundCaseForOrder(lockedOrder, cause, { flow: cause === 'cancellation_option' ? 'individual' : 'cash_pickup', actorId, actorRole: 'participant', session })
+      if (!result.ok) return
       await Ticket.updateMany({ orderId: String(lockedOrder._id) }, { $set: { revoked: true, resaleListingId: null } }, { session })
       lockedOrder.clientRefundRequestedAt = new Date()
       lockedOrder.clientRefundReason = cause
       await lockedOrder.save({ session })
-      result = await createRefundCaseForOrder(lockedOrder, cause, { flow: cause === 'cancellation_option' ? 'individual' : 'cash_pickup', actorId, actorRole: 'participant', session })
     })
     return result
   } finally {
@@ -336,21 +355,17 @@ export async function processPendingEventCancellationRefundBatches(actorId: stri
 export async function switchCashPickupToIndividual(callerId: string, refundCaseId: string, auditContext?: RefundAuditContext) {
   await getDb()
   const now = new Date()
-  const refund = await RefundCase.findOne({ _id: refundCaseId, buyerId: callerId, flow: 'cash_pickup', status: 'code_active' })
+  const refund = await RefundCase.findOne({ _id: refundCaseId, buyerId: callerId, flow: 'cash_pickup', status: 'code_active', cashOperationId: null })
   if (!refund) return { ok: false as const, status: 409, error: 'not_switchable' }
-  const order = await Order.findById(refund.orderId).lean()
-  const buyer = await User.findById(callerId).select('phone').lean()
-  const lockedPhone = order?.contactPhone || buyer?.phone || null
-  const lockedToOriginalMobileMoney = order?.rail === 'fedapay' && lockedPhone
   const result = await RefundCase.findOneAndUpdate(
-    { _id: refundCaseId, buyerId: callerId, flow: 'cash_pickup', status: 'code_active' },
+    { _id: refundCaseId, buyerId: callerId, flow: 'cash_pickup', status: 'code_active', cashOperationId: null },
     {
       $set: {
         flow: 'individual',
-        status: lockedToOriginalMobileMoney ? 'to_refund' : 'switched_individual',
-        individualDestinationType: lockedToOriginalMobileMoney ? 'locked_mobile_money' : null,
-        originalPaymentDestinationMasked: lockedToOriginalMobileMoney ? maskPaymentDestination(lockedPhone) : null,
-        encryptedIndividualDestination: lockedToOriginalMobileMoney ? encryptRefundSensitiveValue(lockedPhone) : null,
+        status: 'switched_individual',
+        individualDestinationType: null,
+        originalPaymentDestinationMasked: null,
+        encryptedIndividualDestination: null,
         codeCancelledAt: now,
         codeHash: null,
         encryptedPickupCode: null,
@@ -364,9 +379,9 @@ export async function switchCashPickupToIndividual(callerId: string, refundCaseI
           { flow: 'cash_pickup', status: 'code_active', codeActive: true },
           {
             flow: 'individual',
-            status: lockedToOriginalMobileMoney ? 'to_refund' : 'switched_individual',
+            status: 'switched_individual',
             codeActive: false,
-            destinationType: lockedToOriginalMobileMoney ? 'locked_mobile_money' : null,
+            destinationType: null,
           }
         ),
       },
@@ -403,6 +418,7 @@ type RefundCaseLeanView = {
   declaredChannel?: string | null
   declaredAt?: Date | string | null
   proofs?: unknown[]
+  signatureUrl?: string | null
   contestReason?: string | null
   contestedAt?: Date | string | null
   contestResolution?: string | null
@@ -438,12 +454,12 @@ function mapRefundCaseView(doc: RefundCaseLeanView, viewer: 'participant' | 'org
     declaredReference: doc.declaredReference,
     declaredChannel: doc.declaredChannel,
     declaredAt: doc.declaredAt ? new Date(doc.declaredAt).toISOString() : null,
-    proofs: doc.proofs ?? [],
+    proofs: [...(doc.proofs ?? []), ...(doc.signatureUrl === `/api/refund-signatures/${doc._id}` ? [{ url: doc.signatureUrl, label: 'Signature du retrait' }] : [])],
     contestReason: doc.contestReason,
     contestedAt: doc.contestedAt ? new Date(doc.contestedAt).toISOString() : null,
     contestResolution: doc.contestResolution,
     contestResolvedAt: doc.contestResolvedAt ? new Date(doc.contestResolvedAt).toISOString() : null,
-    auditTrail: doc.auditTrail ?? [],
+    auditTrail: refundBusinessHistory(doc.auditTrail ?? []),
     createdAt: doc.createdAt ? new Date(doc.createdAt).toISOString() : null,
     updatedAt: doc.updatedAt ? new Date(doc.updatedAt).toISOString() : null,
   }
@@ -471,30 +487,41 @@ export async function listOrganizerRefundCases(organizerId: string, filters: { e
 export async function declareIndividualRefund(
   organizerId: string,
   refundCaseId: string,
-  input: { reference: string; channel: string; proofUrl: string; declaredAt?: Date | null },
+  input: { reference: string; channel: string; proofId: string; declaredAt?: Date | null },
   auditContext?: RefundAuditContext
 ) {
   await getDb()
   const now = new Date()
-  const proofUrl = input.proofUrl.trim()
+  const proofId = input.proofId?.trim()
   const reference = input.reference.trim()
   const channel = input.channel.trim()
-  if (!reference || !channel || !proofUrl) return { ok: false as const, status: 400, error: 'missing_declaration_details' }
+  if (!reference || !channel || !proofId || !/^[a-f\d]{24}$/i.test(proofId)) return { ok: false as const, status: 400, error: 'missing_declaration_details' }
   const duplicateReference = await RefundCase.exists({
     _id: { $ne: refundCaseId },
     organizerId,
-    declaredReference: reference,
+    $or: [
+      { declaredReference: reference },
+      { declaredReferences: reference },
+      { 'auditTrail.after.declaredReference': reference },
+      { auditTrail: { $elemMatch: { action: 'refund_declared', 'metadata.reference': reference } } },
+    ],
   })
   if (duplicateReference) return { ok: false as const, status: 409, error: 'reference_already_used' }
 
   let result
+  const session = await mongoose.startSession()
   try {
-    result = await RefundCase.findOneAndUpdate(
+    result = await session.withTransaction(async () => {
+      const eligible = await RefundCase.exists({ _id: refundCaseId, organizerId, flow: 'individual', status: { $in: ['to_refund', 'contested'] } }).session(session)
+      if (!eligible) return null
+      const proof = await RefundProof.findOne({ _id: proofId, refundCaseId, ownerId: organizerId }).select('+encryptedOriginal').session(session).lean()
+      if (!proof || !decodePrivateRefundProof(proofId, proof)) throw new Error('invalid_private_proof')
+      const updated = await RefundCase.findOneAndUpdate(
       {
         _id: refundCaseId,
         organizerId,
         flow: 'individual',
-        status: { $in: ['individual_generated', 'to_refund', 'contested'] },
+        status: { $in: ['to_refund', 'contested'] },
       },
       {
         $set: {
@@ -504,8 +531,9 @@ export async function declareIndividualRefund(
           declaredAt: input.declaredAt ?? now,
           declaredBy: organizerId,
         },
+        $addToSet: { declaredReferences: reference },
         $push: {
-          proofs: { url: proofUrl, uploadedAt: now, uploadedBy: organizerId, label: 'Preuve de remboursement' },
+          proofs: { proofId, url: `/api/refund-proofs/${proofId}`, uploadedAt: proof.createdAt, uploadedBy: organizerId, label: 'Preuve de remboursement' },
           auditTrail: appendAudit(
             'refund_declared',
             'organizer',
@@ -516,18 +544,25 @@ export async function declareIndividualRefund(
           ),
         },
       },
-      { new: true }
+      { returnDocument: 'after', session }
     )
+      if (updated?.cause === 'cancellation_option') await releaseRefundedOptionStock(updated.orderId, updated.eventId, session)
+      return updated
+    })
   } catch (error) {
+    if (error instanceof Error && error.message === 'invalid_private_proof') return { ok: false as const, status: 400, error: 'invalid_private_proof' }
+    if (error instanceof Error && error.message === 'refund_stock_inconsistent') return { ok: false as const, status: 409, error: 'refund_stock_inconsistent' }
     if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
       return { ok: false as const, status: 409, error: 'reference_already_used' }
     }
     throw error
+  } finally {
+    await session.endSession()
   }
   if (!result) return { ok: false as const, status: 409, error: 'not_declarable' }
   try {
     const event = await Event.findById(result.eventId).select('name').lean()
-    await notifyUserById(result.buyerId, () => refundConfirmedEmail(event?.name || 'Ton événement', fmtMoney(result.refundableMinor, 'XOF'), 'dans les meilleurs délais'))
+    await notifyUserById(result.buyerId, () => refundDeclaredEmail(event?.name || 'Ton événement', fmtMoney(result.refundableMinor, 'XOF'), reference, channel))
   } catch (err) {
     console.error('[refundCases] declaration notification failed:', err)
   }
@@ -561,6 +596,7 @@ export async function contestDeclaredRefund(callerId: string, refundCaseId: stri
   await getDb()
   const now = new Date()
   const cleanReason = reason.trim().slice(0, 1000)
+  if (!cleanReason) return { ok: false as const, status: 400, error: 'contest_reason_required' }
   const result = await RefundCase.updateOne(
     { _id: refundCaseId, buyerId: callerId, status: 'declared' },
     {
@@ -595,6 +631,8 @@ export async function resolveRefundContest(organizerId: string, refundCaseId: st
         contestResolution: cleanResolution,
         contestResolvedAt: now,
         contestResolvedBy: organizerId,
+        contestEmailState: 'pending',
+        contestEmailNextAt: now,
       },
       $push: {
         auditTrail: appendAudit(
@@ -629,29 +667,78 @@ export async function submitIndividualRefundDestination(
     return { ok: false as const, status: 409, error: 'destination_not_editable' }
   }
 
-  const beforeStatus = refund.status
-  refund.individualDestinationType = input.destinationType
-  refund.encryptedIndividualDestination = encryptRefundSensitiveValue(clean)
-  refund.originalPaymentDestinationMasked = maskPaymentDestination(clean)
-  refund.status = 'info_required'
-  refund.bankDetailsVerifiedAt = null
-  refund.auditTrail.push(appendAudit(
-    'individual_destination_submitted',
-    'participant',
-    callerId,
-    withAuditContext({ destinationType: input.destinationType }, auditContext),
-    { status: beforeStatus },
-    { status: 'info_required', destinationMasked: refund.originalPaymentDestinationMasked }
-  ))
-  await refund.save()
+  const destinationMasked = maskPaymentDestination(clean)
+  const result = await RefundCase.updateOne(
+    {
+      _id: refundCaseId,
+      buyerId: callerId,
+      flow: 'individual',
+      status: refund.status,
+      individualDestinationType: refund.individualDestinationType,
+      encryptedIndividualDestination: refund.encryptedIndividualDestination ?? null,
+    },
+    {
+      $set: {
+        individualDestinationType: input.destinationType,
+        encryptedIndividualDestination: encryptRefundSensitiveValue(clean),
+        originalPaymentDestinationMasked: destinationMasked,
+        status: 'info_required',
+        bankDetailsVerifiedAt: null,
+      },
+      $push: {
+        auditTrail: appendAudit(
+          'individual_destination_submitted',
+          'participant',
+          callerId,
+          withAuditContext({ destinationType: input.destinationType }, auditContext),
+          { status: refund.status },
+          { status: 'info_required', destinationMasked }
+        ),
+      },
+    }
+  )
+  if (result.matchedCount === 0) return { ok: false as const, status: 409, error: 'destination_not_editable' }
   return { ok: true as const }
 }
 
-export async function verifyIndividualRefundDestination(organizerId: string, refundCaseId: string, auditContext?: RefundAuditContext) {
+function destinationVersion(id: string, type: string | null | undefined, encrypted: string) {
+  return createHash('sha256').update(JSON.stringify([id, type ?? null, encrypted])).digest('hex')
+}
+
+export async function readIndividualRefundDestination(organizerId: string, refundCaseId: string, auditContext?: RefundAuditContext) {
   await getDb()
+  const refund = await RefundCase.findOne({ _id: refundCaseId, organizerId, flow: 'individual' }).select('+encryptedIndividualDestination')
+  if (!refund) return { ok: false as const, status: 404, error: 'not_found' }
+  const encrypted = refund.encryptedIndividualDestination
+  const details = decryptRefundSensitiveValue(encrypted)
+  if (!encrypted || !details) return { ok: false as const, status: 409, error: 'destination_unavailable' }
+  const version = destinationVersion(refundCaseId, refund.individualDestinationType, encrypted)
+  const logged = await RefundCase.updateOne(
+    { _id: refundCaseId, organizerId, flow: 'individual', encryptedIndividualDestination: encrypted, individualDestinationType: refund.individualDestinationType },
+    { $push: { auditTrail: appendAudit('individual_destination_viewed', 'organizer', organizerId, withAuditContext({ version }, auditContext)) } }
+  )
+  if (!logged.matchedCount) return { ok: false as const, status: 409, error: 'destination_changed' }
+  return { ok: true as const, details, version, destinationType: refund.individualDestinationType, canVerify: refund.status === 'info_required' }
+}
+
+export async function verifyIndividualRefundDestination(organizerId: string, refundCaseId: string, version?: string, auditContext?: RefundAuditContext) {
+  await getDb()
+  if (!version || !/^[a-f0-9]{64}$/.test(version)) return { ok: false as const, status: 400, error: 'destination_review_required' }
+  const refund = await RefundCase.findOne({ _id: refundCaseId, organizerId, flow: 'individual', status: 'info_required' }).select('+encryptedIndividualDestination')
+  if (!refund?.encryptedIndividualDestination) return { ok: false as const, status: 409, error: 'not_verifiable' }
+  if (version !== destinationVersion(refundCaseId, refund.individualDestinationType, refund.encryptedIndividualDestination)) {
+    return { ok: false as const, status: 409, error: 'destination_changed' }
+  }
   const now = new Date()
   const result = await RefundCase.updateOne(
-    { _id: refundCaseId, organizerId, flow: 'individual', status: 'info_required' },
+    {
+      _id: refundCaseId,
+      organizerId,
+      flow: 'individual',
+      status: 'info_required',
+      individualDestinationType: { $in: ['bank_account', 'verified_mobile_money'] },
+      encryptedIndividualDestination: refund.encryptedIndividualDestination,
+    },
     {
       $set: {
         status: 'to_refund',
@@ -662,7 +749,7 @@ export async function verifyIndividualRefundDestination(organizerId: string, ref
           'individual_destination_verified',
           'organizer',
           organizerId,
-          withAuditContext({ verifiedAt: now.toISOString() }, auditContext),
+          withAuditContext({ verifiedAt: now.toISOString(), version }, auditContext),
           { status: 'info_required' },
           { status: 'to_refund' }
         ),

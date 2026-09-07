@@ -50,7 +50,7 @@ export default async function EventsPage({
   const cookieStore = await cookies()
   const hasSessionCookie = hasAuthSessionCookie(cookieStore.getAll())
 
-  const [{ events: pageEvents, total, pageSize, totalPages, page: safePage }, boostedIds, session] = await Promise.all([
+  const [{ events: pageEvents, total, pageSize, totalPages, page: safePage }, boostedIds, session, { events: categorySource }] = await Promise.all([
     getCachedPublicEventsDirectory({
       q: search,
       category,
@@ -60,21 +60,20 @@ export default async function EventsPage({
     }),
     getCachedBoostedEventIds(),
     hasSessionCookie ? auth() : Promise.resolve(null),
+    getCachedPublicEventsDirectory({
+      page: 1,
+      pageSize: 60,
+      includeTotal: false,
+    }),
   ])
 
   let recommendations: ReturnType<typeof getRecommendedEvents<PublicEvent>> = []
-  let recommendationSource: PublicEvent[] = []
+  const recommendationSource: PublicEvent[] = categorySource
   if (session?.user) {
-    const [{ events: prefSource }, profile, interestHistory] = await Promise.all([
-      getCachedPublicEventsDirectory({
-        page: 1,
-        pageSize: 60,
-        includeTotal: false,
-      }),
+    const [profile, interestHistory] = await Promise.all([
       getMyProfile({ id: session.user.id }),
       listActiveInterestSignals({ id: session.user.id }),
     ])
-    recommendationSource = prefSource
 
     if (profile && profile.privacy.personalizedRecommendations !== false) {
       recommendations = getRecommendedEvents({
@@ -86,8 +85,6 @@ export default async function EventsPage({
         max: 12,
       })
     }
-  } else {
-    recommendationSource = pageEvents
   }
 
   const reasons: Record<string, string> = {}

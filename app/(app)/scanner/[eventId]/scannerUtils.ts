@@ -65,6 +65,8 @@ const ORDER_ERROR_MESSAGES: Record<string, string> = {
   not_your_ticket: "Ce billet ne t'appartient pas.",
   item_not_found: 'Cette ligne de commande est introuvable — elle a peut-être déjà été retirée.',
   item_cancelled: 'Cette ligne a été annulée — impossible de la servir.',
+  ticket_unavailable: 'Billet non payé ou révoqué : remise des consommations impossible.',
+  purchased_item_locked: 'Une consommation achetée ou incluse avec le billet ne peut pas être supprimée.',
   serve_staff_only: 'Seul le staff peut marquer un article comme servi.',
   pay_staff_only: 'Seul un serveur, un manager ou le propriétaire peut encaisser.',
   cancel_manager_only: "Seul le manager ou le propriétaire de l'événement peut annuler une ligne.",

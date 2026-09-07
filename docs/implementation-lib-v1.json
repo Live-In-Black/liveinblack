@@ -1,0 +1,1364 @@
+{
+  "scope": "Toutes les exigences actuelles de SYNTHESE_EXIGENCES_LIB_2026-09-06.md, web et mobile, recettes et déploiement. Les exigences historiques exclues ne doivent pas être réactivées.",
+  "status": "in_progress",
+  "requirements": [
+    {
+      "id": "V1-01",
+      "requirement": "Marketplace de l'événementiel réunissant public, organisateurs et prestataires.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "V1-02",
+      "requirement": "Lancement uniquement au Bénin, pas une ouverture simultanée à l'Afrique de l'Ouest ou à la France.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "V1-03",
+      "requirement": "Montants en franc CFA BCEAO, code XOF, affichage FCFA.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "V1-04",
+      "requirement": "Site web, application iPhone sur App Store et application Android sur Google Play.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "V1-05",
+      "requirement": "FedaPay Marketplace pour les paiements en ligne, répartition au moment du paiement.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "V1-06",
+      "requirement": "Aucun versement à J+5, aucun versement différé après événement, aucune avance de 50 %.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "V1-07",
+      "requirement": "Pas de revente de billets dans la V1.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "V1-08",
+      "requirement": "Pas de portefeuille d'argent ni de points de fidélité dans la V1. « Mes billets » reste nécessaire.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "V1-09",
+      "requirement": "Trois types de comptes indépendants, chacun avec son adresse e-mail et son mot de passe.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "V1-10",
+      "requirement": "Les missions d'équipe des agents restent des permissions ; elles ne constituent pas une exception autorisant le cumul client/organisateur/prestataire.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "V1-11",
+      "requirement": "L'organisateur finance et exécute les remboursements ; LIB automatise leur suivi, pas le paiement à sa place.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "V1-12",
+      "requirement": "Prestataires : abonnement de 9 000 FCFA/mois, relation et paiement de la prestation directement entre les parties.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BEN-01",
+      "requirement": "retirer les sélecteurs de pays/régions destinés à une ouverture internationale. Chady le demande explicitement sur l'annuaire prestataires et la liste organisateurs, captures 468 et 470 ; la conversation privée vise l'ensemble des sections pays/régions.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BEN-02",
+      "requirement": "les événements, établissements, prestataires et contenus publics proposés au lancement doivent correspondre au Bénin. Lyon, Paris, Lomé, Dakar, Abidjan et les autres localités étrangères ne deviennent pas conformes parce qu'elles utilisent le FCFA.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BEN-03",
+      "requirement": "harmoniser la devise dans les cartes, accueil, listes, fiches, choix de billets, paniers, paiements, billets, formulaires, abonnements, tableaux de bord et communications.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BEN-04",
+      "requirement": "distinguer une mauvaise étiquette monétaire d'un véritable prix enregistré en EUR. Remplacer « € » par « FCFA » sans contrôler les données n'est pas une conversion financière valide.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BEN-05",
+      "requirement": "traiter les données de démonstration et historiques hors périmètre sans corrompre des commandes réelles ni leurs montants d'origine. Le traitement précis des données existantes reste une décision de migration, pas une autorisation de suppression globale.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BEN-06",
+      "requirement": "publier les quelque 100 articles Bénin annoncés comme préparés. « Préparés » ne signifie pas visibles au public ; la QA trouve zéro article.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BEN-07",
+      "requirement": "localiser les images, exemples, contenus éditoriaux et métadonnées de partage, pas uniquement le texte du titre.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BEN-08",
+      "requirement": "garder les listes publiques accessibles et alimentées sans connexion ; cohérence entre accueil, listes, profils organisateurs, liens directs, blog et sitemap.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BEN-09",
+      "requirement": "vérifier les filtres de catégorie et leurs compteurs, y compris déconnecté. Sélectionner une catégorie ne doit pas faire disparaître toutes les autres. « Tous » doit avoir une signification cohérente avec le total présenté.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BEN-10",
+      "requirement": "assurer des cartes de lieu utilisables et des liens d'itinéraire pertinents sur web, Android et iOS, avec repli en cas d'échec.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "CPT-01",
+      "requirement": "un compte client, un compte organisateur et un compte prestataire sont trois comptes distincts.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "CPT-02",
+      "requirement": "chaque compte a ses propres identifiants ; une même personne souhaitant plusieurs activités crée plusieurs comptes avec des adresses différentes.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "CPT-03",
+      "requirement": "unicité de l'adresse e-mail sur toute la plateforme, pas seulement à l'intérieur de chaque type.",
+      "status": "partially_verified_locally",
+      "evidence": [
+        "profile.integration.test.ts : confirmations concurrentes entre types distincts, titulaire du jeton, rejet de rejeu et ancienne demande ; MongoDB isolé, 06/09/2026."
+      ],
+      "remaining": [
+        "Toutes les créations concurrentes et routes d'inscription à recetter ; index et déploiement production non vérifiés."
+      ]
+    },
+    {
+      "id": "CPT-04",
+      "requirement": "interdire la transformation d'un client en organisateur ou prestataire.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "CPT-05",
+      "requirement": "interdire l'ajout d'un profil organisateur/prestataire à un compte existant.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "CPT-06",
+      "requirement": "interdire le basculement entre les trois types depuis une même connexion.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "CPT-07",
+      "requirement": "le compte client existant reste indépendant et conserve ses données lorsque la personne crée son nouveau compte professionnel.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "CPT-08",
+      "requirement": "créer un compte professionnel dédié puis compléter son dossier. L'approbation valide ce dossier ; elle ne doit pas ajouter un second type commercial à un autre compte.",
+      "status": "partially_verified_locally",
+      "evidence": [
+        "applicationsAgent.integration.test.ts : refus de validation et de brouillon pour type incompatible ou compte mixte, permission agent conservée ; MongoDB isolé, 06/09/2026."
+      ],
+      "remaining": [
+        "Inscription complète avec uploads, parité native, migration historique et production à vérifier."
+      ]
+    },
+    {
+      "id": "CPT-09",
+      "requirement": "conserver les permissions d'agents attribuées par mission : ventes, contrôle d'entrée, remise de remboursements. Le retrait d'une mission doit retirer ses accès.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "CPT-10",
+      "requirement": "bloquer l'inscription avec le texte exact ci-dessous lorsque l'e-mail existe déjà.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "INS-01",
+      "requirement": "retirer le champ SIRET/SIREN organisateur (G 03/09, capture 316).",
+      "status": "implemented_web_locally_verified",
+      "evidence": [
+        "e2e/benin-signup-requirements.spec.ts : 5 tests navigateur réussis le 06/09/2026, sans paiement ni création réelle de compte.",
+        "lib/shared/__tests__/applicationValidation.test.ts et lib/server/__tests__/organizerSignupRoutes.test.ts : 13 tests réussis.",
+        "npx tsc --noEmit : réussi."
+      ],
+      "remaining": [
+        "Parité mobile native à vérifier.",
+        "Déploiement et recette production non effectués."
+      ]
+    },
+    {
+      "id": "INS-02",
+      "requirement": "retirer également le champ devenu « IFU / RCCM / SIRET » : nouvelle demande explicite du 05/09, capture 472. Accepter `000` ou ajouter un validateur RCCM ne satisfait pas cette demande de suppression.",
+      "status": "implemented_web_locally_verified",
+      "evidence": [
+        "e2e/benin-signup-requirements.spec.ts : 5 tests navigateur réussis le 06/09/2026, sans paiement ni création réelle de compte.",
+        "lib/shared/__tests__/applicationValidation.test.ts et lib/server/__tests__/organizerSignupRoutes.test.ts : 13 tests réussis.",
+        "npx tsc --noEmit : réussi."
+      ],
+      "remaining": [
+        "Parité mobile native à vérifier.",
+        "Déploiement et recette production non effectués."
+      ]
+    },
+    {
+      "id": "INS-03",
+      "requirement": "à l'étape justificatifs montrée, ne demander que la **pièce d'identité du titulaire du compte**, et le préciser dans le libellé.",
+      "status": "implemented_web_locally_verified",
+      "evidence": [
+        "e2e/benin-signup-requirements.spec.ts : 5 tests navigateur réussis le 06/09/2026, sans paiement ni création réelle de compte.",
+        "lib/shared/__tests__/applicationValidation.test.ts et lib/server/__tests__/organizerSignupRoutes.test.ts : 13 tests réussis.",
+        "npx tsc --noEmit : réussi."
+      ],
+      "remaining": [
+        "Parité mobile native à vérifier.",
+        "Déploiement et recette production non effectués."
+      ]
+    },
+    {
+      "id": "INS-04",
+      "requirement": "retirer les documents d'entreprise et la licence de débit de boissons entourés dans la capture 319. Remplacer KBIS par RCCM/IFU n'est pas la demande.",
+      "status": "implemented_web_locally_verified",
+      "evidence": [
+        "e2e/benin-signup-requirements.spec.ts : 5 tests navigateur réussis le 06/09/2026, sans paiement ni création réelle de compte.",
+        "lib/shared/__tests__/applicationValidation.test.ts et lib/server/__tests__/organizerSignupRoutes.test.ts : 13 tests réussis.",
+        "npx tsc --noEmit : réussi."
+      ],
+      "remaining": [
+        "Parité mobile native à vérifier.",
+        "Déploiement et recette production non effectués."
+      ]
+    },
+    {
+      "id": "INS-05",
+      "requirement": "retirer le numéro SIRET/SIREN du parcours prestataire, même optionnel (capture 320).",
+      "status": "implemented_web_locally_verified",
+      "evidence": [
+        "e2e/benin-signup-requirements.spec.ts : 5 tests navigateur réussis le 06/09/2026, sans paiement ni création réelle de compte.",
+        "lib/shared/__tests__/applicationValidation.test.ts et lib/server/__tests__/organizerSignupRoutes.test.ts : 13 tests réussis.",
+        "npx tsc --noEmit : réussi."
+      ],
+      "remaining": [
+        "Parité mobile native à vérifier.",
+        "Déploiement et recette production non effectués."
+      ]
+    },
+    {
+      "id": "INS-06",
+      "requirement": "retirer l'étape « Tarifs » de l'inscription prestataire (capture 321 : devis uniquement, min/max, type de tarif). Passer EUR en FCFA ne remplace pas sa suppression. Cela ne supprime pas automatiquement le droit d'afficher ultérieurement une offre commerciale sur le profil.",
+      "status": "implemented_web_locally_verified",
+      "evidence": [
+        "e2e/benin-signup-requirements.spec.ts : 5 tests navigateur réussis le 06/09/2026, sans paiement ni création réelle de compte.",
+        "lib/shared/__tests__/applicationValidation.test.ts et lib/server/__tests__/organizerSignupRoutes.test.ts : 13 tests réussis.",
+        "npx tsc --noEmit : réussi."
+      ],
+      "remaining": [
+        "Parité mobile native à vérifier.",
+        "Déploiement et recette production non effectués."
+      ]
+    },
+    {
+      "id": "INS-07",
+      "requirement": "déplacer les modalités du mot de passe, actuellement dans le champ, vers une petite icône d'information à côté du libellé « Mot de passe » (capture 469).",
+      "status": "implemented_web_partially_verified",
+      "evidence": [
+        "PasswordPolicyHint commun aux trois inscriptions ; interaction vérifiée sur organisateur en E2E."
+      ],
+      "remaining": [
+        "Vérifier l'interaction de l'aide client et prestataire, puis parité mobile."
+      ]
+    },
+    {
+      "id": "INS-08",
+      "requirement": "corriger l'icône œil sur ordinateur : dimensions, placement, absence de chevauchement et véritable affichage/masquage du mot de passe.",
+      "status": "implemented_web_locally_verified",
+      "evidence": [
+        "e2e/benin-signup-requirements.spec.ts : 5 tests navigateur réussis le 06/09/2026, sans paiement ni création réelle de compte.",
+        "lib/shared/__tests__/applicationValidation.test.ts et lib/server/__tests__/organizerSignupRoutes.test.ts : 13 tests réussis.",
+        "npx tsc --noEmit : réussi."
+      ],
+      "remaining": [
+        "Parité mobile native à vérifier.",
+        "Déploiement et recette production non effectués."
+      ]
+    },
+    {
+      "id": "INS-09",
+      "requirement": "afficher un champ de confirmation du mot de passe distinct, visible et utilisable sur ordinateur.",
+      "status": "implemented_web_locally_verified",
+      "evidence": [
+        "e2e/benin-signup-requirements.spec.ts : 5 tests navigateur réussis le 06/09/2026, sans paiement ni création réelle de compte.",
+        "lib/shared/__tests__/applicationValidation.test.ts et lib/server/__tests__/organizerSignupRoutes.test.ts : 13 tests réussis.",
+        "npx tsc --noEmit : réussi."
+      ],
+      "remaining": [
+        "Parité mobile native à vérifier.",
+        "Déploiement et recette production non effectués."
+      ]
+    },
+    {
+      "id": "INS-10",
+      "requirement": "rendre les champs et messages lisibles en saisie normale comme après remplissage automatique du navigateur ; éviter texte blanc sur fond blanc.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "INS-11",
+      "requirement": "conserver l'accès au bouton « Continuer » hors plein écran, sans dépendre d'une taille de fenêtre particulière.",
+      "status": "partially_verified",
+      "evidence": [
+        "Bouton Continuer accessible sur première étape organisateur en 1440x900, 1024x640 et 390x844."
+      ],
+      "remaining": [
+        "Tous les autres formulaires/étapes et mobile natif à vérifier."
+      ]
+    },
+    {
+      "id": "INS-12",
+      "requirement": "revoir année de naissance et genre facultatifs, également repérés par la capture 469 et R502. Leur sort exact n'est pas formulé aussi explicitement que celui du texte du mot de passe : ne pas présenter leur suppression comme définitivement ordonnée.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "TEL-01",
+      "requirement": "accepter correctement les numéros béninois valides dans les trois inscriptions. La QA constate le rejet du +229 alors qu'un numéro français passe.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "TEL-02",
+      "requirement": "ne pas confondre validation de format et vérification de possession du numéro.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "TEL-03",
+      "requirement": "envisager un code OTP, de préférence WhatsApp selon Chady, en comparant les options et leur coût. Twilio est proposé pour le SMS ; un OTP e-mail ne vérifie pas la possession du téléphone.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "TEL-04",
+      "requirement": "le 4 septembre, Chady dit vouloir encore réfléchir. Le 6 septembre, il demande quel service créer et reçoit « Twilio ». Cela indique une préparation, pas la preuve du canal final, de l'intégration ni d'un contrat actif.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "TEL-05",
+      "requirement": "séparer téléphone de contact/compte et téléphone utilisé pour payer ; ne pas écraser l'un avec l'autre.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "TEL-06",
+      "requirement": "le formulaire observé permet un téléphone facultatif. Le cas du client sans compte qui doit suivre un remboursement par téléphone vérifié/SMS doit être articulé avec cette facultativité et le choix OTP.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "AUTH-01",
+      "requirement": "texte « Mot de passe oublié » précisant la condition : « Si l'adresse e-mail est reliée à un compte ». Préremplir depuis la connexion sans promettre l'existence du compte.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "AUTH-02",
+      "requirement": "messages de validation clairs en français, champ e-mail adapté au clavier mobile, gestion des liens expirés/déjà utilisés, vérification de l'adresse et changement de mot de passe.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "AUTH-03",
+      "requirement": "ne pas qualifier le gestionnaire d'identifiants local du navigateur de fuite de tous les comptes. La QA n'a pas constaté d'exposition d'autres utilisateurs.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "AUTH-04",
+      "requirement": "après connexion, garder la destination demandée quand le parcours passe par une page protégée ; déconnexion et expiration doivent réellement retirer les accès.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "ORG-01",
+      "requirement": "créer/modifier ses événements, prix, catégories et quantités, période de vente, dates et lieux, description et visuels.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "ORG-02",
+      "requirement": "proposer entrées, VIP, tables/carrés, groupes, promotions, menus et options selon la configuration retenue.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "ORG-03",
+      "requirement": "gérer sa page, ses événements passés/futurs, ses abonnés et ses informations pratiques ; adresse d'établissement ou indication d'absence de lieu fixe selon le parcours décrit.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "ORG-04",
+      "requirement": "préciser conditions d'accès, âge minimum, dress code et consignes propres à l'événement.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "ORG-05",
+      "requirement": "vérifier le compte professionnel et activer le paiement requis avant publication (R58).",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "ORG-06",
+      "requirement": "attribuer les missions aux agents, suivre ventes, réservations, entrées, précommandes et remboursements.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "ORG-07",
+      "requirement": "disposer de statistiques cohérentes entre toutes les vues : ventes, types de places, intérêt/réservation/présence, conversion, panier et consommations ; les analyses démographiques sont conditionnées au consentement et aux données réellement recueillies.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "ORG-08",
+      "requirement": "recevoir et traiter les demandes de remboursement sans pouvoir refuser arbitrairement celles qui respectent les règles.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "ORG-09",
+      "requirement": "accompagnement de lancement décrit dans D88 : préparation du profil, configuration, prise en main de la billetterie/du scan, assistance avant/pendant/après, analyse des résultats. Le partenaire fournit les informations et événements réels, relaie son lien et partage ses retours.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PRE-01",
+      "requirement": "annuaire de photographes, vidéastes, DJ/artistes, traiteurs, décorateurs, loueurs, techniciens, sécurité, accueil, transport et autres métiers de l'événementiel.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PRE-02",
+      "requirement": "profil avec identité commerciale, spécialités, ville/mobilité dans le périmètre retenu, présentation, expérience, portfolio photo/vidéo, références, offres, matériel, disponibilité et contact.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PRE-03",
+      "requirement": "demandes structurées possibles : date/heure, lieu, type et capacité de l'événement, service attendu, budget, contraintes techniques et livrables.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PRE-04",
+      "requirement": "liberté d'accepter/refuser, de fixer et négocier prix et conditions ; tarif fixe, fourchette ou devis sont des possibilités du catalogue historique, pas une obligation de l'étape d'inscription supprimée.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PRE-05",
+      "requirement": "abonnement de visibilité de 9 000 FCFA/mois ; aucune commission LIB sur le paiement des prestations, aucune exécution de prestation ou encaissement pour le compte du prestataire.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PRE-06",
+      "requirement": "profil masqué à l'expiration selon D90, données conservées, visibilité rétablie après renouvellement. Le catalogue e-mails introduit une période de grâce non définie dans ce dossier : voir arbitrages.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PRE-07",
+      "requirement": "les recommandations avancées, indicateurs de conversion des demandes en missions et avis annoncés comme évolutions dans D89 ne doivent pas être transformés automatiquement en engagements V1. La QA couvre néanmoins les écrans d'avis existants.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PAY-01",
+      "requirement": "utiliser FedaPay Marketplace pour répartir la transaction entre organisateur, LIB et frais techniques selon les lignes financières.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PAY-02",
+      "requirement": "proposer seulement les moyens effectivement actifs sur FedaPay au Bénin. La mention des opérateurs dans un dossier n'est pas une preuve de leur activation réelle.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PAY-03",
+      "requirement": "ne pas présenter Stripe Connect, EUR ou un rail « hors lancement » comme parcours opérationnel de la V1 Bénin.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PAY-04",
+      "requirement": "aucun stockage d'un solde monétaire client dans LIB ; pas de financement du remboursement avec un portefeuille LIB.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PAY-05",
+      "requirement": "générer/valider le billet sur confirmation fiable du paiement ; gérer échec, annulation, retour WebView, fermeture d'application, double clic et notification de paiement répétée sans double commande ni double débit.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PAY-06",
+      "requirement": "afficher une erreur compréhensible et exploitable lorsqu'un compte de paiement ou un événement est mal configuré, plutôt qu'un simple « réessaie » indéfini.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "PAY-07",
+      "requirement": "la QA a atteint l'API mais pas la page de paiement, avec HTTP 409. La répartition instantanée affichée dans le texte n'a donc pas été prouvée par une transaction complète dans cette recette.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BIL-01",
+      "requirement": "achat en ligne réservé à un compte client ; achat auprès d'un agent possible sans création de compte.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BIL-02",
+      "requirement": "billet et QR code à présenter à l'entrée ; contrôle de validité, refus d'un QR inconnu/invalide/déjà consommé ; contrôle des droits du scanner.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BIL-03",
+      "requirement": "stock partagé entre vente web, mobile et agents, avec protection contre les achats concurrents et le dépassement des capacités.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BIL-04",
+      "requirement": "billets de groupe, tables et carrés ; nombre d'admissions définitif, plusieurs billets rattachés à l'acheteur principal.",
+      "status": "partially_verified_locally",
+      "evidence": [
+        "groupFees.integration.test.ts : admissions enregistrées depuis groupMax, un billet agent par admission, refus de sous-déclaration et modification concurrente ; six tests passés."
+      ],
+      "remaining": [
+        "Distribution complète, rattachement payeur/acheteur invité, mobile et production à recetter."
+      ]
+    },
+    {
+      "id": "BIL-05",
+      "requirement": "D87 prévoit distribution des billets aux invités, transfert non révocable une fois envoyé et absence de remise pour places inutilisées. **Le partage/distribution n'est pas une revente payante** ; préciser le périmètre final du transfert nominatif, qui n'a pas été validé séparément dans la dernière synthèse.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BIL-06",
+      "requirement": "remboursement du groupe entier rattaché au payeur principal, sans répartition d'argent par LIB entre invités.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BIL-07",
+      "requirement": "conserver la période de précommande/prévente, le blocage temporaire de place et de prix et l'option d'annulation (G 05/09).",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BIL-08",
+      "requirement": "MOB prévoit des blocages de 24 h et 72 h avec acompte, activation, paiement du solde et libération du stock à expiration. Les tarifs, montants d'acompte, règles de prolongation et articulation exacte entre prévente et blocage ne sont pas arrêtés par les derniers messages.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "BIL-09",
+      "requirement": "R58 retient les événements payants, pas d'événement entièrement gratuit ; les guestlists restent une fonction complémentaire. Les anciens tests d'achat gratuit ne sont pas la référence V1.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "CONSO-01",
+      "requirement": "précommander boissons/repas **en même temps que le billet**, puis retrait sur place. Ne pas déduire de vieux boutons « Commander » que les commandes postérieures ou autonomes sont exigées en V1.",
+      "status": "partial",
+      "evidence": [
+        "POST /api/event-orders/add : refus 410 authentifie, 401 anonyme, quatre tests de route.",
+        "Augmentation de quantite refusee pour tous les rangs ; preorder/included verrouilles ; tests unitaires et trois transactions MongoDB isolees.",
+        "Page web /order convertie en suivi sans ajout ; six tests de rendu/page. Voir docs/IMPLEMENTATION_LIB_V1_SUIVI.md lots 15-16.",
+        "Service interne de creation/fusion supprime : deux points d'entree refusent sans acces base ; sept tests unitaires et suite MongoDB de 18 tests adaptee avec fixtures historiques. Voir lot 17.",
+        "Ecran natif converti en suivi, ancien ajout refuse sans reseau, erreurs distinguees du vide ; check:quality et quatre tests passes au lot 18.",
+        "Materialisation : garde paid/non-revoque et lecture du billet dans la transaction, compteur de conflit ; suite eventOrders 22 tests passes au lot 19.",
+        "Remise : garde transactionnelle paid/non-revoque et test de double remise concurrente ; suite eventOrders 25 tests passes au lot 20.",
+        "Menus d'ajout staff web/natif retires ; total natif limite aux anciennes lignes order non payees/non annulees, test de calcul au lot 21.",
+        "Suppression des precommandes/inclus refusee dans le service, huit cas unitaires et controle MongoDB des documents/journal au lot 22.",
+        "Restent annulation evenement et missions concurrentes, inclus historiques, recette achat/remise sur appareils et deploiement."
+      ]
+    },
+    {
+      "id": "CONSO-02",
+      "requirement": "menus, packs, disponibilité, stocks, anticipation/préparation et suivi de remise des consommations ; distinguer servi, annulé et remboursé dans les chiffres.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "MUS-01",
+      "requirement": "playlist participative liée à l'événement ; proposition de morceaux et « j'aime » des participants ; classement consultable par le DJ.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "MUS-02",
+      "requirement": "DJ habilité à consulter et modérer, sans obligation de jouer chaque morceau ; D88 prévoit catégories de billets éligibles, échéance de participation, limites de vote, actualisation et export.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "SOC-01",
+      "requirement": "messagerie et groupes pour organiser les sorties et partager des événements ; droits des membres, fiabilité des messages, états vides, modération et blocage.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "SOC-02",
+      "requirement": "sur mobile, un texte ordinaire doit être affiché comme texte et non « message non supporté ». Un format réellement non pris en charge doit avoir un repli compréhensible.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "AGT-01",
+      "requirement": "l'organisateur désigne et rémunère ses agents ; LIB ne les rémunère pas à sa place.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "AGT-02",
+      "requirement": "l'agent vend uniquement les événements/types de billets autorisés, avec quantités, options et précommandes applicables.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "AGT-03",
+      "requirement": "pour un client existant, recherche par e-mail/téléphone, vérification par code et rattachement du billet ; **ne jamais demander son mot de passe**.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "AGT-04",
+      "requirement": "pour un client sans compte, parcours invité simplifié, contact permettant la transmission/recherche du billet et invitation facultative à télécharger l'application ; pas de compte avec mot de passe imposé.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "AGT-05",
+      "requirement": "téléphone du payeur Mobile Money distinct du contact destinataire du billet si nécessaire ; confirmation du paiement avant validation du billet dans le parcours numérique.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "AGT-06",
+      "requirement": "même prix et mêmes frais LIB à situation équivalente, pas un prix caché différent parce que la vente passe par un agent.",
+      "status": "partially_verified_locally",
+      "evidence": [
+        "Les trois exemples D90 sont vérifiés dans les commandes web et agents : 120000/8 = 6000 ; 200000/10 = 10000 ; 500000/10 = 15000 FCFA de frais.",
+        "group-pricing.spec.ts vérifie les récapitulatifs client et agent pour 8 admissions, dont les frais désormais inclus dans le total agent."
+      ],
+      "remaining": [
+        "Autres options/promotions/frais techniques, flux Mobile Money agent réel, mobile natif et production."
+      ]
+    },
+    {
+      "id": "AGT-07",
+      "requirement": "suivi des ventes par événement/type, agent, montant, cash/numérique, avec/sans compte et consommations ; ne pas mélanger encaissement, somme due et règlement effectif.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "AGT-08",
+      "requirement": "D87 réserve les informations nominatives de l'acheteur à l'agent concerné et à LIB, avec statistiques agrégées pour l'organisateur dans ce contexte. À articuler avec les identités nécessaires au remboursement, sans ouvrir tout le fichier clients.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "AGT-09",
+      "requirement": "vente distante par échange avec un agent possible ; même logique de stock et confirmation.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-01",
+      "requirement": "organisateur vendeur du billet et responsable de la trésorerie nécessaire ; sa part est reçue immédiatement, sans réserve automatique jusqu'après l'événement.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-02",
+      "requirement": "LIB calcule les droits et montants, invalide les billets, crée les dossiers, notifie, conserve les preuves et facilite le suivi/les contestations.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-03",
+      "requirement": "aucun remboursement exécuté via FedaPay ; remboursement financé et effectué par l'organisateur ou ses agents, suivi dans LIB.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-04",
+      "requirement": "remboursement du groupe en totalité au payeur principal ; redistribution aux invités hors LIB.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-05",
+      "requirement": "l'organisateur supporte les éventuels frais d'envoi pour que le destinataire reçoive le montant affiché intégralement.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-06",
+      "requirement": "activation par catégorie de billets par l'organisateur ; prix 10 % du facial plafonné à 5 000 ; facial minimum 5 000.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-07",
+      "requirement": "achat uniquement avec le billet, en ligne ou espèces ; impossible de l'ajouter ensuite.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-08",
+      "requirement": "achat ET utilisation autorisés seulement s'il reste **strictement plus de 48 heures avant la fermeture de la billetterie**, pas avant le début de l'événement.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-09",
+      "requirement": "à l'instant exact « fermeture - 48 h », achat et utilisation ferment simultanément.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-10",
+      "requirement": "vérifier billet payé, option payée, billet valide/non scanné/non déjà annulé ou remboursé, délai et absence de demande antérieure.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-11",
+      "requirement": "récapitulatif avant confirmation, montant calculé serveur, avertissement d'irréversibilité ; invalidation du billet/QR et création de demande dans une même opération.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-12",
+      "requirement": "**ne pas remettre la place en vente avant validation du remboursement par l'organisateur**.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-13",
+      "requirement": "demande valide non refusable discrétionnairement ; remboursement individuel obligatoire, suivi et possibilité de signaler la non-réception.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-14",
+      "requirement": "avertir l'organisateur du nombre de commandes, du montant global et de sa responsabilité ; double confirmation.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-15",
+      "requirement": "action irréversible dans son interface standard ; arrêt immédiat des ventes et invalidation des billets concernés.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-16",
+      "requirement": "créer automatiquement un dossier par commande payée, y compris espèces, par traitement reprenable et idempotent ; aucune action initiale demandée au participant.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-17",
+      "requirement": "envoyer montant, code unique et point de remboursement attribué, **quel que soit le moyen de paiement d'origine**.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-18",
+      "requirement": "bouton « Je ne peux pas me déplacer » ; avertir puis demander confirmation définitive. Désactiver le code, retirer le dossier de la file de l'agent et le basculer vers le remboursement individuel organisateur. Aucun retrait cash parallèle ensuite.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-19",
+      "requirement": "exiger nouvelle date et nouvelle heure. Sans nouvelle date, ne pas notifier un report définitif comme si elle était fixée.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-20",
+      "requirement": "billet automatiquement conservé pour la nouvelle date ; informer de la date et de l'heure exacte de fin du droit à remboursement.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-21",
+      "requirement": "délai de **24 heures calendaires depuis l'émission de la notification** ; pas 24 h ouvrées, ni depuis l'ouverture de l'e-mail.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-22",
+      "requirement": "refus dans le délai : confirmation irréversible, QR invalidé et dossier créé selon le parcours d'annulation.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-23",
+      "requirement": "sans demande à l'échéance, billet toujours valide pour la nouvelle date et disparition du bouton de remboursement.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-24",
+      "requirement": "code aléatoire, non séquentiel, sécurisé, à usage unique, associé au bon dossier et au point attribué ; tentatives limitées et échecs journalisés.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-25",
+      "requirement": "toute personne présentant le code valide peut retirer ; l'acheteur est responsable de sa confidentialité/transmission. Le code n'est pas nominatif au sens d'une obligation de présence du payeur.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-26",
+      "requirement": "agent autorisé uniquement pour son point ; vérification du code, affichage du montant non modifiable et de l'état, remise du montant exact.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-27",
+      "requirement": "**signature numérique au doigt obligatoire avant clôture de la remise** ; code invalidé définitivement, caisse mise à jour et confirmation envoyée.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-28",
+      "requirement": "validation atomique, y compris si deux agents présentent simultanément le même code. Un retrait validé ne peut être payé une seconde fois.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-29",
+      "requirement": "collecter ces coordonnées seulement après l'option valablement utilisée ou la bascule « Je ne peux pas me déplacer », pas comme condition inutile à tous les retraits cash.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-30",
+      "requirement": "ne pas permettre la saisie libre d'un compte tiers ; les cas exceptionnels de destination nécessitent vérification et trace.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-31",
+      "requirement": "organisateur renseigne référence officielle, date, canal et preuve lisible ; état « Remboursement déclaré », puis information du participant.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-32",
+      "requirement": "conserver l'original des preuves ; ajouter les corrections à l'historique sans remplacement silencieux. Preuves accessibles au client et à l'organisateur autorisés.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-33",
+      "requirement": "le participant peut confirmer réception ou « Je n'ai pas reçu le remboursement » ; la déclaration de l'organisateur n'est pas automatiquement la preuve que le client a reçu les fonds.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-34",
+      "requirement": "avant contestation, afficher les informations utiles et demander le motif ; vérifier canal/numéro pour éviter les erreurs.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-35",
+      "requirement": "contestation = dossier rouvert, billet toujours invalide, référence initiale conservée, aucune seconde demande ni paiement automatique en doublon.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-36",
+      "requirement": "vérifier succès officiel du transfert, bon destinataire, bon montant et référence non réutilisée.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-37",
+      "requirement": "transfert échoué/annulé : recommencer ; erreur de destinataire par l'organisateur : il reste responsable du bon remboursement ; bon destinataire et succès officiel : pas de second remboursement, vérification auprès de l'opérateur.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-38",
+      "requirement": "une simple capture ne garantit pas la réception. L'organisateur peut traiter la contestation avec décision motivée par e-mail ; la poursuite du litige se fait avec son support, sous sa responsabilité et celle du client.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-39",
+      "requirement": "états décrits : Code actif, Basculée en individuel, Remboursement individuel généré, Informations requises, À rembourser, Remboursement déclaré, Remboursée, Contestée, Échec technique ; la procédure prévoit aussi Contestation traitée.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-40",
+      "requirement": "l'organisateur ne peut supprimer la demande, modifier le montant ou réactiver le QR. Toute exception administrative est tracée.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-41",
+      "requirement": "conserver références événement/commande/billet/acheteur/organisateur/agent/transaction, cause, lignes financières, canal/destination masquée, états/dates, preuves, code/point/signature/caisse et historique de livraison des notifications.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-42",
+      "requirement": "chiffrement des coordonnées bancaires et pièces sensibles, accès minimaux, masquage dans l'interface, durées de conservation/suppression définies dans la politique appropriée.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-43",
+      "requirement": "client : ses dossiers ; organisateur : ses événements ; agent : son point. Filtres et export contrôlé par événement, statut, canal, date et agent.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-44",
+      "requirement": "heure serveur et fuseau événement ; Bénin = référence Cotonou/Porto-Novo UTC+1. Stocker séparément début de l'événement et fermeture de billetterie ; afficher les échéances exactes.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-45",
+      "requirement": "dossier existant même si SMS/e-mail échoue ; relance des canaux et journalisation, sans recréer une dette.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-46",
+      "requirement": "vente sans compte : R58 prévoit téléphone vérifié et code transmis par SMS pour le suivi. À concilier avec le choix technique OTP non entièrement clos.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-47",
+      "requirement": "délai public : « dans les meilleurs délais », pas promesse automatique de 2-5, 5-10 jours ou remboursement déjà effectué au simple changement de statut événement.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "REM-48",
+      "requirement": "aligner CGU/CGV, politique participant, conditions de l'option, mandat agents, confidentialité, procédure de litige et e-mails sur R58 ; validation juridique locale à obtenir, sans reprendre mécaniquement les anciennes formulations françaises.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "NOT-01",
+      "requirement": "**ne plus envoyer un e-mail à chaque message**.",
+      "status": "implemented_web_locally_verified",
+      "evidence": [
+        "messagingDeliveryService.test.ts : aucun e-mail dans l'envoi unitaire ; traitement distinct messageDigests.ts."
+      ],
+      "remaining": [
+        "Déploiement et contrôle de toutes les surfaces natives."
+      ]
+    },
+    {
+      "id": "NOT-02",
+      "requirement": "pas d'e-mail de notification de message lorsque le destinataire est connecté/actif.",
+      "status": "partially_verified_locally",
+      "evidence": [
+        "messageDigests.integration.test.ts : présence active même invisible ; account-presence.spec.ts : présence globale web et onglet masqué."
+      ],
+      "remaining": [
+        "Présence Android/iOS et validation en production."
+      ]
+    },
+    {
+      "id": "NOT-03",
+      "requirement": "envoyer un rappel après une longue attente sans réponse **ou** une accumulation de messages successifs/en attente ; Chady cite « 10 » ou « 20 » à titre d'exemples.",
+      "status": "implemented_web_locally_verified",
+      "evidence": [
+        "19 tests dédiés MongoDB dont message isolé oublié et dix messages récents ; docs/MESSAGERIE_RAPPELS_V1.md."
+      ],
+      "remaining": [
+        "Activation effective du cron, recette fournisseur et seuils définitifs."
+      ]
+    },
+    {
+      "id": "NOT-04",
+      "requirement": "regrouper les messages dans un rappel, plutôt que multiplier les e-mails indépendants ; éviter plusieurs rappels rapprochés pour la même attente.",
+      "status": "partially_verified_locally",
+      "evidence": [
+        "Tests MongoDB : regroupement, cooldown, lot non répété, deux crons concurrents et reprise avec clé stable."
+      ],
+      "remaining": [
+        "Recette fournisseur et supervision des résultats incertains hors fenêtre d'idempotence."
+      ]
+    },
+    {
+      "id": "NOT-05",
+      "requirement": "vérifier avant envoi que le besoin existe encore : message non lu, absence de réponse/retour, état de présence. C'est une conséquence de l'objectif anti-spam, pas un seuil chiffré supplémentaire validé.",
+      "status": "implemented_web_locally_verified",
+      "evidence": [
+        "Tests MongoDB : lecture, réponse, blocages, sourdine, départ, suppression et lecture pendant une reprise."
+      ],
+      "remaining": [
+        "Recette déployée et native."
+      ]
+    },
+    {
+      "id": "NOT-06",
+      "requirement": "préciser durée d'attente, seuil définitif, délai entre rappels, portée par conversation ou destinataire et définition de « connecté ». Ces paramètres ne sont pas arrêtés par « 10 ou 20 par exemple ».",
+      "status": "decision_pending",
+      "evidence": [
+        "Valeurs techniques explicites dans MESSAGERIE_RAPPELS_V1.md : 30 min OU 10 messages, cooldown 60 min par conversation/destinataire, présence 45 s."
+      ],
+      "remaining": [
+        "Confirmation des valeurs définitives par le porteur du projet."
+      ]
+    },
+    {
+      "id": "NOT-07",
+      "requirement": "ne pas remplacer silencieusement « attente OU accumulation » par « seuil ET délai » : un seul message important oublié ne doit pas être exclu sans décision explicite.",
+      "status": "implemented_web_locally_verified",
+      "evidence": [
+        "Tests unitaires aux bornes et tests MongoDB d'un seul message sans nouvel envoi."
+      ],
+      "remaining": [
+        "Exécution réelle du cron après déploiement."
+      ]
+    },
+    {
+      "id": "NOT-08",
+      "requirement": "cette limitation vise la messagerie ; ne pas supprimer les e-mails de sécurité, billets, reports et remboursements indispensables en l'étendant à tous les envois.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "NOT-09",
+      "requirement": "identité LIVE IN BLACK harmonisée avec la palette rose retenue ; logo également demandé comme image de profil de l'adresse d'envoi (G 29/08).",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "NOT-10",
+      "requirement": "passage demandé de l'ancienne adresse professionnelle à **contact@liveinblack.com** (P 06/09 18:13-18:25). Chady prévoit sa création ; pas de preuve de mise en service dans l'export.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "NOT-11",
+      "requirement": "localiser exemples, lieux, montants et liens ; ne plus utiliser Lomé/EUR comme contexte standard du lancement Bénin.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "NOT-12",
+      "requirement": "chaque notification doit correspondre à l'état réel de l'action et pointer vers le bon compte/parcours ; pas de « tu es remboursé » si seul le dossier vient d'être créé.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "NOT-13",
+      "requirement": "garder préférences de suivi, désabonnement aux suivis et distinction rappels d'intérêt / détenteur ayant déjà acheté (lien vers billet plutôt que nouvel achat).",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "NOT-14",
+      "requirement": "la prévisualisation graphique rose du 1er septembre modernise le rendu mais ne prouve pas que les textes métier obsolètes ont été corrigés.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-01",
+      "requirement": "logo retenu le 29 août, capture 213, fusion L/B ; adapter ses couleurs, utiliser les assets du pack de marque.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-02",
+      "requirement": "remplacer l'accent vert par le rose sur web, mobile, visuels et e-mails ; ne pas conserver des images générées vertes en décalage avec la palette.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-03",
+      "requirement": "appliquer le logo LIB à l'icône Android, au lancement/splash et aux supports concernés, pas l'icône générique.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-04",
+      "requirement": "mascotte jugée « trop jouet » le 30 août, mais conservée temporairement ; ne pas considérer cet accord provisoire comme une validation définitive.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-05",
+      "requirement": "retirer les quatre illustrations décoratives de l'espace membre montrées en capture 322 ; conserver seulement les fonctions réellement dans la V1, sans points de fidélité.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-06",
+      "requirement": "accueil correct en fenêtre réduite comme plein écran (captures 311/312), notamment placement des boutons d'action.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-07",
+      "requirement": "formulaires longs défilables et actions accessibles ; tester l'ordinateur portable d'environ 16 pouces évoqué, mais aussi diverses tailles de fenêtre.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-08",
+      "requirement": "composants de boutons cohérents, dimensions ajustées horizontalement, disposition logique et compréhensible ; pas de boutons posés arbitrairement (capture 346).",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-09",
+      "requirement": "barre de recherche de l'en-tête sans superposition sur ordinateur (capture 476).",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-10",
+      "requirement": "vérifier les contrôles organisateurs, tri « Plus populaires », case « Événement à venir » et bouton « Appliquer » (capture 471). « Faut voir si ces boutons marchent » est une demande de vérification, pas une preuve que tous sont cassés.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-11",
+      "requirement": "augmenter les contrastes des erreurs, du bouton de déconnexion et des petits éléments de validation ; ne pas se limiter aux champs de saisie.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-12",
+      "requirement": "corriger menus de compte coupés, liens sociaux débordants, titres/sous-titres tronqués, mauvais intitulé « organisateur » dans l'espace prestataire.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-13",
+      "requirement": "supprimer le doublon de boutons connexion/inscription dans l'en-tête du formulaire et rendre les sous-titres secondaires plus lisibles.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-14",
+      "requirement": "ne pas laisser le lecteur audio flottant recouvrir le total du paiement mobile ; gérer proprement ses erreurs.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-15",
+      "requirement": "traduction des erreurs, pas de clés brutes `comment_too_short` ou d'entités visibles `t&apos;est` / `d&apos;attente`.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-16",
+      "requirement": "retour après connexion mobile vers un accueil pertinent plutôt qu'une impression de page réglages ; après création d'événement, rafraîchir « Mes événements » sans relancement manuel.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-17",
+      "requirement": "clavier, zones sûres, rotation, petits écrans, textes longs, accents, dates, focus, libellés accessibles et texte agrandi à tester.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-18",
+      "requirement": "lien politique cookies lisible, bon contraste et taille suffisante.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "UI-19",
+      "requirement": "le mode clair est apprécié mais explicitement non prioritaire pour le moment (G 06/09 12:22). **Différé**, pas bloquant de lancement et pas abandonné définitivement.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-01",
+      "requirement": "stabiliser web et mobile, construire une recette partagée et fournir des builds identifiables. L'objectif « web fin août » était un objectif historique, pas une échéance tenue démontrée.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-02",
+      "requirement": "centraliser documents/remarques et éviter que les exigences se perdent dans WhatsApp ; demandes de regroupement le 4 septembre, documents de synthèse transmis ensuite.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-03",
+      "requirement": "organisation GitHub appartenant au projet, dépôts web/mobile transférés, Ged avec rôle Owner et collaborateurs habilités ; vérifier droits, CI/CD, Actions, intégration Vercel et variables après transfert. Les messages annoncent ces actions, sans constituer un nouvel audit des accès.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-04",
+      "requirement": "corriger les CI qui échouent ; suivre les branches de développement et la branche Yassine, intégrer les changements avant de déclarer leur livraison. Push d'une branche, fusion et déploiement sont trois états distincts.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-05",
+      "requirement": "accès Expo/Vercel pour les personnes concernées ; build APK téléchargeable et installable sur plusieurs appareils, instructions simples et version clairement identifiée.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-06",
+      "requirement": "traiter les blocages de téléchargement/installation signalés les 5 et 6 septembre ; téléchargement via ordinateur parfois réussi, ancienne application installée identifiée comme cause possible d'un conflit. Cela ne prouve pas tous les cas résolus.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-07",
+      "requirement": "une preview web/mobile aide à montrer les écrans mais ne remplace pas le test de l'application installée.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-08",
+      "requirement": "les vidéos de démonstration du 5 septembre sont signalées comme non à jour par Chady, notamment localisation/devise. Ne pas les utiliser comme cahier des charges actuel.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-09",
+      "requirement": "préparer société béninoise et compte bancaire professionnel puis FedaPay professionnel, Apple Developer et Google Play avec les informations de la société. Chady indique une aide familiale locale pour ces démarches ; pas de preuve de finalisation dans les échanges.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-10",
+      "requirement": "accès Hostinger et domaine/e-mail ; difficultés d'accès puis connexion annoncée le 31 août ; ne pas réutiliser ni publier les secrets transmis dans les discussions.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-11",
+      "requirement": "Google Analytics et accès au tableau de bord annoncés fin août ; Search Console annoncée le 1er septembre. Préserver SEO, sitemap dynamique, RSS et aperçus de partage décrits dans AV, en les localisant au Bénin.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-12",
+      "requirement": "revue des CGU/CGV/confidentialité/remboursements et textes d'e-mails avant lancement ; responsabilités organisateur, mandat agents et conservation des données à transposer.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-13",
+      "requirement": "la recette doit tracer build, appareil/OS, environnement, compte/type, étapes, attendu/obtenu, date, testeur et preuve ; appareils iOS/Android compacts et récents, réseau faible/hors ligne, accessibilité.",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "OPS-14",
+      "requirement": "critère de sortie MOB : tous les P0/P1 applicables passés, aucun crash ni problème ouvert de sécurité/paiement, exceptions documentées. Mettre d'abord le plan en accord avec la V1 pour éviter de bloquer sur des fonctionnalités volontairement retirées.",
+      "status": "unverified",
+      "evidence": []
+    }
+  ],
+  "additionalCoverage": [
+    "58 scénarios e-mails",
+    "93 cas mobiles révisés pour la V1",
+    "Anomalies QA T1-T14 et régressions antérieures",
+    "Rôles client, agents, administration et opérations",
+    "Barème boosts et frais par admission",
+    "Arbitrages et dépendances externes de la section 15",
+    "Tests bout en bout, builds web/iOS/Android, état de production"
+  ],
+  "externalOrDecisionDependencies": [
+    "Migration sans perte des comptes historiques multi-profils",
+    "Validation juridique locale, société et banque professionnelles",
+    "FedaPay Marketplace configuré et paiement réel vérifié",
+    "Accès/inscription Apple Developer et Google Play, publication sur stores",
+    "Paramètres métier non arrêtés : cash agents, OTP, blocages et période de grâce",
+    "Configuration réelle contact@liveinblack.com"
+  ],
+  "lastProgress": {
+    "date": "2026-09-07",
+    "classification": "progress",
+    "lot": "77 : checkout gratuit public ferme pour la V1 payante",
+    "unitTests": "Suite complete web 768 tests / 143 fichiers passee au lot 77 ; test cible gratuit/revente/webhook 11 tests / 3 fichiers passe au lot 77 ; test cible applicationValidation 8/8 passe au lot 75 ; TypeScript passe au lot 77. Test cible eventWizardUtils 5/5 passe au lot 67. Lot 62 : test unitaire boost 7/7 passe. Lot 61 : tests cibles boost/money/gaps/payout utils 21 tests / 4 fichiers passent",
+    "integrationTests": "Lot 75 : applications.integration.test.ts et applicationsPrestataire.integration.test.ts adaptes pour ne plus proteger SIRET/Lome/Togo ni exiger business_doc/insurance/exploitation_proof, mais non executes car les integrations sont exclues sans run Mongo dedie. Lot 71 : agentDashboard.integration.test.ts et agentBoosts.integration.test.ts adaptes pour separer le revenu historique EUR du revenu XOF et relocaliser les boosts positifs Benin/FCFA, mais non executes car les integrations sont exclues par la configuration de test sans run Mongo dedie. Lot 65 : agentDeletion.integration.test.ts adapte pour verifier la purge de prestataireSubRail/stripeSubscriptionId/stripeCustomerId apres annulation d'un ancien abonnement Stripe, mais non execute car l'approbation d'acces Mongo local a ete rejetee au tour precedent. Lot 64 : providerSubscriptions.integration.test.ts adapte pour prouver Stripe refuse/no-op et FedaPay force Benin/XOF, mais non execute pour la meme raison. Lot 62 : test MongoDB de finalisation boost FedaPay ajoute mais non execute pour la meme raison. Lot 61 : organizerPayouts passe 6 tests MongoDB avec refus Stripe Connect et demande manuelle. Lot 59 : organizerEventLifecycle passe 16 tests et resale.integration est skippe comme historique avec 13 tests exclus",
+    "browserTests": "Pas de recette navigateur complete du lot 59. Seeded E2E mise a jour au lot 57 pour attendre un refus V1 mais non executee",
+    "typecheck": "passed",
+    "build": "Build Next 16.3.3 webpack passe au lot 77 apres fermeture du checkout gratuit public et suppression des routes de revente : 183 pages statiques. Lot 60 regenere le catalogue e-mails. Dernier export Expo local au lot 56 dans /tmp/lib-mobile-v1-cash-recovery. Aucune app signee ni publication store",
+    "lint": "Dernier ESLint cible et git diff --check documentes au lot 54. Lot 55 : pas de nouvelle passe lint dediee",
+    "production": "not_deployed",
+    "previousLots": "Lots 1 a 74 documentes dans docs/IMPLEMENTATION_LIB_V1_SUIVI.md ; le registre complet reste a reauditer exigence par exigence.",
+    "phoneChecks": "Normalisation profil et trois inscriptions, indicatifs independants du catalogue, contact partage permis ; 47 tests integration inscription/profil passes au lot 33. OTP et recette appareil ouverts",
+    "mobileQuality": "check:quality complet repasse au lot 54 avec dix tests justificatifs/signatures ; tests simules et controles de structure, pas de recette appareil",
+    "nextCriticalWork": [
+      "Consommations : auditer gardes paid/revoked de materialisation/remise, stocks et statistiques ; ecrans web/natif convertis et ajout ferme, recette appareil encore requise.",
+      "Notifications : recette deployee, effets post-commit/retries client et seuils definitifs ; message/conversation/reveil atomiques pour envoi standard, transferts et sondages, rappel attente OU accumulation et presence web/native implementes localement. Le catalogue e-mails actif ne genere plus les quatre scenarios de revente au lot 60.",
+      "R58 et FedaPay : recette appareil/navigateur de la reprise cash, destinations verifiees, migration cles/references historiques, paiement de bout en bout et preuve des remboursements.",
+      "Paiements : ancien Stripe Connect organisateur, demande manuelle, checkout public Stripe, webhook Stripe actif, solde de blocage Stripe et abonnement prestataire Stripe fermes aux lots 61, 63 et 64 ; suppression de compte nettoie les anciens identifiants d'abonnement externe au lot 65 ; fallbacks EUR retires des paiements actifs au lot 66 ; checkout boost FedaPay cable au lot 62 ; exposition UI revente retiree des surfaces client/organisateur au lot 69 ; centre ops aligne sur revente exclue au lot 70 ; dashboard/boosts agent FCFA au lot 71 ; panneau paiements agent sans actions/libelles EUR/Stripe visibles au lot 72 ; webhook FedaPay et services internes revente neutralises au lot 76 ; checkout gratuit public ferme au lot 77, mais integrations Mongo boost/subscription/deletion/orders/seat-holds et paiement/webhook FedaPay sandbox restent a verifier.",
+      "Benin : donnees reelles, prix, filtres, cartes et articles ; telephones normalises au profil et aux trois inscriptions ; devise par defaut XOF au lot 61 ; creation/edition evenement forcees Benin/XOF au lot 67 ; seeds E2E/dev/bulk/blog relocalises Benin/FCFA au lot 68 ; dashboard/boosts agent affiches en FCFA au lot 71 ; annuaires publics sans selecteur multi-region au lot 73 ; categories blog limitees au lancement Benin au lot 74 ; dossiers prestataires simplifies au lot 75 ; migration historique et recette a traiter.",
+      "Mobile : poursuivre la parite et la recette sur appareils ; bundles locaux ne sont pas des applications signees publiees.",
+      "Comptes : migration des anciens profils sans perte et recette exhaustive des permissions."
+    ]
+  }
+}

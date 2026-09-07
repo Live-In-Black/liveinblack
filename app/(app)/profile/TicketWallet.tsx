@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { CalendarPlus, Download, ExternalLink, Gift, HandCoins, ListChecks, QrCode, Share2, Sparkles, Ticket, X } from 'lucide-react'
+import { CalendarPlus, Download, ExternalLink, HandCoins, ListChecks, QrCode, Share2, Sparkles, Ticket, X } from 'lucide-react'
 import { QRCodeCanvas } from 'qrcode.react'
 import { fmtMoney } from '@/lib/shared/money'
 import { downloadTicketPNG, shareOrCopy, shareStory, downloadICS, countdownLabel } from '@/lib/shared/ticketExtras'
@@ -77,7 +77,7 @@ export interface TicketWalletGroupView {
 }
 
 const SITE = typeof window !== 'undefined' ? window.location.origin : ''
-const SUPPORT_EMAIL = 'hagechady@liveinblack.com'
+const SUPPORT_EMAIL = 'contact@liveinblack.com'
 const DISMISSED_KEY = 'liveinblack:dismissedCancelBanners'
 
 const REFUND_ERROR_LABELS: Record<string, string> = {
@@ -88,20 +88,7 @@ const REFUND_ERROR_LABELS: Record<string, string> = {
   free_ticket_not_refundable: 'Ce billet est gratuit, il n’y a rien à rembourser.',
   xof_required: 'Ce remboursement suit le parcours de lancement au Bénin, en FCFA uniquement.',
   event_cancelled_cash_pickup_created: 'L’événement est annulé : ton dossier de retrait au point de remboursement est créé automatiquement.',
-  ticket_listed_for_resale: 'Retire d’abord ce billet de la revente avant de demander un remboursement.',
-}
-
-const RESELL_ERROR_LABELS: Record<string, string> = {
-  price_above_original: 'Le prix de revente ne peut pas dépasser le prix initial du billet.',
-  invalid_price: 'Indique un prix valide.',
-  resale_window_closed: 'La revente est fermée pour cet événement (moins de 2h avant les portes).',
-  resale_limit_reached: 'Ce billet a déjà changé de propriétaire le nombre maximum de fois autorisé.',
-  event_ended: 'Cet événement est déjà terminé.',
-  event_cancelled: 'Cet événement est annulé.',
-  ticket_already_checked_in: 'Ce billet a déjà été scanné à l’entrée.',
-  already_listed: 'Ce billet est déjà en vente.',
-  not_resellable_source: 'Ce billet n’est pas revendable.',
-  group_not_fully_held_by_host: 'Impossible de revendre : au moins une place de ce groupe a déjà été attribuée à quelqu’un d’autre.',
+  ticket_listed_for_resale: 'Ce billet ne peut pas être remboursé dans son état actuel. Contacte le support si la situation te semble incorrecte.',
 }
 
 function readDismissed(): Set<string> {
@@ -246,9 +233,8 @@ function SeatHoldsPanel() {
   async function payBalance(hold: SeatHoldItem) {
     setPayingId(hold.id)
     setPayErr(null)
-    const endpoint = hold.currency === 'XOF' ? '/api/checkout/seat-hold/fedapay' : '/api/checkout/seat-hold'
     try {
-      const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seatHoldId: hold.id }) })
+      const res = await fetch('/api/checkout/seat-hold/fedapay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seatHoldId: hold.id }) })
       const data = (await res.json().catch(() => null)) as { url?: string; error?: string } | null
       if (!res.ok || !data?.url) {
         setPayErr(data?.error || 'Impossible de lancer le paiement.')
@@ -793,13 +779,6 @@ function PremiumTicketCard({
   const [refundState, setRefundState] = useState<'idle' | 'busy' | 'done' | 'err'>(ticket.refundRequested ? 'done' : 'idle')
   const [refundErr, setRefundErr] = useState<string | null>(null)
   const [refundConfirmOpen, setRefundConfirmOpen] = useState(false)
-  const [withdrawConfirmOpen, setWithdrawConfirmOpen] = useState(false)
-  const [resellOpen, setResellOpen] = useState(false)
-  const [resellPrice, setResellPrice] = useState('')
-  const [resellState, setResellState] = useState<'idle' | 'busy' | 'err'>('idle')
-  const [resellErr, setResellErr] = useState<string | null>(null)
-  const [withdrawState, setWithdrawState] = useState<'idle' | 'busy' | 'err'>('idle')
-  const [activeListing, setActiveListing] = useState(ticket.activeListing)
   const [nowTs, setNowTs] = useState(() => Date.now())
   const qrExportRef = useRef<HTMLCanvasElement>(null)
 
@@ -867,54 +846,6 @@ function PremiumTicketCard({
     const result = await shareOrCopy(`${SITE}/events/${event.id}`, `Rejoins-moi à ${event.name}`)
     if (result.method === 'copy') flash('Lien copié')
     else if (result.method === 'unsupported') flash('Partage indisponible sur ce navigateur')
-  }
-
-  async function handleResell() {
-    const majorAmount = Number(resellPrice.replace(',', '.'))
-    if (!majorAmount || majorAmount <= 0) {
-      setResellState('err')
-      setResellErr('Indique un prix valide.')
-      return
-    }
-    setResellState('busy')
-    setResellErr(null)
-    try {
-      const res = await fetch('/api/tickets/resell', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticketCode: ticket.ticketCode, resalePrice: majorAmount }),
-      })
-      const data = await res.json().catch(() => null)
-      if (res.ok && data?.ok) {
-        setActiveListing({ id: data.listingId, resalePriceMinor: Math.round(majorAmount * (ticket.currency === 'XOF' ? 1 : 100)), feeMinor: data.feeMinor, sellerNetMinor: data.sellerNetMinor, status: 'active' })
-        setResellOpen(false)
-        setResellState('idle')
-        flash('Billet mis en vente')
-      } else {
-        setResellState('err')
-        setResellErr(RESELL_ERROR_LABELS[data?.error as string] || 'Mise en vente impossible pour le moment.')
-      }
-    } catch {
-      setResellState('err')
-      setResellErr('Mise en vente impossible pour le moment.')
-    }
-  }
-
-  async function handleWithdrawResell() {
-    if (!activeListing || withdrawState === 'busy') return
-    setWithdrawState('busy')
-    try {
-      const res = await fetch(`/api/resale-listings/${activeListing.id}`, { method: 'DELETE' })
-      if (res.ok) {
-        setActiveListing(null)
-        setWithdrawState('idle')
-        flash('Mise en vente retirée — nouveau billet généré')
-      } else {
-        setWithdrawState('err')
-      }
-    } catch {
-      setWithdrawState('err')
-    }
   }
 
   async function handleRefundRequest() {
@@ -1108,10 +1039,10 @@ function PremiumTicketCard({
                 <Link
                   href={`/order/${event.id}/${ticket.ticketCode}`}
                   style={{ ...actionBtnStyle(false), background: 'var(--primary)', color: 'var(--primary-ink)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5, boxSizing: 'border-box' }}
-                  title="Commander sur place"
+                  title="Consulter le suivi des consommations"
                 >
                   <ExternalLink size={14} aria-hidden="true" />
-                  Commander
+                  Consommations
                 </Link>
               )}
 
@@ -1131,25 +1062,6 @@ function PremiumTicketCard({
               </Button>
 
               <ActionBtn onClick={handleCalendar} icon={<CalendarPlus size={14} aria-hidden="true" />}>Agenda</ActionBtn>
-              {ticket.resellable && !activeListing && (
-                <Button variant="secondary" size="sm" onClick={() => setResellOpen((v) => !v)} icon={<Gift size={14} aria-hidden="true" />} style={{ ...actionBtnStyle(false, 'rgba(var(--violet-rgb), .14)', 'var(--violet)'), justifyContent: 'center' }}>
-                  Revendre
-                </Button>
-              )}
-              {activeListing && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setWithdrawConfirmOpen(true)}
-                  disabled={withdrawState === 'busy'}
-                  loading={withdrawState === 'busy'}
-                  loadingText="Retrait…"
-                  icon={<Gift size={14} aria-hidden="true" />}
-                  style={{ ...actionBtnStyle(withdrawState === 'busy', 'var(--surface-2)', 'var(--text-muted)'), justifyContent: 'center' }}
-                >
-                  {`${fmtMoney(toMajor(activeListing.resalePriceMinor, ticket.currency), ticket.currency)} · Retirer`}
-                </Button>
-              )}
               {canShowRefundButton && (
                 <Button
                   variant="danger"
@@ -1169,33 +1081,6 @@ function PremiumTicketCard({
               <p style={{ fontSize: 'var(--font-size-caption-lg)', color: 'var(--danger)', margin: 0 }}>Le téléchargement n&apos;a pas pu démarrer. Réessaie dans quelques secondes.</p>
             )}
             {refundState === 'err' && refundErr && <p style={{ fontSize: 'var(--font-size-caption-lg)', color: 'var(--danger)', margin: 0 }}>{refundErr}</p>}
-
-            {withdrawConfirmOpen && (
-              <Modal
-                onClose={() => setWithdrawConfirmOpen(false)}
-                title="Retirer la mise en vente"
-                subtitle="Le billet sera retiré du marché de revente."
-                ariaLabel="Confirmer le retrait de la mise en vente"
-                actions={
-                  <>
-                    <Button variant="secondary" onClick={() => setWithdrawConfirmOpen(false)} disabled={withdrawState === 'busy'}>Annuler</Button>
-                    <Button
-                      variant="danger"
-                      onClick={() => { setWithdrawConfirmOpen(false); void handleWithdrawResell() }}
-                      disabled={withdrawState === 'busy'}
-                      loading={withdrawState === 'busy'}
-                      loadingText="Retrait…"
-                    >
-                      Confirmer le retrait
-                    </Button>
-                  </>
-                }
-              >
-                <p style={{ margin: 0, color: 'var(--text-muted)', lineHeight: 1.6, fontSize: 'var(--font-size-body-sm)' }}>
-                  Ce billet ne sera plus visible à la revente et un nouveau billet actif sera généré pour toi.
-                </p>
-              </Modal>
-            )}
 
             {refundConfirmOpen && (
               <Modal
@@ -1224,36 +1109,6 @@ function PremiumTicketCard({
               </Modal>
             )}
 
-            {resellOpen && !activeListing && (
-              <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p id={`resell-help-${ticket.ticketCode}`} style={{ fontSize: 'var(--font-size-body)', color: 'var(--text-muted)', margin: 0, lineHeight: 1.55 }}>
-                  Prix maximum : {fmtMoney(ticket.placePrice, ticket.currency)} (prix initial, majoration interdite). Le montant de revente n&apos;est jamais garanti tant que personne n&apos;a acheté ; les frais payés à l&apos;achat initial ne sont pas récupérés.
-                </p>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <Input
-                    aria-label="Prix de revente du billet"
-                    aria-describedby={`resell-help-${ticket.ticketCode}`}
-                    type="number"
-                    inputMode="decimal"
-                    placeholder={`Prix (max ${ticket.placePrice})`}
-                    value={resellPrice}
-                    onChange={(e) => setResellPrice(e.target.value)}
-                    style={{ flex: 1, borderRadius: 12, background: 'var(--obsidian)', fontSize: 'var(--font-size-headline-lg)' }}
-                  />
-                  <Button
-                    variant="primary"
-                    onClick={handleResell}
-                    disabled={resellState === 'busy'}
-                    loading={resellState === 'busy'}
-                    loadingText="Publication…"
-                    style={{ ...actionBtnStyle(resellState === 'busy'), background: 'var(--violet)', color: 'var(--text)' }}
-                  >
-                    Confirmer
-                  </Button>
-                </div>
-                {resellState === 'err' && resellErr && <p role="alert" style={{ fontSize: 'var(--font-size-body)', color: 'var(--pink-strong)', margin: 0 }}>{resellErr}</p>}
-              </div>
-            )}
           </>
         )}
       </div>

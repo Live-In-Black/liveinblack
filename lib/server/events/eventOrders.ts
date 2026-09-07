@@ -38,12 +38,9 @@ import {
 // Port de api/event-stock.js (action 'order') vers le modèle Mongo à un seul
 // document EventOrder par événement (tableau `items` embarqué — voir
 // lib/models/EventOrder.ts). Le modèle d'autorisation par RANG ci-dessous est
-// repris FIDÈLEMENT du legacy (api/event-stock.js:115-126) ; seules trois
-// choses changent délibérément par rapport au legacy (voir chaque endroit
-// commenté) :
-//   1. un rang 0 (simple client) ne peut plus attacher une ligne de commande
-//      à un billet qui n'est pas le sien (lacune legacy jamais vérifiée à la
-//      CRÉATION d'une ligne — seulement à l'édition) ;
+// conserve les missions du legacy pour le suivi. En V1 :
+//   1. aucun appelant ne peut créer une commande autonome ; les lignes
+//      nouvelles proviennent de la matérialisation des achats du billet ;
 //   2. la lecture des commandes est cloisonnée par ticket/événement selon le
 //      rang (ferme l'audit H15 — le legacy laissait tout compte connecté lire
 //      event_orders/{eventId} en entier) ;
@@ -216,15 +213,7 @@ function sanitizedItemId(prefix: string, ticketCode: string, name: string): stri
 // ─────────────────────────────── addOrderItem ───────────────────────────────
 
 export async function addOrderItem(caller: OrderCaller, input: AddOrderItemInput): Promise<AddOrderItemResult> {
-  await getDb()
-  return addEventOrderItem(caller, input, {
-    loadEventContext,
-    resolveCallerName,
-    getOrCreateOrder,
-    appendLog,
-    toItemView,
-    startSession: mongoose.startSession,
-  })
+  return addEventOrderItem(caller, input)
 }
 
 // ────────────────────────── updateOrderItemQuantity ─────────────────────────
@@ -314,74 +303,79 @@ export async function materializeTicketOrders(caller: OrderCaller, input: Materi
   const { event, rank, role } = ctxResult.ctx
   if (rank < 1) return { ok: false, status: 403, error: 'staff_only' }
 
-  const ticket = await Ticket.findOne({ ticketCode })
-  if (!ticket || ticket.eventId !== eventId) return { ok: false, status: 404, error: 'ticket_not_found' }
-
-  // Précommandes : prix depuis ticket.preorders (déjà résolu/payé au
-  // checkout, cf. Phase 3) — JAMAIS re-résolu depuis event.menu.
-  //
-  // FUSION PAR NOM avant de construire les candidats : ni le schéma zod du
-  // checkout (app/api/checkout/route.ts, `preorders: z.array({name, qty})`)
-  // ni createOrder (lib/server/orders.ts) ni fulfillOrder ne fusionnent deux
-  // entrées de même nom — un client peut donc soumettre deux fois
-  // {name:'Champagne', qty:1} plutôt qu'une fois {qty:2}, et ticket.preorders
-  // se retrouve avec deux entrées du même nom. Or l'id métier d'une ligne
-  // précommande est déterministe par NOM SEUL (`pre_{ticketCode}_{name}`,
-  // cf. sanitizedItemId) : sans cette fusion, deux candidats partageraient le
-  // même id et seraient tous deux insérés dans order.items lors du même
-  // appel (existingIds n'est vérifié qu'une fois, avant insertion — voir
-  // toInsert plus bas) puisque ni l'un ni l'autre n'est encore présent au
-  // moment du filtre. La seconde ligne deviendrait alors orpheline : tout
-  // mutateur par id (serve/cancel/update/remove, qui font tous
-  // `.find(i => i.id === itemId)`) ne peut jamais atteindre que la première.
-  const preordersByName = new Map<string, { name: string; price: number; qty: number; showOptionId: string | null; showLabel: string | null; showInfo: string | null }>()
-  for (const p of ticket.preorders ?? []) {
-    const existing = preordersByName.get(p.name)
-    if (existing) existing.qty += p.qty ?? 1
-    else preordersByName.set(p.name, { name: p.name, price: p.price ?? 0, qty: p.qty ?? 1, showOptionId: p.showOptionId ?? null, showLabel: p.showLabel ?? null, showInfo: p.showInfo ?? null })
-  }
-  const preorderCandidates = Array.from(preordersByName.values()).map((p) => ({
-    id: sanitizedItemId('pre', ticketCode, p.name),
-    menuItemId: null as string | null,
-    name: p.name,
-    quantity: p.qty,
-    unitPriceMinor: p.price,
-    showOptionId: p.showOptionId,
-    showLabel: p.showLabel,
-    showInfo: p.showInfo,
-    ticketId: ticketCode,
-    addedBy: caller.id,
-    addedByName: null as string | null,
-    status: 'sent' as const,
-    kind: 'preorder' as const,
-  }))
-
-  // Inclus : place du billet → event.places[].included[], filtré aux entrées
-  // dont le nom existe encore dans event.menu (une entrée "included" pointant
-  // vers un item de menu supprimé est silencieusement ignorée — mirrors
-  // legacy `includedForPlace`). Toujours prix 0 (inclus dans le prix du billet).
-  const placeDef = event.places?.find((p) => p.type === ticket.place)
-  const includedCandidates = (placeDef?.included ?? [])
-    .filter((inc) => event.menu?.some((m) => m.name === inc.name))
-    .map((inc) => ({
-      id: sanitizedItemId('inc', ticketCode, inc.name),
-      menuItemId: inc.name as string | null,
-      name: inc.name,
-      quantity: inc.qty ?? 1,
-      unitPriceMinor: 0,
-      ticketId: ticketCode,
-      addedBy: caller.id,
-      addedByName: null as string | null,
-      status: 'sent' as const,
-      kind: 'included' as const,
-    }))
-
-  const candidates = [...preorderCandidates, ...includedCandidates]
-
   const session = await mongoose.startSession()
-  let inserted: number
+  let result: MaterializeTicketOrdersResult
   try {
-    inserted = await session.withTransaction(async (): Promise<number> => {
+    result = await session.withTransaction(async (): Promise<MaterializeTicketOrdersResult> => {
+      // A real write conflicts with concurrent revocation; candidates use this fresh ticket.
+      const ticket = await Ticket.findOneAndUpdate(
+        { ticketCode, eventId, paid: true, revoked: { $ne: true } },
+        { $inc: { consumptionRevision: 1 } },
+        { session, returnDocument: 'after' },
+      )
+      if (!ticket) return { ok: false, status: 409, error: 'ticket_unavailable' }
+
+      // Précommandes : prix depuis ticket.preorders (déjà résolu/payé au
+      // checkout, cf. Phase 3) — JAMAIS re-résolu depuis event.menu.
+      //
+      // FUSION PAR NOM avant de construire les candidats : ni le schéma zod du
+      // checkout (app/api/checkout/route.ts, `preorders: z.array({name, qty})`)
+      // ni createOrder (lib/server/orders.ts) ni fulfillOrder ne fusionnent deux
+      // entrées de même nom — un client peut donc soumettre deux fois
+      // {name:'Champagne', qty:1} plutôt qu'une fois {qty:2}, et ticket.preorders
+      // se retrouve avec deux entrées du même nom. Or l'id métier d'une ligne
+      // précommande est déterministe par NOM SEUL (`pre_{ticketCode}_{name}`,
+      // cf. sanitizedItemId) : sans cette fusion, deux candidats partageraient le
+      // même id et seraient tous deux insérés dans order.items lors du même
+      // appel (existingIds n'est vérifié qu'une fois, avant insertion — voir
+      // toInsert plus bas) puisque ni l'un ni l'autre n'est encore présent au
+      // moment du filtre. La seconde ligne deviendrait alors orpheline : tout
+      // mutateur par id (serve/cancel/update/remove, qui font tous
+      // `.find(i => i.id === itemId)`) ne peut jamais atteindre que la première.
+      const preordersByName = new Map<string, { name: string; price: number; qty: number; showOptionId: string | null; showLabel: string | null; showInfo: string | null }>()
+      for (const p of ticket.preorders ?? []) {
+        const existing = preordersByName.get(p.name)
+        if (existing) existing.qty += p.qty ?? 1
+        else preordersByName.set(p.name, { name: p.name, price: p.price ?? 0, qty: p.qty ?? 1, showOptionId: p.showOptionId ?? null, showLabel: p.showLabel ?? null, showInfo: p.showInfo ?? null })
+      }
+      const preorderCandidates = Array.from(preordersByName.values()).map((p) => ({
+        id: sanitizedItemId('pre', ticketCode, p.name),
+        menuItemId: null as string | null,
+        name: p.name,
+        quantity: p.qty,
+        unitPriceMinor: p.price,
+        showOptionId: p.showOptionId,
+        showLabel: p.showLabel,
+        showInfo: p.showInfo,
+        ticketId: ticketCode,
+        addedBy: caller.id,
+        addedByName: null as string | null,
+        status: 'sent' as const,
+        kind: 'preorder' as const,
+      }))
+
+      // Inclus : place du billet → event.places[].included[], filtré aux entrées
+      // dont le nom existe encore dans event.menu (une entrée "included" pointant
+      // vers un item de menu supprimé est silencieusement ignorée — mirrors
+      // legacy `includedForPlace`). Toujours prix 0 (inclus dans le prix du billet).
+      const placeDef = event.places?.find((p) => p.type === ticket.place)
+      const includedCandidates = (placeDef?.included ?? [])
+        .filter((inc) => event.menu?.some((m) => m.name === inc.name))
+        .map((inc) => ({
+          id: sanitizedItemId('inc', ticketCode, inc.name),
+          menuItemId: inc.name as string | null,
+          name: inc.name,
+          quantity: inc.qty ?? 1,
+          unitPriceMinor: 0,
+          ticketId: ticketCode,
+          addedBy: caller.id,
+          addedByName: null as string | null,
+          status: 'sent' as const,
+          kind: 'included' as const,
+        }))
+
+      const candidates = [...preorderCandidates, ...includedCandidates]
+
       const order = await getOrCreateOrder(eventId, session)
       const existingIds = new Set(order.items.map((i) => i.id))
       // Filtre SÉQUENTIEL (pas un `.filter()` figé sur l'état initial de
@@ -430,13 +424,13 @@ export async function materializeTicketOrders(caller: OrderCaller, input: Materi
         )
       }
 
-      return toInsert.length
+      return { ok: true, inserted: toInsert.length }
     })
   } finally {
     await session.endSession()
   }
 
-  return { ok: true, inserted }
+  return result
 }
 
 // ────────────────────────────── lectures (H15) ──────────────────────────────

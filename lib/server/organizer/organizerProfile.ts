@@ -11,7 +11,7 @@ import { slugifyOrganizer, validateOrganizerSlugFormat, RESERVED_ORGANIZER_SLUGS
 import { normalizeRegionId } from '@/lib/shared/locations'
 import type { SocialNetworkKey } from '@/lib/shared/social'
 import { revalidateTag } from 'next/cache'
-import { reorderOrganizerMediaList, resolveOrganizerZones, toOrganizerProfileView, type OrganizerProfileView } from './organizerProfileUtils'
+import { reorderOrganizerMediaList, toOrganizerProfileView, type OrganizerProfileView } from './organizerProfileUtils'
 
 // Port de la partie ÉCRITURE de OrganizerPublicStudio.jsx (#7 phase
 // organisateur — "Ma page publique"). La lecture publique vit déjà dans
@@ -59,7 +59,7 @@ export type GetOrCreateResult = ErrResult | { ok: true; profile: OrganizerProfil
 // premier accès au studio : sans cache localStorage-first dans cette
 // migration, un profil qui n'existe qu'en mémoire serait invisible à tout
 // autre chemin serveur (ex. le prochain GET, ou un futur suivi/statistiques).
-export async function getOrCreateMyOrganizerProfile(caller: ProfileCaller): Promise<GetOrCreateResult> {
+export async function getOrCreateMyOrganizerProfile(caller: ProfileCaller, options: { onCreated?: () => void } = {}): Promise<GetOrCreateResult> {
   await getDb()
 
   const existing = await OrganizerProfile.findOne({ userId: caller.id })
@@ -77,6 +77,7 @@ export async function getOrCreateMyOrganizerProfile(caller: ProfileCaller): Prom
 
   const publicName = (String(formData.nomCommercial || '').trim() || [user.firstName, user.lastName].filter(Boolean).join(' ').trim() || 'Organisateur')
   const regionId = normalizeRegionId(String(formData.pays || ''))
+  if (regionId !== 'benin') return { ok: false, status: 400, error: 'benin_launch_region_required' }
   const slug = await makeUniqueSlug(publicName, caller.id)
 
   const created = await OrganizerProfile.create({
@@ -91,7 +92,8 @@ export async function getOrCreateMyOrganizerProfile(caller: ProfileCaller): Prom
     status: 'draft',
     zonesIntervention: regionId ? [regionId] : [],
   })
-  revalidateTag('public-organizers', 'default')
+  if (options.onCreated) options.onCreated()
+  else revalidateTag('public-organizers', 'default')
 
   return { ok: true, profile: toOrganizerProfileView(created) }
 }
@@ -142,12 +144,9 @@ export async function updateOrganizerProfile(caller: ProfileCaller, input: Updat
   if (input.city !== undefined) profile.city = input.city.trim()
 
   if (input.zonesIntervention !== undefined) {
-    // Zones d'intervention = marketing (multi-pays où l'organisateur
-    // communique) — TOTALEMENT séparées de regionId (ancre devise/paiement,
-    // figée à l'onboarding, jamais recalculée ici). On garantit que regionId
-    // reste toujours présent dans la liste, sinon un organisateur pourrait
-    // « intervenir » partout sauf dans sa propre zone de facturation.
-    profile.zonesIntervention = resolveOrganizerZones(profile.regionId, input.zonesIntervention) as typeof profile.zonesIntervention
+    // Le lancement commercial est limité au Bénin, y compris les zones
+    // d'intervention affichées sur la fiche publique.
+    profile.zonesIntervention = ['benin'] as typeof profile.zonesIntervention
   }
 
   if (input.shortDescription !== undefined) {

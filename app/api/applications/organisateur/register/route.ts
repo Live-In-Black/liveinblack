@@ -15,7 +15,6 @@ const bodySchema = z.object({
   password: z.string().min(8).max(128).refine(isPasswordPolicyCompliant),
   formData: z.object({
     nomCommercial: z.string().trim().min(1),
-    siret: z.string().trim().min(1),
     emailPro: z.string().trim().toLowerCase().email(),
     telephoneProCode: z.string().trim().min(1),
     telephonePro: z.string().trim().min(1),

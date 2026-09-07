@@ -23,7 +23,6 @@ const bodySchema = z.object({
     pays: z.literal('Bénin').default('Bénin'),
     nomCommercial: z.string().trim().default(''),
     nomScene: z.string().trim().default(''),
-    siret: z.string().trim().default(''),
     zonesIntervention: z.array(z.string()).default([]),
     description: z.string().trim().default(''),
     specialitesLibre: z.string().trim().default(''),

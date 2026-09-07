@@ -15,6 +15,7 @@ const auditEntrySchema = new Schema(
 
 const proofSchema = new Schema(
   {
+    proofId: { type: String, default: null },
     url: { type: String, required: true },
     uploadedAt: { type: Date, default: Date.now },
     uploadedBy: { type: String, required: true },
@@ -75,7 +76,13 @@ const refundCaseSchema = new Schema(
     codeLastAttemptAt: { type: Date, default: null },
     codeLockedAt: { type: Date, default: null },
     signatureUrl: { type: String, default: null },
+    encryptedSignature: { type: String, default: null, select: false },
+    cashOperationId: { type: String, default: null, select: false },
+    cashOperationAgentId: { type: String, default: null },
+    cashOperationStartedAt: { type: Date, default: null },
+    cashReleasedOperationIds: { type: [String], default: [], select: false },
     declaredReference: { type: String, default: null },
+    declaredReferences: { type: [String], default: [] },
     declaredChannel: { type: String, default: null },
     declaredAt: { type: Date, default: null },
     declaredBy: { type: String, default: null },
@@ -85,6 +92,14 @@ const refundCaseSchema = new Schema(
     contestResolution: { type: String, default: null },
     contestResolvedAt: { type: Date, default: null },
     contestResolvedBy: { type: String, default: null },
+    contestEmailState: { type: String, enum: ['pending', 'sent', 'uncertain', null], default: null },
+    contestEmailNextAt: { type: Date, default: null },
+    contestEmailLeaseUntil: { type: Date, default: null },
+    contestEmailLeaseToken: { type: String, default: null, select: false },
+    contestEmailPayload: { type: String, default: null, select: false },
+    contestEmailFirstAttemptAt: { type: Date, default: null },
+    contestEmailSentAt: { type: Date, default: null },
+    contestEmailLastError: { type: String, default: null },
     auditTrail: { type: [auditEntrySchema], default: [] },
   },
   { timestamps: true }
@@ -93,6 +108,7 @@ const refundCaseSchema = new Schema(
 refundCaseSchema.index({ orderId: 1, cause: 1 }, { unique: true })
 refundCaseSchema.index({ eventId: 1, status: 1, flow: 1 })
 refundCaseSchema.index({ refundPointId: 1, status: 1 })
+refundCaseSchema.index({ contestEmailState: 1, contestEmailNextAt: 1, contestEmailLeaseUntil: 1 })
 refundCaseSchema.index(
   { organizerId: 1, declaredReference: 1 },
   {
@@ -101,6 +117,11 @@ refundCaseSchema.index(
       declaredReference: { $type: 'string' },
     },
   }
+)
+
+refundCaseSchema.index(
+  { organizerId: 1, declaredReferences: 1 },
+  { unique: true, partialFilterExpression: { declaredReferences: { $type: 'string' } } }
 )
 
 export type RefundCaseDoc = InferSchemaType<typeof refundCaseSchema>

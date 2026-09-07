@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 import { getDb } from '@/lib/db/mongoose'
 import Event, { type EventDoc } from '@/lib/models/Event'
 import { isClientDiscoverableEvent } from '@/lib/shared/eventDiscovery'
-import { normalizeGeoText } from '@/lib/shared/locations'
+import { normalizeGeoText, normalizeRegionId } from '@/lib/shared/locations'
 
 const DEFAULT_PUBLIC_PAGE_SIZE = 24
 const MAX_PUBLIC_PAGE_SIZE = 96
@@ -11,7 +11,7 @@ const MAX_PAGE_OFFSET = 4_000
 const EVENT_TOTAL_TTL_MS = 30_000
 const MAX_TOTAL_COUNT_CACHE_ENTRIES = 200
 const PUBLIC_EVENT_FIELDS =
-  'name category eventType musicStyles ambiances artists dj tags date dateDisplay time endTime publishAt cancelled isDemo city region location imageUrl videoUrl organizerName organizer organizerId places createdAt color'
+  'name category eventType musicStyles ambiances artists dj tags date dateDisplay time endTime publishAt cancelled isDemo city region location imageUrl videoUrl organizerName organizer organizerId places createdAt color currency'
 
 type CachedCount = {
   value: number
@@ -103,6 +103,8 @@ function buildDiscoverableFilters(now = new Date()) {
   const nowIsoDate = now.toISOString().slice(0, 10)
 
   return {
+    region: 'Bénin',
+    currency: 'XOF',
     cancelled: { $ne: true },
     isDemo: { $ne: true },
     isPrivate: { $ne: true },
@@ -245,5 +247,7 @@ export async function getEventById(id: string): Promise<EventAccessResult> {
   const doc = await Event.findById(id).lean()
   if (!doc) return { status: 'not_found' }
   const event = toPublicEvent(doc)
-  return isClientDiscoverableEvent(event) ? { status: 'ok', event } : { status: 'not_found' }
+  return event.isPrivate !== true && normalizeRegionId(event.region) === 'benin' && String(event.currency || '').toUpperCase() === 'XOF' && isClientDiscoverableEvent(event)
+    ? { status: 'ok', event }
+    : { status: 'not_found' }
 }

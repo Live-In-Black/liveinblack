@@ -129,7 +129,9 @@ const eventSchema = new Schema(
     city: { type: String, default: '' },
     region: { type: String, default: '' }, // nom de région (regions.ts), pas un id
 
-    currency: { type: String, enum: ['EUR', 'XOF'], default: 'EUR' },
+    currency: { type: String, enum: ['EUR', 'XOF'], default: 'XOF' },
+    isDemo: { type: Boolean, default: false },
+    demoLabel: { type: String, default: null },
 
     imageUrl: { type: String, default: null },
     videoUrl: { type: String, default: null },

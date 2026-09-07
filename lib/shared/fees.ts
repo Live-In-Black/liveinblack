@@ -1,9 +1,8 @@
 // Port TypeScript de lib/fees.js — source UNIQUE des taux de commission
 // LIVEINBLACK + éligibilité Stripe Connect. Toute modif de tarif se fait ICI.
 //
-// Décisions fondateur (inchangées) :
-//   - Frais de service BILLETS = 5% + 0,49 € PAR BILLET, plafonné 2,50 €/billet,
-//     payé par l'ACHETEUR, gratuit sur les billets gratuits.
+// V1 Benin : 5%, minimum 200 et maximum 1 500 FCFA PAR ADMISSION.
+// Les constantes EUR/revente ci-dessous restent historiques, hors lancement.
 //   - PRESTATAIRES = abonnement mensuel (pas de commission — hors périmètre ici).
 //   - BOOSTS = 100% plateforme (déjà le cas, aucun reversement).
 export const FEES = {
@@ -74,6 +73,16 @@ export function computeTicketFeeXOF(unitPrice: number, qty: number): number {
   if (u <= 0 || n <= 0) return 0
   const perTicket = Math.min(Math.max(Math.round(u * FEES.TICKET_XOF.pct), FEES.TICKET_XOF.min), FEES.TICKET_XOF.cap)
   return perTicket * n
+}
+
+// Le plafond/plancher porte sur chaque admission, pas sur la table entiere.
+export function computeGroupTicketFeeXOF(groupFaceValue: number, admissions: number): number {
+  if (!Number.isSafeInteger(groupFaceValue) || groupFaceValue < 0 || !Number.isSafeInteger(admissions) || admissions < 2) {
+    throw new RangeError('invalid_group_pricing')
+  }
+  if (groupFaceValue === 0) return 0
+  const perAdmission = Math.min(Math.max(Math.round(groupFaceValue * FEES.TICKET_XOF.pct / admissions), FEES.TICKET_XOF.min), FEES.TICKET_XOF.cap)
+  return perAdmission * admissions
 }
 
 // Commission LIVE IN BLACK sur une revente (par admission — une place de
