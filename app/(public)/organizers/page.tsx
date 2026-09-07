@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   },
 }
 
-type DirectoryParams = { q?: string; region?: string; sort?: string; page?: string }
+type DirectoryParams = { q?: string; region?: string; upcoming?: string; sort?: string; page?: string }
 
 export default async function PublicOrganizersPage({ searchParams }: { searchParams: Promise<DirectoryParams> }) {
   const [{ q, region: rawRegion = '', upcoming, sort = 'popular', page: pageParam }, cookieStore] = await Promise.all([
