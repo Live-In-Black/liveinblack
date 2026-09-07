@@ -1,5 +1,4 @@
-import Conversation from '@/lib/models/Conversation'
-import Message from '@/lib/models/Message'
+import { persistMessageWithWake } from './persistMessage'
 import {
   buildForwardedPoll,
   canForwardMessageType,
@@ -125,7 +124,8 @@ export async function forwardMessageToConversations<
     if (!canSend.ok) continue
 
     const forwardedPoll = buildForwardedPoll(args.source.poll)
-    const created = await Message.create({
+    const lastMessageLabel = resolveForwardedLastMessageLabel(args.source.type, args.source.content)
+    const created = await persistMessageWithWake({
       conversationId: String(targetConversation._id),
       senderId: caller.id,
       senderName,
@@ -133,13 +133,7 @@ export async function forwardMessageToConversations<
       content: args.source.content,
       poll: forwardedPoll,
       forwardedFrom: { senderName: args.source.senderName, convName: sourceConvLabel },
-    })
-
-    const lastMessageLabel = resolveForwardedLastMessageLabel(args.source.type, args.source.content)
-    await Conversation.updateOne(
-      { _id: targetConversation._id },
-      { $set: { lastMessage: lastMessageLabel, lastMessageAt: created.createdAt, lastSenderId: caller.id } }
-    )
+    }, lastMessageLabel)
 
     const targetConvSource = targetConversation.toObject({ flattenMaps: true }) as ConversationSource
     sent.push(

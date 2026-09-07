@@ -99,6 +99,7 @@ const orderSchema = new Schema(
     contactEmail: { type: String, default: null },
     contactPhone: { type: String, default: null },
     stockDecremented: { type: Boolean, default: false },
+    refundStockReleasedAt: { type: Date, default: null },
     expiresAt: { type: Date, required: true },
 
     // Anti double-traitement du webhook (verrou 90s) + drapeaux finaux, même

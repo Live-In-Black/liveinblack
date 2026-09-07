@@ -11,7 +11,7 @@ import bcrypt from 'bcryptjs'
 const sendEmail = vi.fn()
 vi.mock('../email', () => ({ sendEmail: (...a: unknown[]) => sendEmail(...a) }))
 
-import { listApplicationsForAgent, getApplicationForAgent, moderateApplication, setApplicationAdminNote, type AgentCaller } from '../provider/applications'
+import { getMyApplication, saveApplicationDraft, listApplicationsForAgent, getApplicationForAgent, moderateApplication, setApplicationAdminNote, type AgentCaller } from '../provider/applications'
 import User from '@/lib/models/User'
 import Application from '@/lib/models/Application'
 
@@ -123,6 +123,33 @@ describeIntegration('applications agent (intégration, vraie base) — #9 phase 
   })
 
   describe('moderateApplication', () => {
+    it.each([
+      ['client'],
+      ['prestataire'],
+      ['client', 'organisateur'],
+      ['organisateur', 'prestataire'],
+    ])('refuse un dossier organisateur incompatible avec les rôles %j', async (...roles) => {
+      const user = await seedUser({ roles, activeRole: roles[0] })
+      const app = await seedSubmittedApplication(user.id)
+      expect(await moderateApplication(AGENT, String(app._id), 'approve')).toMatchObject({
+        ok: false, status: 403, error: 'separate_account_required',
+      })
+      expect((await Application.findById(app._id).lean())?.status).toBe('submitted')
+      expect((await User.findById(user.id).lean())?.roles).toEqual(roles)
+      expect(sendEmail).not.toHaveBeenCalled()
+      expect(await getMyApplication({ id: user.id }, 'organisateur')).toBeNull()
+      expect(await saveApplicationDraft({ id: user.id }, 'organisateur', {})).toMatchObject({
+        ok: false, status: 403, error: 'separate_account_required',
+      })
+    })
+
+    it('conserve la permission agent lors de la revue du compte organisateur dédié', async () => {
+      const user = await seedUser({ roles: ['organisateur', 'agent'] })
+      const app = await seedSubmittedApplication(user.id)
+      expect((await moderateApplication(AGENT, String(app._id), 'under_review')).ok).toBe(true)
+      expect((await User.findById(user.id).lean())?.roles).toEqual(['organisateur', 'agent'])
+    })
+
     it('approve : passe orgStatus=active, approvedAt posé, email envoyé, audit tracé', async () => {
       const alice = await seedUser()
       const app = await seedSubmittedApplication(alice.id)

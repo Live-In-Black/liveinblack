@@ -6,14 +6,16 @@ import { runObservedRoute } from '@/lib/server/observability'
 import { verifyWebhookSignature, isApprovedTransactionEvent } from '@/lib/server/payments/fedapayClient'
 import { fulfillOrder } from '@/lib/server/payments/fulfillOrder'
 import { releaseOrder } from '@/lib/server/events/orders'
-import { fulfillResaleOrder, releaseResaleOrder } from '@/lib/server/events/resale'
 import { fulfillAgentSaleOrder, releaseAgentSaleOrder } from '@/lib/server/agent/agentSales'
 import { activateSeatHold, completeSeatHold, releaseSeatHoldDepositOrder } from '@/lib/server/events/seatHolds'
 import { handleFedapaySubscriptionPayment } from '@/lib/server/provider/providerSubscriptions'
 import Order from '@/lib/models/Order'
 import User from '@/lib/models/User'
 import Event from '@/lib/models/Event'
+import BoostSlot from '@/lib/models/BoostSlot'
 import { reconcileEventPayout } from '@/lib/server/events/eventPayouts'
+import { finalizeFedapayBoost } from '@/lib/server/payments/finalizeBoost'
+import { releaseBoostSlotIfPending } from '@/lib/server/events/boostSlots'
 import { notifyUserById } from '@/lib/server/emails/notify'
 import { paymentFailedEmail } from '@/lib/server/emails'
 
@@ -81,11 +83,18 @@ export async function POST(req: Request) {
           return NextResponse.json({ received: true })
         }
 
+        const pendingBoostSlot = await BoostSlot.findOne({ fedapayTxnId: String(entity.id) }).select('_id').lean()
+        if (pendingBoostSlot) {
+          const boost = await finalizeFedapayBoost({ id: entity.id, status: entity.status || 'approved', amount: entity.amount || 0 })
+          revalidateTag('boosts', { expire: 0 })
+          return NextResponse.json({ received: true, boost })
+        }
+
         const order = await Order.findOne({ fedapayTxnId: String(entity.id) }).lean()
         if (!order) return NextResponse.json({ received: true, ignored: 'no_matching_order' })
         if (order.kind === 'resale') {
-          await fulfillResaleOrder(order._id.toString(), { paidAmountMinor: entity.amount })
-          return NextResponse.json({ received: true })
+          await releaseOrder(order._id.toString(), null)
+          return NextResponse.json({ received: true, ignored: 'resale_disabled_v1' })
         }
         if (order.kind === 'agent_sale') {
           await fulfillAgentSaleOrder(order._id.toString(), { paidAmountMinor: entity.amount })
@@ -107,9 +116,15 @@ export async function POST(req: Request) {
         name === 'transaction.declined' ||
         (name === 'transaction.updated' && ['canceled', 'declined', 'expired'].includes(entity.status || ''))
       ) {
+        const boostSlot = await BoostSlot.findOne({ fedapayTxnId: String(entity.id) }).lean()
+        if (boostSlot) {
+          await releaseBoostSlotIfPending(boostSlot.slotId, boostSlot.boostId)
+          return NextResponse.json({ received: true, boost: 'released' })
+        }
+
         const order = await Order.findOne({ fedapayTxnId: String(entity.id) }).lean()
         if (order) {
-          if (order.kind === 'resale') await releaseResaleOrder(order._id.toString())
+          if (order.kind === 'resale') await releaseOrder(order._id.toString(), null)
           else if (order.kind === 'agent_sale') await releaseAgentSaleOrder(order._id.toString())
           else if (order.kind === 'seat_hold_deposit') await releaseSeatHoldDepositOrder(order._id.toString(), releaseOrder)
           else await releaseOrder(order._id.toString(), null)

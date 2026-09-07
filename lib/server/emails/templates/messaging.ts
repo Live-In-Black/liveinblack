@@ -1,13 +1,19 @@
 // Emails liés à la messagerie — digest de messages non lus (throttlé, jamais
 // un email par message), ajout à un groupe.
-// ⚠️ Pas encore branchés — voir lib/server/messaging.ts. Nécessite un
-// mécanisme de throttle/debounce (ex. "au plus 1 digest par conversation par
-// heure") avant d'être activé, pour ne pas spammer.
+// Le rappel regroupe une attente longue OU une accumulation de messages.
 import type { Email } from '../types'
 import { DEFAULT_SITE, EMAIL_COLORS as C } from '../theme'
 import { scopedWrap, heading, paragraph, button, escapeHtml } from '../layout'
 
 const wrap = scopedWrap('messaging')
+
+export function unreadMessagesReminderEmail(count: number, conversationUrl: string, site: string = DEFAULT_SITE): Email {
+  const label = count === 1 ? '1 message attend ta réponse' : `${count} messages attendent ta réponse`
+  return {
+    subject: label,
+    html: wrap(`${heading('Messages en attente')}${paragraph(label + ' dans une conversation. Consulte tes messages pour reprendre la discussion.')}${button(conversationUrl, 'Voir les messages')}`, { site, preheader: label }),
+  }
+}
 
 export function newMessageDigestEmail(senderName: string, preview: string, conversationUrl: string, site: string = DEFAULT_SITE): Email {
   const inner = `

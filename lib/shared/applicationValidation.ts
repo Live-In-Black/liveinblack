@@ -1,4 +1,5 @@
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
+import { normalizeRegionId } from './locations'
 
 // Port de la validation de src/pages/OnboardingOrganisateur.jsx — CÔTÉ
 // CLIENT dans le legacy (jamais revérifiée serveur), ici volontairement
@@ -7,43 +8,28 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js'
 // (frontière de sécurité réelle — voir #7 phase organisateur, gap #1 du
 // research : "toute la validation d'étape est client-only côté legacy").
 
-export function isValidSiret(raw: string): boolean {
-  const digits = String(raw || '').replace(/\D/g, '')
-  // Échappatoire "pas de SIRET" : que des zéros, au moins 3 chiffres —
-  // fidèle au legacy qui accepte ce cas pour les micro-structures/étranger.
-  if (digits.length >= 3 && /^0+$/.test(digits)) return true
-  if (digits.length !== 9 && digits.length !== 14) return false
-  // Luhn
-  let sum = 0
-  for (let i = 0; i < digits.length; i++) {
-    let n = Number(digits[digits.length - 1 - i])
-    if (i % 2 === 1) {
-      n *= 2
-      if (n > 9) n -= 9
-    }
-    sum += n
-  }
-  return sum % 10 === 0
-}
-
-export function formatSiret(raw: string): string {
-  return String(raw || '').replace(/\D/g, '')
-}
-
 export function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim())
 }
 
 export function isValidPhone(dialCode: string, number: string): boolean {
-  const national = String(number || '').trim().replace(/^0+/, '')
+  const code = String(dialCode || '').replace(/\s+/g, '')
+  const digits = String(number || '').replace(/\D/g, '')
+  if (code === '+229') {
+    // Nouveau plan béninois : 01/09 + 8 chiffres. On conserve aussi
+    // l'ancien format national à 8 chiffres pour les comptes existants.
+    return /^0[19]\d{8}$/.test(digits) || /^[19]\d{7}$/.test(digits)
+  }
+
+  const national = digits
   if (!national) return false
-  const phone = parsePhoneNumberFromString(`${dialCode}${national}`)
+  const phone = parsePhoneNumberFromString(`${code}${national}`)
   return Boolean(phone?.isValid())
 }
 
 export interface OrganizerFormData {
   nomCommercial: string
-  siret: string
+  siret?: string
   emailPro: string
   telephoneProCode: string
   telephonePro: string
@@ -67,8 +53,8 @@ export type FormValidationResult = { ok: true } | { ok: false; error: string }
 
 // Étape 0 — "Informations de l'établissement".
 export function validateOrganizerStep0(f: Partial<OrganizerFormData>): FormValidationResult {
+  if (normalizeRegionId(f.pays || '') !== 'benin') return { ok: false, error: 'Le lancement actuel est limité au Bénin.' }
   if (!f.nomCommercial?.trim()) return { ok: false, error: "Le nom de l'établissement est obligatoire." }
-  if (!isValidSiret(f.siret || '')) return { ok: false, error: 'Numéro SIRET/SIREN invalide (ou saisis au moins 3 zéros si tu n’en as pas).' }
   if (!isValidEmail(f.emailPro || '')) return { ok: false, error: 'Adresse e-mail professionnelle invalide.' }
   if (!isValidPhone(f.telephoneProCode || '', f.telephonePro || '')) return { ok: false, error: 'Numéro de téléphone professionnel invalide.' }
   if (!f.noFixedAddress && !f.adresseEtablissement?.trim()) return { ok: false, error: "L'adresse de l'établissement est obligatoire (ou coche « pas de lieu fixe »)." }
@@ -109,7 +95,7 @@ export interface PrestataireFormData {
   pays: string
   nomCommercial: string
   nomScene: string
-  siret: string
+  siret?: string
   zonesIntervention: string[]
   description: string
   specialitesLibre: string
@@ -143,11 +129,11 @@ export interface PrestataireFormData {
 // Étape 0 — "Compte" (identité + coordonnées).
 export function validatePrestataireStep0(f: Partial<PrestataireFormData>): FormValidationResult {
   const errors: string[] = []
+  if (normalizeRegionId(f.pays || '') !== 'benin') errors.push('Le lancement actuel est limité au Bénin.')
   if (!f.prenom?.trim()) errors.push('Le prénom est obligatoire.')
   if (!f.nom?.trim()) errors.push('Le nom est obligatoire.')
   if (!f.telephone?.trim()) errors.push('Le téléphone est obligatoire.')
   else if (!isValidPhone(f.telephoneCode || '', f.telephone || '')) errors.push('Numéro invalide pour ce pays.')
-  if (f.siret && !isValidSiret(f.siret)) errors.push('Numéro invalide : SIREN = 9 chiffres, SIRET = 14 chiffres.')
   if (errors.length > 0) return { ok: false, error: errors.join(' ') }
   return { ok: true }
 }
@@ -164,23 +150,13 @@ export function validatePrestataireFormData(f: Partial<PrestataireFormData>): Fo
   return validatePrestataireStep2(f)
 }
 
-// Catégories dont la sélection élargit les documents exigés au-delà de
-// 'identity' — port de getRequiredDocs (src/utils/applications.js). Union
-// across TOUTES les catégories choisies (un prestataire multi-catégories
-// cumule les exigences les plus strictes).
-const BUSINESS_DOC_CATEGORIES = new Set(['salle', 'materiel', 'food', 'securite', 'transport'])
-
+// Onboarding LIB V1 : seuls les justificatifs d'identité du titulaire du
+// compte sont demandés. Les pièces éventuellement requises par FedaPay ou un
+// contrôle juridique séparé ne doivent pas réapparaître dans ce formulaire.
 export function getRequiredDocs(type: 'organisateur' | 'prestataire', prestataireTypes: string[] = []): string[] {
-  if (type === 'organisateur') return ['identity']
-  const docs = new Set(['identity'])
-  const selected = new Set(prestataireTypes)
-  if (selected.has('artiste')) docs.add('billing_proof')
-  if ([...selected].some((t) => BUSINESS_DOC_CATEGORIES.has(t))) {
-    docs.add('business_doc')
-    docs.add('insurance')
-  }
-  if (selected.has('salle')) docs.add('exploitation_proof')
-  return [...docs]
+  void type
+  void prestataireTypes
+  return ['identity']
 }
 
 // Port de getCompleteness (src/utils/applications.js, #9 phase agent/admin)

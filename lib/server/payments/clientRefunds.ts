@@ -5,12 +5,12 @@ import Order, { type OrderDoc } from '@/lib/models/Order'
 import Ticket from '@/lib/models/Ticket'
 import { notifyUserById } from '@/lib/server/emails/notify'
 import { sendEmail } from '@/lib/server/email'
-import { refundConfirmedEmail } from '@/lib/server/emails'
+import { refundRequestCreatedEmail } from '@/lib/server/emails'
 import type { Email } from '@/lib/server/emails/types'
 import { fmtMoney } from '@/lib/shared/money'
 import { extractTicketCode, verifyTicketToken } from '../events/ticketToken'
 import { createClientInitiatedRefundCase } from '@/lib/server/refunds/refundCases'
-import { computeRefundableMinor, isBeforeCancellationOptionDeadline } from '@/lib/shared/refundPolicy'
+import { clientRefundEligibility } from '@/lib/server/refunds/clientEligibility'
 
 const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
 
@@ -20,7 +20,7 @@ export interface RefundCaller {
 
 export type RefundRequestResult =
   | { ok: false; status: number; error: string }
-  | { ok: true; refunded: boolean }
+  | { ok: true; refunded: false; requested: true; refundCaseId: string }
 
 // Cœur partagé des deux points d'entrée ci-dessous (compte authentifié / lien
 // sécurisé sans compte) — l'AUTORISATION (qui a le droit d'appeler ceci pour
@@ -36,16 +36,9 @@ async function processOrderRefund(order: HydratedDocument<OrderDoc>, notifyEmail
   const event = await Event.findById(order.eventId)
   if (!event) return { ok: false, status: 404, error: 'event_not_found' }
 
-  const coveredByProtection = order.cancellationProtectionPurchased && isBeforeCancellationOptionDeadline(event.closingDate)
-  const cause = coveredByProtection ? 'cancellation_option' : 'postponed_declined'
-
-  if (!coveredByProtection) {
-    if (event.cancelled) return { ok: false, status: 409, error: 'event_cancelled_cash_pickup_created' }
-    if (!event.postponedFrom) return { ok: false, status: 409, error: 'not_eligible' }
-    if (!event.refundWindowClosesAt || Date.now() >= event.refundWindowClosesAt.getTime()) {
-      return { ok: false, status: 409, error: 'refund_window_closed' }
-    }
-  }
+  const eligibility = clientRefundEligibility(order, event)
+  if (!eligibility.ok) return eligibility
+  const { cause } = eligibility
 
   // Un seul billet déjà scanné bloque le remboursement de tout le groupe —
   // le service (l'entrée) a déjà été rendu pour au moins un participant.
@@ -58,10 +51,11 @@ async function processOrderRefund(order: HydratedDocument<OrderDoc>, notifyEmail
   const result = await createClientInitiatedRefundCase(order, cause, order.userId)
   if (!result.ok) return result
 
-  const amount = computeRefundableMinor(order, cause) / (order.currency === 'XOF' ? 1 : 100)
-  await notifyEmail(refundConfirmedEmail(event.name, fmtMoney(amount, order.currency), 'dans les meilleurs délais', SITE))
+  await notifyEmail(refundRequestCreatedEmail(event.name, fmtMoney(result.amountXOF ?? 0, 'XOF'), {
+    code: result.pickupCode, point: result.refundPointName, address: result.refundPointAddress,
+  }, SITE))
 
-  return { ok: true, refunded: true }
+  return { ok: true, refunded: false, requested: true, refundCaseId: result.refundCaseId }
 }
 
 export async function requestClientRefund(caller: RefundCaller, orderId: string): Promise<RefundRequestResult> {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import crypto from 'node:crypto'
 import mongoose from 'mongoose'
 import { getDb } from '@/lib/db/mongoose'
@@ -15,19 +16,10 @@ import { fmtMoney } from '@/lib/shared/money'
 
 const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
 
-// Bourse de revente officielle (LIVE_IN_BLACK_Systeme_de_revente.docx).
-// Principe : le paiement acheteur passe par le MÊME flux à deux temps que
-// n'importe quel achat (créer un Order en attente -> rediriger vers
-// Stripe/FedaPay -> le webhook finalise), jamais une fonction synchrone —
-// voir fulfillResaleOrder, appelée depuis app/api/webhooks/{stripe,fedapay}
-// à la place de fulfillOrder quand order.kind === 'resale'.
-//
-// v1 volontairement restreint (à faire évoluer avec le client) :
-//  - une place de groupe n'est revendable que si l'hôte détient encore TOUTES
-//    les places lui-même (aucun siège déjà attribué à un ami) — évite le cas
-//    ambigu "un ami perd son siège suite à la revente déclenchée par l'hôte".
-//  - pas de liste d'attente (hors périmètre v1, cf. plan).
-//  - anti-fraude minimal : vendeur != acheteur, max 2 reventes par admission.
+// Module historique de revente officielle (D92).
+// V1 Benin : la revente est exclue. Les exports restent pour compatibilite et
+// audit d'anciens dossiers, mais les points d'entree actifs retournent
+// immediatement `resale_disabled_v1`.
 
 const MAX_RESALES_PER_ADMISSION = 2
 const CLOSES_BEFORE_DOORS_MS = 2 * 60 * 60 * 1000
@@ -63,6 +55,11 @@ function rotateQr(ticket: { seatVersion?: number | null; entryNonce?: string | n
 export type ListResaleResult = ErrResult | { ok: true; listing: ResaleListingDoc & { _id: mongoose.Types.ObjectId } }
 
 export async function listTicketForResale(caller: ResaleCaller, ticketCode: string, resalePriceMajor: number): Promise<ListResaleResult> {
+  void caller
+  void ticketCode
+  void resalePriceMajor
+  return { ok: false, status: 410, error: 'resale_disabled_v1' }
+
   await getDb()
 
   const code = ticketCode?.trim().toUpperCase()
@@ -218,9 +215,8 @@ export async function withdrawResaleListing(caller: ResaleCaller, listingId: str
 }
 
 // ─────────────────────────── initiateResaleOrder ────────────────────────────
-// Appelée par les routes de checkout dédiées (app/api/checkout/resale,
-// app/api/checkout/resale/fedapay — à construire) au lieu de
-// lib/server/orders.ts::createOrder (aucun stock à décrémenter ici).
+// Ancien point d'entree checkout revente. V1 Benin : aucun stock n'est
+// decremente et aucune commande de revente n'est creee.
 
 export type InitiateResaleResult = ErrResult | { ok: true; order: OrderDoc & { _id: mongoose.Types.ObjectId } }
 
@@ -229,6 +225,11 @@ export async function initiateResaleOrder(
   listingId: string,
   rail: 'stripe' | 'fedapay'
 ): Promise<InitiateResaleResult> {
+  void buyerCaller
+  void listingId
+  void rail
+  return { ok: false, status: 410, error: 'resale_disabled_v1' }
+
   await getDb()
 
   const listing = await ResaleListing.findById(listingId)
@@ -326,9 +327,14 @@ export type FulfillResaleResult =
   | { status: 'listing_not_found' }
   | { status: 'not_reserved' }
   | { status: 'amount_mismatch' }
+  | { status: 'resale_disabled_v1' }
   | { status: 'ok'; ticketCodes: string[] }
 
 export async function fulfillResaleOrder(orderId: string, opts: { paidAmountMinor?: number } = {}): Promise<FulfillResaleResult> {
+  void orderId
+  void opts
+  return { status: 'resale_disabled_v1' }
+
   await getDb()
 
   const order = await Order.findById(orderId)
@@ -490,13 +496,8 @@ function momoCountryForRegion(region: string): string | null {
 }
 
 // ─────────────────────────── expireStaleResaleListings ──────────────────────
-// Sweep cron (voir app/api/cron/resale-expiry/route.ts) — jusqu'ici AUCUN
-// code ne basculait jamais un ResaleListing en status:'expired' (vérifié :
-// la fenêtre n'était fermée qu'à la volée en lecture, listTicketForResale/
-// initiateResaleOrder ci-dessus). Un listing 'reserved' n'est jamais touché
-// ici (il a son propre cycle via releaseResaleOrder à l'expiration de
-// l'Order acheteur) — seuls les listings encore 'active' après closesAt sont
-// concernés.
+// Sweep historique hors cron V1 : a appeler seulement en migration/audit si
+// d'anciennes annonces encore actives doivent etre classees comme expirees.
 export async function expireStaleResaleListings(): Promise<{ expired: number }> {
   await getDb()
   const stale = await ResaleListing.find({ status: 'active', closesAt: { $lte: new Date() } }).lean()

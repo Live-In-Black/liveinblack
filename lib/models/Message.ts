@@ -38,7 +38,7 @@ const pollEventSnapshotSchema = new Schema(
     name: { type: String, default: '' },
     date: { type: String, default: '' },
     price: { type: Number, default: 0 },
-    currency: { type: String, default: 'EUR' },
+    currency: { type: String, default: 'XOF' },
     image: { type: String, default: null },
   },
   { _id: false }

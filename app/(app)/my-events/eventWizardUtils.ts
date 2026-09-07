@@ -213,6 +213,9 @@ export function validateWizardLocation(input: { city: string; region: string }):
   const errs: Record<string, string> = {}
   if (!input.city.trim()) errs.city = 'La ville est obligatoire'
   if (!input.region) errs.region = 'Choisis une région'
+  else if (input.region.trim().toLowerCase() !== 'bénin' && input.region.trim().toLowerCase() !== 'benin') {
+    errs.region = 'Le lancement billetterie est ouvert au Bénin uniquement.'
+  }
   return errs
 }
 

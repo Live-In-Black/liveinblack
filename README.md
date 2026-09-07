@@ -277,7 +277,7 @@ Important : `MONGODB_TEST_URI` doit cibler une base dont le nom contient `test`.
 | Commande | Description |
 | --- | --- |
 | `npm run seed` | Seed de developpement |
-| `npm run seed:blog` | Seed blog standard |
+| `npm run seed:blog` | Seed campagne blog Bénin |
 | `npm run seed:blog:benin` | Seed campagne blog Benin |
 | `npm run audit:growth` | Audit croissance : SEO, campagne blog Benin, densite UI dashboard et analytics |
 | `npm run audit:growth-analytics` | Audit des evenements de conversion publics et checkout |

@@ -85,6 +85,12 @@ export async function updateEventOrderItemQuantity(
       }
 
       const oldQuantity = item.quantity
+      if (item.kind === 'preorder' || item.kind === 'included') {
+        return { kind: 'error', status: 409, error: 'purchased_quantity_locked' }
+      }
+      if (quantity > oldQuantity) {
+        return { kind: 'error', status: 410, error: 'standalone_orders_disabled_v1' }
+      }
       item.quantity = quantity
       await order.save({ session })
 

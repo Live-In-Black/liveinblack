@@ -43,17 +43,29 @@ export const EVENT_TYPE_LABELS: Record<string, string> = {
   anniversaire: 'Anniversaire',
 }
 
-// Identique à BUDGETS de src/utils/recommendations.js (mêmes bornes, même
-// ordre) — `vip` et `plus-50` ont volontairement le même test (fidèle au
-// legacy, jamais "corrigé" ici pour rester bug-for-bug compatible).
+// Les montants des événements actifs sont en FCFA (XOF). Les anciens ids
+// en euros restent acceptés par normalizeBudgetId pour ne pas invalider les
+// préférences déjà enregistrées.
 export const BUDGETS: { id: string; test: (price: number) => boolean }[] = [
   { id: 'gratuit', test: (p) => p <= 0 },
-  { id: 'moins-10', test: (p) => p > 0 && p < 10 },
-  { id: '10-20', test: (p) => p >= 10 && p <= 20 },
-  { id: '20-50', test: (p) => p > 20 && p <= 50 },
-  { id: 'plus-50', test: (p) => p > 50 },
-  { id: 'vip', test: (p) => p > 50 },
+  { id: 'moins-5000', test: (p) => p > 0 && p < 5000 },
+  { id: '5000-10000', test: (p) => p >= 5000 && p <= 10000 },
+  { id: '10000-25000', test: (p) => p > 10000 && p <= 25000 },
+  { id: 'plus-25000', test: (p) => p > 25000 },
+  { id: 'vip', test: (p) => p > 25000 },
 ]
+
+const LEGACY_BUDGET_IDS: Record<string, string> = {
+  'moins-10': 'moins-5000',
+  '10-20': '5000-10000',
+  '20-50': '10000-25000',
+  'plus-50': 'plus-25000',
+}
+
+export function normalizeBudgetId(value: unknown): string {
+  const id = typeof value === 'string' ? value : ''
+  return LEGACY_BUDGET_IDS[id] || id
+}
 
 // Compat legacy : events créés avant l'introduction de musicStyles[] n'ont
 // qu'un `category` (genre unique). Mappé vers nos ids pour rester
@@ -246,7 +258,7 @@ export function scoreRecommendationEvent(
   }
 
   // Budget — seulement si le prix de l'event est CONNU
-  const budget = BUDGETS.find((b) => b.id === p.budget)
+  const budget = BUDGETS.find((b) => b.id === normalizeBudgetId(p.budget))
   const minPrice = eventMinPrice(event)
   if (budget && minPrice != null && budget.test(minPrice)) {
     score += RECOMMENDATION_WEIGHTS.budget

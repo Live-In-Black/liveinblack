@@ -13,16 +13,10 @@ import { Button, Card } from '@/app/components/ui'
 export default function OrganizerAnalytics({ events }: { events: OrganizerEventView[] }) {
   const [showFees, setShowFees] = useState(false)
 
-  const byCurrency = useMemo(() => {
-    const totals = new Map<'EUR' | 'XOF', { revenue: number; ticketCount: number }>()
-    for (const e of events) {
-      const cur = totals.get(e.currency) ?? { revenue: 0, ticketCount: 0 }
-      cur.revenue += e.revenue
-      cur.ticketCount += e.ticketCount
-      totals.set(e.currency, cur)
-    }
-    return totals
-  }, [events])
+  const xofRevenue = useMemo(
+    () => events.filter((event) => event.currency === 'XOF').reduce((total, event) => total + event.revenue, 0),
+    [events]
+  )
 
   const totalTickets = events.reduce((sum, e) => sum + e.ticketCount, 0)
   const topEvents = [...events].filter((e) => e.totalCapacity > 0).sort((a, b) => b.soldCount / b.totalCapacity - a.soldCount / a.totalCapacity)
@@ -76,16 +70,13 @@ export default function OrganizerAnalytics({ events }: { events: OrganizerEventV
           </svg>
         </span>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {[...byCurrency.entries()].map(([currency, totals]) => (
-            <span key={currency} style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <span style={{ font: '600 26px var(--font-open-sans)', color: 'var(--text)' }}>{formatMoney(totals.revenue, currency)}</span>
-              {byCurrency.size > 1 && <span style={{ font: '600 11px var(--font-open-sans)', color: 'var(--text-faint)' }}>{currency}</span>}
-            </span>
-          ))}
+          <span style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ font: '600 26px var(--font-open-sans)', color: 'var(--text)' }}>{formatMoney(xofRevenue, 'XOF')}</span>
+          </span>
         </span>
         {showFees && (
           <span style={{ display: 'block', font: '500 11.5px var(--font-open-sans)', color: 'var(--text-faint)', lineHeight: 1.6, margin: '8px 0 0' }}>
-            Frais de service (5 % + 0,49 € par billet, plafonné à 2,50 € — ou 5 % + 300 FCFA, plafonné à 1 500 FCFA) payés par l&rsquo;acheteur. Tu conserves 100 % du prix affiché.
+            Frais de service : 5 % du prix du billet, avec un minimum de 200 FCFA et un plafond de 1 500 FCFA. Ils sont payés par l&rsquo;acheteur ; tu conserves 100 % du prix affiché.
           </span>
         )}
       </Button>
@@ -100,7 +91,7 @@ export default function OrganizerAnalytics({ events }: { events: OrganizerEventV
           <div style={{ display: 'grid', gap: 8 }}>
             {topEvents.map((e) => {
               const fill = Math.min(100, Math.round((e.soldCount / e.totalCapacity) * 100))
-              return <div key={e.id} style={{ display: 'grid', gap: 5 }}><div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 'var(--font-size-footnote-lg)' }}><span style={{ color: 'var(--text)' }}>{e.name}</span><span style={{ color: 'var(--gold)', fontWeight: 600 }}>{e.soldCount}/{e.totalCapacity} · {fill}% · {formatMoney(e.revenue, e.currency)}</span></div><div aria-label={`Remplissage ${fill} %`} style={{ height: 5, borderRadius: 999, background: 'var(--fill-secondary)', overflow: 'hidden' }}><div style={{ width: `${fill}%`, height: '100%', borderRadius: 999, background: fill >= 90 ? 'var(--primary)' : 'var(--gold)' }} /></div></div>
+              return <div key={e.id} style={{ display: 'grid', gap: 5 }}><div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 'var(--font-size-footnote-lg)' }}><span style={{ color: 'var(--text)' }}>{e.name}</span><span style={{ color: 'var(--gold)', fontWeight: 600 }}>{e.soldCount}/{e.totalCapacity} · {fill}%{e.currency === 'XOF' ? ` · ${formatMoney(e.revenue, 'XOF')}` : ''}</span></div><div aria-label={`Remplissage ${fill} %`} style={{ height: 5, borderRadius: 999, background: 'var(--fill-secondary)', overflow: 'hidden' }}><div style={{ width: `${fill}%`, height: '100%', borderRadius: 999, background: fill >= 90 ? 'var(--primary)' : 'var(--gold)' }} /></div></div>
             })}
           </div>
         </Card>

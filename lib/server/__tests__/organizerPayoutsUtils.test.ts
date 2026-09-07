@@ -9,20 +9,20 @@ import {
 
 describe('organizerPayoutsUtils', () => {
   it('dérive correctement le mode de payout', () => {
-    expect(derivePayoutMode({ stripeAccountId: 'acct_123', stripeCountry: 'FR' })).toBe('connect')
-    expect(derivePayoutMode({ stripeAccountId: 'acct_123', stripeCountry: 'TG' })).toBe('connect')
-    expect(derivePayoutMode({ stripeCountry: 'TG' })).toBe('manual')
+    expect(derivePayoutMode({ stripeAccountId: 'acct_123', stripeCountry: 'FR' })).toBe('none')
+    expect(derivePayoutMode({ stripeAccountId: 'acct_123', stripeCountry: 'TG' })).toBe('none')
+    expect(derivePayoutMode({ stripeCountry: 'TG' })).toBe('none')
     expect(derivePayoutMode({})).toBe('none')
   })
 
   it('construit une vue de payout stable avec fallbacks', () => {
     expect(
       buildPayoutStatusView(
-        { stripeAccountId: null, stripeCountry: 'TG', stripeChargesEnabled: false },
+        { stripeAccountId: 'acct_legacy', stripeCountry: 'TG', stripeChargesEnabled: true },
         { amountDueCents: null, amountDueXOF: 12000 }
       )
     ).toEqual({
-      mode: 'manual',
+      mode: 'none',
       connected: false,
       chargesEnabled: false,
       country: 'TG',

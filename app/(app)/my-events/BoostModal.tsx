@@ -46,11 +46,9 @@ const CHECKOUT_ERROR_MESSAGES: Record<string, string> = {
   event_not_found: 'Événement introuvable.',
 }
 
-// Les boosts sont réglés uniquement en euros (rail Stripe) quelle que soit la
-// devise de l'événement — voir CHECKOUT_ERROR_MESSAGES et le commentaire sur
-// BOOST_PLANS. On réutilise `fmtMoney` partagé plutôt qu'un formateur local.
+// V1 Bénin : les boosts sont affichés en FCFA et doivent passer par FedaPay.
 function formatPrice(price: number): string {
-  return fmtMoney(price, 'EUR')
+  return fmtMoney(price, 'XOF')
 }
 
 function RankIcon({ position, size = 20 }: { position: number; size?: number }) {
@@ -229,7 +227,7 @@ export default function BoostModal({ event, onClose }: BoostModalProps) {
               </div>
             </div>
             <p style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--text-faint)', lineHeight: 1.7, margin: 0 }}>
-              Paiement sécurisé via Stripe. Le créneau est confirmé uniquement après validation du paiement.
+              Paiement sécurisé via FedaPay. Le créneau est confirmé uniquement après validation du paiement.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 9 }}>
               <Button
@@ -249,7 +247,7 @@ export default function BoostModal({ event, onClose }: BoostModalProps) {
                 onClick={confirmBoost}
                 disabled={paying}
                 loading={paying}
-                loadingText="Redirection vers Stripe…"
+                loadingText="Redirection vers FedaPay…"
                 fullWidth
                 style={{
                   minHeight: 40,

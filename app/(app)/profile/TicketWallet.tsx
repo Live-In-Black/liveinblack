@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { CalendarPlus, Download, ExternalLink, Gift, HandCoins, ListChecks, QrCode, Share2, Sparkles, Ticket, X } from 'lucide-react'
+import { CalendarPlus, Download, ExternalLink, HandCoins, ListChecks, QrCode, Share2, Sparkles, Ticket, X } from 'lucide-react'
 import { QRCodeCanvas } from 'qrcode.react'
 import { fmtMoney } from '@/lib/shared/money'
 import { downloadTicketPNG, shareOrCopy, shareStory, downloadICS, countdownLabel } from '@/lib/shared/ticketExtras'
@@ -77,7 +77,7 @@ export interface TicketWalletGroupView {
 }
 
 const SITE = typeof window !== 'undefined' ? window.location.origin : ''
-const SUPPORT_EMAIL = 'hagechady@liveinblack.com'
+const SUPPORT_EMAIL = 'contact@liveinblack.com'
 const DISMISSED_KEY = 'liveinblack:dismissedCancelBanners'
 
 const REFUND_ERROR_LABELS: Record<string, string> = {
@@ -88,20 +88,7 @@ const REFUND_ERROR_LABELS: Record<string, string> = {
   free_ticket_not_refundable: 'Ce billet est gratuit, il n’y a rien à rembourser.',
   xof_required: 'Ce remboursement suit le parcours de lancement au Bénin, en FCFA uniquement.',
   event_cancelled_cash_pickup_created: 'L’événement est annulé : ton dossier de retrait au point de remboursement est créé automatiquement.',
-  ticket_listed_for_resale: 'Retire d’abord ce billet de la revente avant de demander un remboursement.',
-}
-
-const RESELL_ERROR_LABELS: Record<string, string> = {
-  price_above_original: 'Le prix de revente ne peut pas dépasser le prix initial du billet.',
-  invalid_price: 'Indique un prix valide.',
-  resale_window_closed: 'La revente est fermée pour cet événement (moins de 2h avant les portes).',
-  resale_limit_reached: 'Ce billet a déjà changé de propriétaire le nombre maximum de fois autorisé.',
-  event_ended: 'Cet événement est déjà terminé.',
-  event_cancelled: 'Cet événement est annulé.',
-  ticket_already_checked_in: 'Ce billet a déjà été scanné à l’entrée.',
-  already_listed: 'Ce billet est déjà en vente.',
-  not_resellable_source: 'Ce billet n’est pas revendable.',
-  group_not_fully_held_by_host: 'Impossible de revendre : au moins une place de ce groupe a déjà été attribuée à quelqu’un d’autre.',
+  ticket_listed_for_resale: 'Ce billet ne peut pas être remboursé dans son état actuel. Contacte le support si la situation te semble incorrecte.',
 }
 
 function readDismissed(): Set<string> {
@@ -116,22 +103,19 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
   const upcomingSeatCount = countUpcomingSeats(buckets.upcoming)
 
   return (
-    <main className="lb-dashboard-page">
+    <section className="ticket-wallet-page">
       <style>{`
         .ticket-wallet-section-grid {
           display: grid !important;
-          grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)) !important;
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 300px)) !important;
           gap: 10px !important;
           width: 100% !important;
-        }
-        @media (min-width: 1024px) {
-          .ticket-wallet-section-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-          }
+          justify-content: start !important;
+          align-items: start !important;
         }
         @media (min-width: 640px) and (max-width: 1023px) {
           .ticket-wallet-section-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            grid-template-columns: repeat(2, minmax(0, 300px)) !important;
           }
         }
         @media (max-width: 639px) {
@@ -145,7 +129,7 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
         .ticket-wallet-ticket-list { padding: 0 12px 12px !important; gap: 8px !important; }
         .ticket-wallet-face { display: grid !important; grid-template-columns: minmax(0, 1fr) 112px !important; }
         .ticket-wallet-rail { min-height: 76px !important; padding: 10px 12px !important; }
-        .ticket-wallet-card-shell { border-radius: 14px !important; box-shadow: none !important; width: 100% !important; }
+        .ticket-wallet-card-shell { border-radius: var(--radius-card) !important; box-shadow: none !important; width: 100% !important; }
         .ticket-wallet-card-body { padding: 8px 10px !important; }
         .ticket-wallet-card-actions { padding: 8px 10px !important; gap: 6px !important; }
         .ticket-wallet-action-grid { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 6px !important; }
@@ -154,6 +138,18 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
         .ticket-wallet-qr canvas { width: 80px !important; height: 80px !important; }
         .ticket-wallet-meta > div { padding: 8px 9px !important; }
         .ticket-wallet-meta > div p:first-child { margin-bottom: 2px !important; }
+        .ticket-wallet-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+          min-height: 48px;
+          margin-top: 24px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid var(--border);
+        }
+        .ticket-wallet-profile-link { gap: 10px !important; padding-right: 12px; }
+        .ticket-wallet-toolbar > a:last-child { margin-left: auto; }
         @media (max-width: 480px) {
           .ticket-wallet-face { grid-template-columns: 1fr !important; }
           .ticket-wallet-qr { width: 100% !important; border-left: 0 !important; border-top: 1px dashed var(--border-strong) !important; }
@@ -162,11 +158,12 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
           .ticket-wallet-summary { grid-template-columns: 1fr !important; }
           .ticket-wallet-summary-action { justify-content: flex-start !important; }
           .ticket-wallet-summary-action a { min-height: 32px !important; padding: 6px 10px !important; font-size: var(--font-size-caption) !important; }
+          .ticket-wallet-toolbar { gap: 16px; }
         }
       `}</style>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <Link href="/profile" style={{ minHeight: 36, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--font-size-footnote-lg)', fontWeight: 700, color: 'var(--text-muted)', textDecoration: 'none' }}>
+        <div className="ticket-wallet-toolbar">
+          <Link className="ticket-wallet-profile-link" href="/profile" style={{ minHeight: 36, display: 'inline-flex', alignItems: 'center', fontSize: 'var(--font-size-footnote-lg)', color: 'var(--text-muted)', textDecoration: 'none' }}>
             <ArrowLeft size={16} aria-hidden="true" />
             Profil
           </Link>
@@ -174,7 +171,7 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
         </div>
 
         <header style={{ marginBottom: 6 }}>
-          <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(26px,3.2vw,34px)', fontWeight: 720, letterSpacing: '-.045em' }}>Mes billets</h1>
+          <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(26px,3.2vw,34px)', fontWeight: 500, letterSpacing: '-.035em' }}>Mes billets</h1>
           <p style={{ maxWidth: 720, margin: '5px 0 0', color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote)', lineHeight: 1.38 }}>Tous tes accès, QR codes et places à venir dans un seul portefeuille.</p>
         </header>
 
@@ -188,7 +185,7 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                 <TicketGlyph />
                 <div>
-                  <p style={{ fontWeight: 800, fontSize: 'var(--font-size-headline)', color: 'var(--text)', margin: 0 }}>
+                  <p style={{ fontWeight: 500, fontSize: 'var(--font-size-headline)', color: 'var(--text)', margin: 0 }}>
                     {upcomingSeatCount > 0 ? `${upcomingSeatCount} place${upcomingSeatCount > 1 ? 's' : ''} à venir` : 'Aucune place à venir'}
                   </p>
                   <p style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--text-muted)', margin: '2px 0 0' }}>
@@ -206,7 +203,7 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
           </>
         )}
       </div>
-    </main>
+    </section>
   )
 }
 
@@ -246,9 +243,8 @@ function SeatHoldsPanel() {
   async function payBalance(hold: SeatHoldItem) {
     setPayingId(hold.id)
     setPayErr(null)
-    const endpoint = hold.currency === 'XOF' ? '/api/checkout/seat-hold/fedapay' : '/api/checkout/seat-hold'
     try {
-      const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seatHoldId: hold.id }) })
+      const res = await fetch('/api/checkout/seat-hold/fedapay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seatHoldId: hold.id }) })
       const data = (await res.json().catch(() => null)) as { url?: string; error?: string } | null
       if (!res.ok || !data?.url) {
         setPayErr(data?.error || 'Impossible de lancer le paiement.')
@@ -793,13 +789,6 @@ function PremiumTicketCard({
   const [refundState, setRefundState] = useState<'idle' | 'busy' | 'done' | 'err'>(ticket.refundRequested ? 'done' : 'idle')
   const [refundErr, setRefundErr] = useState<string | null>(null)
   const [refundConfirmOpen, setRefundConfirmOpen] = useState(false)
-  const [withdrawConfirmOpen, setWithdrawConfirmOpen] = useState(false)
-  const [resellOpen, setResellOpen] = useState(false)
-  const [resellPrice, setResellPrice] = useState('')
-  const [resellState, setResellState] = useState<'idle' | 'busy' | 'err'>('idle')
-  const [resellErr, setResellErr] = useState<string | null>(null)
-  const [withdrawState, setWithdrawState] = useState<'idle' | 'busy' | 'err'>('idle')
-  const [activeListing, setActiveListing] = useState(ticket.activeListing)
   const [nowTs, setNowTs] = useState(() => Date.now())
   const qrExportRef = useRef<HTMLCanvasElement>(null)
 
@@ -867,54 +856,6 @@ function PremiumTicketCard({
     const result = await shareOrCopy(`${SITE}/events/${event.id}`, `Rejoins-moi à ${event.name}`)
     if (result.method === 'copy') flash('Lien copié')
     else if (result.method === 'unsupported') flash('Partage indisponible sur ce navigateur')
-  }
-
-  async function handleResell() {
-    const majorAmount = Number(resellPrice.replace(',', '.'))
-    if (!majorAmount || majorAmount <= 0) {
-      setResellState('err')
-      setResellErr('Indique un prix valide.')
-      return
-    }
-    setResellState('busy')
-    setResellErr(null)
-    try {
-      const res = await fetch('/api/tickets/resell', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticketCode: ticket.ticketCode, resalePrice: majorAmount }),
-      })
-      const data = await res.json().catch(() => null)
-      if (res.ok && data?.ok) {
-        setActiveListing({ id: data.listingId, resalePriceMinor: Math.round(majorAmount * (ticket.currency === 'XOF' ? 1 : 100)), feeMinor: data.feeMinor, sellerNetMinor: data.sellerNetMinor, status: 'active' })
-        setResellOpen(false)
-        setResellState('idle')
-        flash('Billet mis en vente')
-      } else {
-        setResellState('err')
-        setResellErr(RESELL_ERROR_LABELS[data?.error as string] || 'Mise en vente impossible pour le moment.')
-      }
-    } catch {
-      setResellState('err')
-      setResellErr('Mise en vente impossible pour le moment.')
-    }
-  }
-
-  async function handleWithdrawResell() {
-    if (!activeListing || withdrawState === 'busy') return
-    setWithdrawState('busy')
-    try {
-      const res = await fetch(`/api/resale-listings/${activeListing.id}`, { method: 'DELETE' })
-      if (res.ok) {
-        setActiveListing(null)
-        setWithdrawState('idle')
-        flash('Mise en vente retirée — nouveau billet généré')
-      } else {
-        setWithdrawState('err')
-      }
-    } catch {
-      setWithdrawState('err')
-    }
   }
 
   async function handleRefundRequest() {
@@ -1108,10 +1049,10 @@ function PremiumTicketCard({
                 <Link
                   href={`/order/${event.id}/${ticket.ticketCode}`}
                   style={{ ...actionBtnStyle(false), background: 'var(--primary)', color: 'var(--primary-ink)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5, boxSizing: 'border-box' }}
-                  title="Commander sur place"
+                  title="Consulter le suivi des consommations"
                 >
                   <ExternalLink size={14} aria-hidden="true" />
-                  Commander
+                  Consommations
                 </Link>
               )}
 
@@ -1131,25 +1072,6 @@ function PremiumTicketCard({
               </Button>
 
               <ActionBtn onClick={handleCalendar} icon={<CalendarPlus size={14} aria-hidden="true" />}>Agenda</ActionBtn>
-              {ticket.resellable && !activeListing && (
-                <Button variant="secondary" size="sm" onClick={() => setResellOpen((v) => !v)} icon={<Gift size={14} aria-hidden="true" />} style={{ ...actionBtnStyle(false, 'rgba(var(--violet-rgb), .14)', 'var(--violet)'), justifyContent: 'center' }}>
-                  Revendre
-                </Button>
-              )}
-              {activeListing && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setWithdrawConfirmOpen(true)}
-                  disabled={withdrawState === 'busy'}
-                  loading={withdrawState === 'busy'}
-                  loadingText="Retrait…"
-                  icon={<Gift size={14} aria-hidden="true" />}
-                  style={{ ...actionBtnStyle(withdrawState === 'busy', 'var(--surface-2)', 'var(--text-muted)'), justifyContent: 'center' }}
-                >
-                  {`${fmtMoney(toMajor(activeListing.resalePriceMinor, ticket.currency), ticket.currency)} · Retirer`}
-                </Button>
-              )}
               {canShowRefundButton && (
                 <Button
                   variant="danger"
@@ -1169,33 +1091,6 @@ function PremiumTicketCard({
               <p style={{ fontSize: 'var(--font-size-caption-lg)', color: 'var(--danger)', margin: 0 }}>Le téléchargement n&apos;a pas pu démarrer. Réessaie dans quelques secondes.</p>
             )}
             {refundState === 'err' && refundErr && <p style={{ fontSize: 'var(--font-size-caption-lg)', color: 'var(--danger)', margin: 0 }}>{refundErr}</p>}
-
-            {withdrawConfirmOpen && (
-              <Modal
-                onClose={() => setWithdrawConfirmOpen(false)}
-                title="Retirer la mise en vente"
-                subtitle="Le billet sera retiré du marché de revente."
-                ariaLabel="Confirmer le retrait de la mise en vente"
-                actions={
-                  <>
-                    <Button variant="secondary" onClick={() => setWithdrawConfirmOpen(false)} disabled={withdrawState === 'busy'}>Annuler</Button>
-                    <Button
-                      variant="danger"
-                      onClick={() => { setWithdrawConfirmOpen(false); void handleWithdrawResell() }}
-                      disabled={withdrawState === 'busy'}
-                      loading={withdrawState === 'busy'}
-                      loadingText="Retrait…"
-                    >
-                      Confirmer le retrait
-                    </Button>
-                  </>
-                }
-              >
-                <p style={{ margin: 0, color: 'var(--text-muted)', lineHeight: 1.6, fontSize: 'var(--font-size-body-sm)' }}>
-                  Ce billet ne sera plus visible à la revente et un nouveau billet actif sera généré pour toi.
-                </p>
-              </Modal>
-            )}
 
             {refundConfirmOpen && (
               <Modal
@@ -1224,36 +1119,6 @@ function PremiumTicketCard({
               </Modal>
             )}
 
-            {resellOpen && !activeListing && (
-              <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p id={`resell-help-${ticket.ticketCode}`} style={{ fontSize: 'var(--font-size-body)', color: 'var(--text-muted)', margin: 0, lineHeight: 1.55 }}>
-                  Prix maximum : {fmtMoney(ticket.placePrice, ticket.currency)} (prix initial, majoration interdite). Le montant de revente n&apos;est jamais garanti tant que personne n&apos;a acheté ; les frais payés à l&apos;achat initial ne sont pas récupérés.
-                </p>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <Input
-                    aria-label="Prix de revente du billet"
-                    aria-describedby={`resell-help-${ticket.ticketCode}`}
-                    type="number"
-                    inputMode="decimal"
-                    placeholder={`Prix (max ${ticket.placePrice})`}
-                    value={resellPrice}
-                    onChange={(e) => setResellPrice(e.target.value)}
-                    style={{ flex: 1, borderRadius: 12, background: 'var(--obsidian)', fontSize: 'var(--font-size-headline-lg)' }}
-                  />
-                  <Button
-                    variant="primary"
-                    onClick={handleResell}
-                    disabled={resellState === 'busy'}
-                    loading={resellState === 'busy'}
-                    loadingText="Publication…"
-                    style={{ ...actionBtnStyle(resellState === 'busy'), background: 'var(--violet)', color: 'var(--text)' }}
-                  >
-                    Confirmer
-                  </Button>
-                </div>
-                {resellState === 'err' && resellErr && <p role="alert" style={{ fontSize: 'var(--font-size-body)', color: 'var(--pink-strong)', margin: 0 }}>{resellErr}</p>}
-              </div>
-            )}
           </>
         )}
       </div>

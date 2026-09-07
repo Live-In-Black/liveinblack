@@ -19,6 +19,7 @@ import PromoCodesPanel from '@/app/components/features/events/PromoCodesPanel'
 import { Button, Card, EmptyState, Pagination, pagedSlice, ToastViewport } from '@/app/components/ui'
 import { useQueryParamState } from '@/lib/client/useQueryParamState'
 import { LoadingPlacesModal, useEventPlaces } from './eventModalHelpers'
+import { ArrowUpRight, CalendarPlus, ScanLine, Store } from 'lucide-react'
 
 const PAST_PAGE_SIZE = 15
 
@@ -68,9 +69,14 @@ export default function MesEvenementsClient({ initialEvents, initialStripeCharge
   }
 
   const payoutGapLabel = useMemo(
-    () => computePayoutGapLabel(events, { stripeChargesEnabled: initialStripeChargesEnabled, momos: initialMomos }),
+    () => computePayoutGapLabel(events.filter((event) => event.currency === 'XOF'), { stripeChargesEnabled: initialStripeChargesEnabled, momos: initialMomos }),
     [events, initialStripeChargesEnabled, initialMomos]
   )
+  const payoutSetupLabel = useMemo(() => {
+    const requirements = payoutGapLabel ? [payoutGapLabel] : []
+    if (!initialMomos.bj && !payoutGapLabel.includes('Bénin')) requirements.push('un numéro Mobile Money pour le Bénin')
+    return requirements.join(', ainsi que ')
+  }, [initialMomos.bj, payoutGapLabel])
 
   const { upcomingEvents, pastEvents, cancelledEvents } = useMemo(() => {
     const upcoming: OrganizerEventView[] = []
@@ -230,70 +236,65 @@ export default function MesEvenementsClient({ initialEvents, initialStripeCharge
         </div>
       )}
 
-      {payoutGapLabel && (
-        <div style={{ padding: '16px 18px', marginBottom: 16, borderRadius: 14, border: '1px solid var(--primary-a35)', background: 'var(--primary-a08)' }}>
-          <p style={{ font: '700 14px var(--font-open-sans)', color: 'var(--gold)', margin: '0 0 6px' }}>Configure ton encaissement pour être payé</p>
+      {payoutSetupLabel && (
+        <div style={{ padding: '16px 18px', marginBottom: 16, borderRadius: 'var(--radius-card)', border: '1px solid var(--primary-a35)', background: 'var(--primary-a08)' }}>
+          <p style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 500, color: 'var(--text)', margin: '0 0 6px' }}>Configure ton encaissement pour être payé</p>
           <p style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', lineHeight: 1.6, margin: '0 0 12px' }}>
-            Tu as des événements dont la recette reste en attente : il te manque {payoutGapLabel}. Sans ça, l&rsquo;argent n&rsquo;est pas versé automatiquement.
+            Il te manque {payoutSetupLabel}. Sans ces informations, tes recettes ne pourront pas être versées automatiquement.
           </p>
           <Link
             href="/organizer-studio?tab=paiements"
-            style={{ minHeight: 38, display: 'inline-flex', alignItems: 'center', padding: '8px 14px', borderRadius: 3, background: 'var(--gold)', color: 'var(--obsidian)', fontWeight: 500, textTransform: 'none', letterSpacing: 'normal', fontSize: 'var(--font-size-footnote)', textDecoration: 'none' }}
+            style={{ minHeight: 38, display: 'inline-flex', alignItems: 'center', padding: '8px 14px', borderRadius: 'var(--radius-control)', background: 'var(--primary)', color: 'var(--primary-ink)', fontWeight: 500, fontSize: 'var(--font-size-footnote)', textDecoration: 'none' }}
           >
             Configurer mon encaissement
           </Link>
         </div>
       )}
 
-      {!initialMomos.bj && (
-        <div style={{ padding: '16px 18px', marginBottom: 16, borderRadius: 14, border: '1px solid var(--danger-border)', background: 'var(--surface)', color: 'var(--text-muted)' }}>
-          <p style={{ font: '700 14px var(--font-open-sans)', color: 'var(--danger)', margin: '0 0 6px' }}>Compte de paiement Bénin requis</p>
-          <p style={{ fontSize: 'var(--font-size-callout)', lineHeight: 1.6, margin: '0 0 12px' }}>
-            Pour publier un événement du lancement Bénin, ajoute d’abord ton compte Mobile Money Bénin dans l’espace encaissements.
-          </p>
-          <Link
-            href="/organizer-studio?tab=paiements"
-            style={{ minHeight: 38, display: 'inline-flex', alignItems: 'center', padding: '8px 14px', borderRadius: 3, background: 'var(--gold)', color: 'var(--obsidian)', fontWeight: 600, fontSize: 'var(--font-size-footnote)', textDecoration: 'none' }}
-          >
-            Configurer mon encaissement
-          </Link>
+      <section className="lb-organizer-actions" aria-labelledby="organizer-actions-title">
+        <div className="lb-organizer-section-heading">
+          <div>
+            <p>Accès directs</p>
+            <h2 id="organizer-actions-title">Actions rapides</h2>
+          </div>
+          <span>Gère l’essentiel depuis ton tableau de bord.</span>
         </div>
-      )}
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: 16, marginBottom: 28 }}>
+        <div className="lb-organizer-action-grid">
         <Button
+          className="lb-organizer-action-card"
           variant="ghost"
           onClick={startCreate}
-          style={{ minHeight: 64, textAlign: 'left', padding: 9, borderRadius: 14, border: '1px solid var(--border-strong)', background: 'linear-gradient(180deg,var(--surface-2),var(--surface))', cursor: 'pointer', display: 'block', fontWeight: 400, boxShadow: '0 12px 28px rgba(var(--black-rgb), .16)' }}
+          style={{ cursor: 'pointer', fontWeight: 400, textAlign: 'left' }}
         >
-          <p style={{ fontSize: 'var(--font-size-footnote-lg)', fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--gold)', margin: '0 0 10px' }}>Nouveau</p>
-          <p style={{ fontSize: 'var(--font-size-title-5)', fontWeight: 800, color: 'var(--text)', margin: '0 0 6px' }}>Créer un événement</p>
-          <p style={{ fontSize: 'var(--font-size-callout)', lineHeight: 1.42, color: 'var(--text-muted)', margin: 0 }}>Configure le lieu, les billets et toutes les options.</p>
+          <span className="lb-organizer-action-icon"><CalendarPlus size={19} aria-hidden="true" /></span>
+          <span className="lb-organizer-action-content"><strong>Créer un événement</strong><small>Configure le lieu, les billets et les options.</small></span>
+          <ArrowUpRight className="lb-organizer-action-arrow" size={17} aria-hidden="true" />
         </Button>
         <Link
+          className="lb-organizer-action-card"
           href="/organizer-studio"
-          style={{ minHeight: 64, textAlign: 'left', padding: 9, borderRadius: 14, border: '1px solid var(--border-strong)', background: 'linear-gradient(180deg,var(--surface-2),var(--surface))', textDecoration: 'none', display: 'block', boxShadow: '0 12px 28px rgba(var(--black-rgb), .16)' }}
+          style={{ textDecoration: 'none', alignItems: 'center' }}
         >
-          <p style={{ fontSize: 'var(--font-size-footnote-lg)', fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--primary)', margin: '0 0 10px' }}>Audience</p>
-          <p style={{ fontSize: 'var(--font-size-title-5)', fontWeight: 800, color: 'var(--text)', margin: '0 0 6px' }}>Ma page publique</p>
-          <p style={{ fontSize: 'var(--font-size-callout)', lineHeight: 1.42, color: 'var(--text-muted)', margin: 0 }}>Présente ton univers et configure tes encaissements.</p>
+          <span className="lb-organizer-action-icon"><Store size={19} aria-hidden="true" /></span>
+          <span className="lb-organizer-action-content"><strong>Ma page publique</strong><small>Présente ton univers et développe ton audience.</small></span>
+          <ArrowUpRight className="lb-organizer-action-arrow" size={17} aria-hidden="true" />
         </Link>
         <Link
+          className="lb-organizer-action-card"
           href="/my-shifts"
-          style={{ minHeight: 64, textAlign: 'left', padding: 9, borderRadius: 14, border: '1px solid var(--border-strong)', background: 'linear-gradient(180deg,var(--surface-2),var(--surface))', textDecoration: 'none', display: 'block', boxShadow: '0 12px 28px rgba(var(--black-rgb), .16)' }}
+          style={{ textDecoration: 'none', alignItems: 'center' }}
         >
-          <p style={{ fontSize: 'var(--font-size-footnote-lg)', fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--primary)', margin: '0 0 10px' }}>Entrée</p>
-          <p style={{ fontSize: 'var(--font-size-title-5)', fontWeight: 800, color: 'var(--text)', margin: '0 0 6px' }}>Scanner les billets</p>
-          <p style={{ fontSize: 'var(--font-size-callout)', lineHeight: 1.42, color: 'var(--text-muted)', margin: 0 }}>Contrôle les QR codes et suis les entrées en direct.</p>
+          <span className="lb-organizer-action-icon"><ScanLine size={19} aria-hidden="true" /></span>
+          <span className="lb-organizer-action-content"><strong>Scanner les billets</strong><small>Contrôle les QR codes et suis les entrées.</small></span>
+          <ArrowUpRight className="lb-organizer-action-arrow" size={17} aria-hidden="true" />
         </Link>
-      </div>
+        </div>
+      </section>
 
       <OrganizerAnalytics events={events} />
 
-      <section style={{ marginBottom: 28 }}>
-        <p style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, letterSpacing: '3.2px', textTransform: 'uppercase', color: 'var(--primary)', fontFamily: 'var(--font-display), sans-serif', margin: '0 0 12px' }}>
-          Mes soirées en cours
-        </p>
+      <section className="lb-organizer-events-section">
+        <div className="lb-organizer-section-heading"><div><p>Programmation</p><h2>Mes soirées en cours</h2></div><span>{upcomingEvents.length} événement{upcomingEvents.length > 1 ? 's' : ''} à venir</span></div>
         {upcomingEvents.length === 0 ? (
           <EmptyState
             title="Aucun événement pour l’instant"
@@ -355,7 +356,7 @@ export default function MesEvenementsClient({ initialEvents, initialStripeCharge
                 </div>
                 <span style={{ padding: '4px 10px', borderRadius: 999, background: 'var(--surface-2)', color: 'var(--text-muted)', fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 700, textTransform: 'uppercase' }}>Terminé</span>
                 <span style={{ color: 'var(--gold)', fontSize: 'var(--font-size-footnote-lg)', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                  {event.ticketCount} billet(s) · {formatMoney(event.revenue, event.currency)}
+                  {event.ticketCount} billet(s){event.currency === 'XOF' ? ` · ${formatMoney(event.revenue, 'XOF')}` : ''}
                 </span>
                 <Link
                   href={`/my-events/${event.id}/statistiques`}

@@ -2,11 +2,10 @@
 // d'un event (logique dupliquée jusqu'ici dans plusieurs pages legacy).
 import type { EventLike } from './event-types'
 import { getRegionByName } from './regions'
+import { BENIN_TIME_ZONE } from './beninTime'
 
-// UTC+0 toute l'année (aucune des régions XOF n'a de changement d'heure) —
-// repère par défaut si `region` est absent/inconnu, ex. anciens events sans
-// région ou fixtures de test.
-const DEFAULT_TIMEZONE = 'Africa/Lome'
+// V1 market fallback: Benin, UTC+1. Currency alone does not define a timezone.
+const DEFAULT_TIMEZONE = BENIN_TIME_ZONE
 
 function eventTimezone(ev: EventLike | null | undefined): string {
   const region = ev?.region ? getRegionByName(ev.region) : null

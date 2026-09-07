@@ -2,7 +2,8 @@ import mongoose, { type HydratedDocument } from 'mongoose'
 import { getDb } from '@/lib/db/mongoose'
 import Message, { type MessageDoc } from '@/lib/models/Message'
 import Conversation, { type ConversationDoc } from '@/lib/models/Conversation'
-import Event from '@/lib/models/Event'
+import { persistMessageWithWake } from './persistMessage'
+import { getEventById } from '../events/events'
 import User from '@/lib/models/User'
 import { assertCanSendInConversation } from './messaging'
 import { loadParticipantConversation } from './messagingCoreService'
@@ -168,7 +169,7 @@ export async function createPoll(caller: PollCaller, input: CreatePollInput): Pr
 
   const senderName = await resolveSenderName(caller.id)
 
-  const message = await Message.create({
+  const message = await persistMessageWithWake({
     conversationId: conversation.id as string,
     senderId: caller.id,
     senderName,
@@ -180,14 +181,7 @@ export async function createPoll(caller: PollCaller, input: CreatePollInput): Pr
       options: optionsResult.value.map((text, i) => ({ id: String(i), text, voterIds: [] })),
       event: null,
     },
-  })
-
-  // Aperçu de conversation dérivé du type de message — même convention que
-  // les types text/image/voice (préfixe fixe + contenu pertinent).
-  conversation.lastMessage = `Sondage : ${questionResult.value}`
-  conversation.lastMessageAt = message.createdAt as unknown as Date
-  conversation.lastSenderId = caller.id
-  await conversation.save()
+  }, `Sondage : ${questionResult.value}`)
 
   return {
     ok: true,
@@ -221,8 +215,9 @@ export async function createEventPoll(caller: PollCaller, input: CreateEventPoll
   // aucun champ event (nom/prix/devise/image) n'est accepté depuis le corps
   // de requête client. Le snapshot embarqué dans le message est donc figé
   // au moment de l'envoi et garanti fidèle à l'Event réel à cet instant.
-  const event = await Event.findById(eventId)
-  if (!event) return { ok: false, status: 404, error: 'event_not_found' }
+  const eventResult = await getEventById(eventId)
+  if (eventResult.status !== 'ok') return { ok: false, status: 404, error: 'event_not_found' }
+  const event = eventResult.event
 
   const senderName = await resolveSenderName(caller.id)
 
@@ -234,7 +229,7 @@ export async function createEventPoll(caller: PollCaller, input: CreateEventPoll
   // côté organisateur, sans signification métier.
   const price = event.places && event.places.length > 0 ? Math.min(...event.places.map((p) => p.price ?? 0)) : 0
 
-  const message = await Message.create({
+  const message = await persistMessageWithWake({
     conversationId: conversation.id as string,
     senderId: caller.id,
     senderName,
@@ -256,12 +251,7 @@ export async function createEventPoll(caller: PollCaller, input: CreateEventPoll
         image: event.imageUrl ?? null,
       },
     },
-  })
-
-  conversation.lastMessage = `Sondage événement : ${event.name}`
-  conversation.lastMessageAt = message.createdAt as unknown as Date
-  conversation.lastSenderId = caller.id
-  await conversation.save()
+  }, `Sondage événement : ${event.name}`)
 
   return {
     ok: true,

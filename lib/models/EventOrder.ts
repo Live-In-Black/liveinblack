@@ -1,7 +1,7 @@
 import { Schema, model, models, type InferSchemaType, type Model } from 'mongoose'
 
 // Remplace `event_orders/{eventId} -> { items: OrderItem[] }` — commande sur
-// place (précommandes affichées + ajouts en temps réel pendant la soirée).
+// place (précommandes affichées et commandes historiques conservées).
 // Un seul document par événement (comme le legacy) : les mutations passent
 // TOUJOURS par lib/server/eventOrders.ts (jamais d'écriture client directe),
 // qui applique les autorisations par rang (voir ce fichier).

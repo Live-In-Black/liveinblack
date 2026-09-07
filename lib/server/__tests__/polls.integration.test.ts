@@ -151,7 +151,7 @@ describeIntegration('polls (intégration, mise à jour atomique) — poll + even
       const alice = await seedUser()
       const bob = await seedUser()
       const conversation = await seedDirectConversation([alice.id, bob.id])
-      const event = await seedCatalogEvent()
+      const event = await seedCatalogEvent({ currency: 'XOF', region: 'Bénin', city: 'Cotonou' })
 
       // Le contrat de createEventPoll n'accepte que {conversationId, eventId}
       // — on force ici un input avec des champs événement supplémentaires
@@ -178,7 +178,7 @@ describeIntegration('polls (intégration, mise à jour atomique) — poll + even
       // de ce que le test a tenté d'injecter dans l'input.
       expect(result.message.poll!.event?.name).toBe('Soirée Test XYZ')
       expect(result.message.poll!.event?.id).toBe(event.id)
-      expect(result.message.poll!.event?.currency).toBe('EUR')
+      expect(result.message.poll!.event?.currency).toBe('XOF')
       expect(result.message.poll!.event?.image).toBe('https://example.com/event.jpg')
       // Prix = place la moins chère (1000), pas 3000 (première place du
       // tableau) ni 999999 (valeur injectée).
@@ -204,7 +204,7 @@ describeIntegration('polls (intégration, mise à jour atomique) — poll + even
       const alice = await seedUser()
       const outsider = await seedUser()
       const conversation = await seedDirectConversation([alice.id])
-      const event = await seedCatalogEvent()
+      const event = await seedCatalogEvent({ currency: 'XOF', region: 'Bénin', city: 'Cotonou' })
 
       const result = await createEventPoll({ id: outsider.id }, { conversationId: conversation.id, eventId: event.id })
       expect(result.ok).toBe(false)
@@ -218,7 +218,7 @@ describeIntegration('polls (intégration, mise à jour atomique) — poll + even
       const bob = await seedUser()
       await User.updateOne({ _id: alice.id }, { $addToSet: { blockedUserIds: bob.id } })
       const conversation = await seedDirectConversation([alice.id, bob.id])
-      const event = await seedCatalogEvent()
+      const event = await seedCatalogEvent({ currency: 'XOF', region: 'Bénin', city: 'Cotonou' })
 
       const result = await createEventPoll({ id: bob.id }, { conversationId: conversation.id, eventId: event.id })
       expect(result.ok).toBe(false)
@@ -367,7 +367,7 @@ describeIntegration('polls (intégration, mise à jour atomique) — poll + even
       const alice = await seedUser()
       const bob = await seedUser()
       const conversation = await seedDirectConversation([alice.id, bob.id])
-      const event = await seedCatalogEvent()
+      const event = await seedCatalogEvent({ currency: 'XOF', region: 'Bénin', city: 'Cotonou' })
       const created = await createEventPoll({ id: alice.id }, { conversationId: conversation.id, eventId: event.id })
       expect(created.ok).toBe(true)
       if (!created.ok) return
@@ -397,7 +397,7 @@ describeIntegration('polls (intégration, mise à jour atomique) — poll + even
     it('revoter pour la même option bascule le vote — sur un event_poll', async () => {
       const alice = await seedUser()
       const conversation = await seedDirectConversation([alice.id])
-      const event = await seedCatalogEvent()
+      const event = await seedCatalogEvent({ currency: 'XOF', region: 'Bénin', city: 'Cotonou' })
       const created = await createEventPoll({ id: alice.id }, { conversationId: conversation.id, eventId: event.id })
       expect(created.ok).toBe(true)
       if (!created.ok) return
@@ -417,7 +417,7 @@ describeIntegration('polls (intégration, mise à jour atomique) — poll + even
     it('refuse un optionId invalide sur un event_poll (invalid_option)', async () => {
       const alice = await seedUser()
       const conversation = await seedDirectConversation([alice.id])
-      const event = await seedCatalogEvent()
+      const event = await seedCatalogEvent({ currency: 'XOF', region: 'Bénin', city: 'Cotonou' })
       const created = await createEventPoll({ id: alice.id }, { conversationId: conversation.id, eventId: event.id })
       expect(created.ok).toBe(true)
       if (!created.ok) return

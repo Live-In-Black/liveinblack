@@ -10,6 +10,7 @@ const refundPointSchema = new Schema(
     agentIds: { type: [String], default: [], index: true },
     cashDisbursedMinor: { type: Number, default: 0 },
     cashDisbursementCount: { type: Number, default: 0 },
+    refundOperationRevision: { type: Number, default: 0 },
   },
   { timestamps: true }
 )

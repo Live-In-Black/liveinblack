@@ -27,11 +27,7 @@ const DEV_PASSWORD = 'DevTest1234!'
 const EVENT_COUNT = Number(process.argv.find((a) => a.startsWith('--count='))?.split('=')[1] || 100)
 
 const REGIONS = [
-  { id: 'togo', name: 'Togo', cities: ['Lomé', 'Kara', 'Sokodé'], currency: 'XOF' as const },
-  { id: 'benin', name: 'Bénin', cities: ['Cotonou', 'Porto-Novo', 'Parakou'], currency: 'XOF' as const },
-  { id: 'cote-ivoire', name: 'Côte d’Ivoire', cities: ['Abidjan', 'Yamoussoukro', 'Bouaké'], currency: 'XOF' as const },
-  { id: 'senegal', name: 'Sénégal', cities: ['Dakar', 'Thiès', 'Saint-Louis'], currency: 'XOF' as const },
-  { id: 'france', name: 'France', cities: ['Paris', 'Lyon', 'Marseille'], currency: 'EUR' as const },
+  { id: 'benin', name: 'Bénin', cities: ['Cotonou', 'Porto-Novo', 'Abomey-Calavi', 'Parakou', 'Ouidah', 'Bohicon'], currency: 'XOF' as const },
 ]
 
 const CATEGORIES = ['Afrobeat', 'Amapiano', 'House', 'Techno', 'Hip-Hop', 'Dancehall', 'Coupé-décalé', 'Live band', 'RnB', 'Latino']
@@ -141,7 +137,7 @@ async function main() {
       passwordHash,
       firstName,
       lastName,
-      phone: `+228 9${randInt(0, 9)} ${randInt(10, 99)} ${randInt(10, 99)} ${randInt(10, 99)}`,
+      phone: `+229 9${randInt(0, 9)} ${randInt(10, 99)} ${randInt(10, 99)} ${randInt(10, 99)}`,
       roles: ['organisateur'],
       activeRole: 'organisateur',
       status: 'active',
@@ -166,7 +162,7 @@ async function main() {
       avatarUrl: customPhotoUrl(i + 20, 200, 200),
       bannerUrl: customPhotoUrl(i, 1200, 500),
       media: [{ id: `m${i}`, url: customPhotoUrl(i, 800, 600), type: 'image', visibility: 'public', displayOrder: 0 }],
-      proPhone: `+228 9${randInt(0, 9)} ${randInt(10, 99)} ${randInt(10, 99)} ${randInt(10, 99)}`,
+      proPhone: `+229 9${randInt(0, 9)} ${randInt(10, 99)} ${randInt(10, 99)} ${randInt(10, 99)}`,
     })
     organizers.push({ userId: String(user._id), profile })
   }
@@ -186,7 +182,7 @@ async function main() {
       passwordHash,
       firstName,
       lastName,
-      phone: `+228 9${randInt(0, 9)} ${randInt(10, 99)} ${randInt(10, 99)} ${randInt(10, 99)}`,
+      phone: `+229 9${randInt(0, 9)} ${randInt(10, 99)} ${randInt(10, 99)} ${randInt(10, 99)}`,
       roles: ['prestataire'],
       activeRole: 'prestataire',
       status: 'active',
@@ -205,7 +201,7 @@ async function main() {
       zonesIntervention: [region.id],
       prestataireType: category,
       prestataireTypes: [category],
-      phone: `+228 9${randInt(0, 9)} ${randInt(10, 99)} ${randInt(10, 99)} ${randInt(10, 99)}`,
+      phone: `+229 9${randInt(0, 9)} ${randInt(10, 99)} ${randInt(10, 99)} ${randInt(10, 99)}`,
       catalogCurrency: region.currency,
       subscriptionActive: true,
       photoUrl: customPhotoUrl(i + 40, 200, 200),
@@ -238,7 +234,7 @@ async function main() {
       passwordHash,
       firstName,
       lastName,
-      phone: `+228 9${randInt(0, 9)} ${randInt(10, 99)} ${randInt(10, 99)} ${randInt(10, 99)}`,
+      phone: `+229 9${randInt(0, 9)} ${randInt(10, 99)} ${randInt(10, 99)} ${randInt(10, 99)}`,
       roles: ['client'],
       activeRole: 'client',
       status: 'active',
@@ -360,7 +356,7 @@ async function main() {
         eventId: String(event._id),
         position: randInt(1, 3),
         region: region.id,
-        price: 9.99,
+        price: 30000,
         days: 7,
         userId: organizer.userId,
         purchasedAt: now,

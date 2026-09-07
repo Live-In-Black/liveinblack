@@ -3,14 +3,16 @@
 // l'identique ; simplifiée uniquement là où le schéma Mongo est déjà
 // canonique (Ticket.preorders a toujours la forme {name,price,qty}, jamais
 // les deux formes legacy preorders/preorderSummary+preorderItems).
+import { beninDayKey } from './beninTime'
+
 const DAY_MS = 24 * 60 * 60 * 1000
 
 export const EVENT_STATS_DEFINITIONS = {
   estimatedRevenue: {
     label: 'Recettes billetterie',
-    definition: 'Somme des prix payés pour tous les billets vendus (hors invitations gratuites).',
+    definition: 'Somme des prix des billets payés encore valides (hors invitations gratuites et billets révoqués).',
     formula: 'Somme des prix des billets payants',
-    limitation: 'Estimation : ne déduit pas encore les remboursements, remises et frais Stripe. Les précommandes (boissons) sont comptées à part.',
+    limitation: 'Estimation des billets valides, pas un relevé des encaissements et remboursements effectifs. Les frais techniques sont exclus ; les précommandes sont comptées à part.',
   },
   assignedTickets: {
     label: 'Billets émis',
@@ -121,12 +123,6 @@ export function filterEventTickets(tickets: StatsTicket[] | null | undefined, fi
   })
 }
 
-function dayKey(value: string | Date | null | undefined): string | null {
-  const date = new Date(value || 0)
-  if (Number.isNaN(date.getTime())) return null
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
-
 export function ticketPreorderLines(ticket: StatsTicket): { name: string; quantity: number; price: number }[] {
   return (ticket.preorders || [])
     .map((p) => ({ name: p.name, quantity: Number(p.qty) || 0, price: Number(p.price) || 0 }))
@@ -168,7 +164,7 @@ export function computeEventStats(event: StatsEvent, allTickets: StatsTicket[], 
   const estimatedRevenue = paidTickets.reduce((sum, t) => sum + ticketPrice(event, t), 0)
 
   const preorderMap = new Map<string, { name: string; quantity: number; revenue: number }>()
-  for (const ticket of active) {
+  for (const ticket of paidTickets) {
     for (const line of ticketPreorderLines(ticket)) {
       const current = preorderMap.get(line.name) || { name: line.name, quantity: 0, revenue: 0 }
       current.quantity += line.quantity
@@ -193,7 +189,7 @@ export function computeEventStats(event: StatsEvent, allTickets: StatsTicket[], 
 
   const salesMap = new Map<string, { date: string; tickets: number; revenue: number }>()
   for (const ticket of active) {
-    const key = dayKey(ticket.bookedAt)
+    const key = beninDayKey(ticket.bookedAt)
     if (!key) continue
     const current = salesMap.get(key) || { date: key, tickets: 0, revenue: 0 }
     current.tickets += 1
@@ -265,7 +261,7 @@ export function buildEventInsights(stats: EventStatsResult): EventInsight[] {
     insights.push({ tone: 'teal', text: `${stats.byPlace[0].name} est la catégorie la plus demandée avec ${stats.byPlace[0].count} billet${stats.byPlace[0].count > 1 ? 's' : ''}.` })
   }
 
-  insights.push({ tone: 'muted', text: 'Les montants restent estimatifs : remboursements, remises et frais ne sont pas encore déduits.' })
+  insights.push({ tone: 'muted', text: 'Les montants portent sur les billets valides et restent estimatifs : ils ne constituent pas un relevé des encaissements, frais et remboursements effectifs.' })
   return insights
 }
 
@@ -274,8 +270,9 @@ const AGE_BOUNDS = [18, 25, 35, 45]
 
 export function ageFromBirthYear(birthYear: number | null | undefined, now: Date = new Date()): number | null {
   const y = Number(birthYear)
-  if (!Number.isFinite(y) || y < 1900 || y > now.getFullYear()) return null
-  return Math.max(0, now.getFullYear() - y)
+  const currentYear = Number(beninDayKey(now)?.slice(0, 4))
+  if (!Number.isFinite(currentYear) || !Number.isFinite(y) || y < 1900 || y > currentYear) return null
+  return Math.max(0, currentYear - y)
 }
 
 export interface AgeBucket {

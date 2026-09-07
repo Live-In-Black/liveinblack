@@ -53,29 +53,6 @@ export default function SubscriptionPanel({ profile, subscription }: { profile: 
   const currency = subscription.currency
   const zone = regions.find((r) => r.id === subscription.billingRegionId) || null
 
-  async function handleStripeSubscribe() {
-    if (renewing) return
-    setRenewing(true)
-    try {
-      const res = await fetch('/api/subscriptions/checkout', { method: 'POST' })
-      const data = await res.json()
-      if (res.ok && data.alreadyActive) {
-        setRenewing(false)
-        setMsg('Ton abonnement est déjà actif.')
-        return
-      }
-      if (res.ok && data.url) {
-        window.location.href = data.url
-        return
-      }
-      setRenewing(false)
-      setMsg(data.error || 'Impossible de démarrer le paiement. Réessaie.')
-    } catch {
-      setRenewing(false)
-      setMsg('Erreur réseau. Réessaie dans un instant.')
-    }
-  }
-
   async function handleFedapaySubscribe() {
     if (renewing) return
     setRenewing(true)
@@ -103,31 +80,19 @@ export default function SubscriptionPanel({ profile, subscription }: { profile: 
   let daysLeft = 0
   let expiresAt: string | null = null
 
-  if (currency === 'EUR') {
-    const active = profile.subscriptionActive
-    color = active ? C.teal : C.pink
-    title = active ? 'Abonnement actif' : 'Abonnement inactif'
-    statusLabel = active ? 'Actif' : 'Inactif'
-    message = active ? 'Ton profil est visible. Renouvellement automatique chaque mois par carte bancaire.' : "Ton profil n'est pas visible publiquement. Active ton abonnement pour le mettre en ligne."
-    showCta = !active
-    cta = 'Activer mon abonnement'
-    expiresAt = subscription.prestataireSubEnd
-    daysLeft = daysUntil(expiresAt)
-  } else {
-    const subWindow: SubWindow = {
-      subscriptionExpiresAt: profile.subscriptionExpiresAt ? new Date(profile.subscriptionExpiresAt) : null,
-      gracePeriodEndsAt: profile.gracePeriodEndsAt ? new Date(profile.gracePeriodEndsAt) : null,
-    }
-    const p = subPresentation(subWindow)
-    color = p.color
-    title = p.title
-    statusLabel = p.status === 'active' ? 'Actif' : p.status === 'expiring_soon' ? 'Expire bientôt' : p.status === 'grace' ? 'Période de grâce' : p.status === 'expired' ? 'Expiré' : 'Inactif'
-    message = p.message
-    showCta = true
-    cta = p.cta
-    expiresAt = profile.subscriptionExpiresAt
-    daysLeft = p.daysLeft
+  const subWindow: SubWindow = {
+    subscriptionExpiresAt: profile.subscriptionExpiresAt ? new Date(profile.subscriptionExpiresAt) : null,
+    gracePeriodEndsAt: profile.gracePeriodEndsAt ? new Date(profile.gracePeriodEndsAt) : null,
   }
+  const p = subPresentation(subWindow)
+  color = p.color
+  title = p.title
+  statusLabel = p.status === 'active' ? 'Actif' : p.status === 'expiring_soon' ? 'Expire bientôt' : p.status === 'grace' ? 'Période de grâce' : p.status === 'expired' ? 'Expiré' : 'Inactif'
+  message = p.message
+  showCta = true
+  cta = p.cta
+  expiresAt = profile.subscriptionExpiresAt
+  daysLeft = p.daysLeft
 
   return (
     <section aria-labelledby="provider-subscription-title">
@@ -146,21 +111,21 @@ export default function SubscriptionPanel({ profile, subscription }: { profile: 
           <p style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', margin: '10px 0 0', lineHeight: 1.5 }}>{message}</p>
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
-            <InfoTile label={currency === 'EUR' ? 'Prochain prélèvement' : 'Jours restants'} value={currency === 'EUR' ? (expiresAt ? fmtDate(expiresAt) : '—') : expiresAt ? `${daysLeft} j` : '—'} accent={currency === 'XOF' && daysLeft > 0 ? C.teal : currency === 'XOF' ? C.pink : undefined} />
-            {currency === 'XOF' && <InfoTile label="Expire le" value={fmtDate(expiresAt)} />}
+            <InfoTile label="Jours restants" value={expiresAt ? `${daysLeft} j` : '—'} accent={daysLeft > 0 ? C.teal : C.pink} />
+            <InfoTile label="Expire le" value={fmtDate(expiresAt)} />
             <InfoTile label="Zone" value={zone ? `${zone.flag} ${zone.name}` : '—'} />
-            <InfoTile label="Tarif" value={currency === 'XOF' ? subPriceLabel() : '9,99 € / mois'} />
+            <InfoTile label="Tarif" value={subPriceLabel()} />
           </div>
 
           <p style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--text-faint)', margin: '12px 0 0' }}>
-            {currency === 'XOF' ? 'Paiement Mobile Money / carte (FedaPay) · renouvellement manuel · aucun prélèvement automatique' : 'Carte bancaire (Stripe) · renouvellement automatique chaque mois'}
+            Paiement Mobile Money / carte (FedaPay) · renouvellement manuel · aucun prélèvement automatique
           </p>
 
           {msg && <p style={{ fontSize: 'var(--font-size-footnote)', color: C.pink, margin: '12px 0 0' }}>{msg}</p>}
 
           {showCta && (
             <Button
-              onClick={() => void (currency === 'XOF' ? handleFedapaySubscribe() : handleStripeSubscribe())}
+              onClick={() => void handleFedapaySubscribe()}
               disabled={renewing}
               loading={renewing}
               loadingText="Redirection…"

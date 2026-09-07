@@ -198,7 +198,7 @@ describe('messagingViews', () => {
       pollType: 'event_poll',
       question: 'On réserve ?',
       options: [{ id: 'yes', text: 'Oui', voterIds: [] }],
-      event: { id: 'e1', name: '', date: '', price: 0, currency: 'EUR', image: null },
+      event: { id: 'e1', name: '', date: '', price: 0, currency: 'XOF', image: null },
     })
     expect(view.forwardedFrom).toEqual({ senderName: '', convName: '' })
     expect(view.readStatus).toBeNull()

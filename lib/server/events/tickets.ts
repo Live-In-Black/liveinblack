@@ -140,7 +140,7 @@ export interface TicketWalletGroupView {
 
 export type ListMyTicketsResult = { ok: true; groups: TicketWalletGroupView[] }
 
-function toWalletItemView(
+export function toWalletItemView(
   ticket: {
     ticketCode: string
     seatVersion?: number | null
@@ -171,15 +171,9 @@ function toWalletItemView(
   listingsById: Map<string, { resalePriceMinor: number; feeMinor: number; sellerNetMinor: number; status: string }>,
   resaleEnabled: boolean
 ): TicketWalletItemView {
-  const RESALE_LIMIT = 2
-  const listing = ticket.resaleListingId ? listingsById.get(ticket.resaleListingId) ?? null : null
-  const resellable =
-    resaleEnabled &&
-    !ticket.checkedInAt &&
-    !ticket.revoked &&
-    !ticket.resaleListingId &&
-    (ticket.source === 'paid' || ticket.source === 'stripe-webhook' || ticket.source === 'fedapay-webhook') &&
-    (ticket.resaleCount ?? 0) < RESALE_LIMIT
+  void listingsById
+  void resaleEnabled
+  const resellable = false
   return {
     ticketCode: ticket.ticketCode,
     ticketToken: signTicketToken({
@@ -205,7 +199,7 @@ function toWalletItemView(
     refundRequested: ticket.orderId ? refundedOrderIds.has(ticket.orderId) : false,
     cancellationProtectionPurchased: ticket.orderId ? protectedOrderIds.has(ticket.orderId) : false,
     resellable,
-    activeListing: listing ? { id: ticket.resaleListingId as string, ...listing } : null,
+    activeListing: null,
   }
 }
 

@@ -1,19 +1,12 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowUpRight,
   BellRing,
-  CalendarDays,
   CheckCheck,
   ChevronDown,
-  CreditCard,
-  FileCheck2,
-  MessageCircle,
-  ShieldCheck,
-  Sparkles,
-  UsersRound,
 } from 'lucide-react'
 import { Button, EmptyState } from '@/app/components/ui'
 import { isPushSupported, getPushPermissionState, subscribeToPush } from '@/lib/client/push'
@@ -40,26 +33,6 @@ function timeAgo(iso: string | null): string {
   const h = Math.floor(min / 60)
   if (h < 24) return `${h} h`
   return `${Math.floor(h / 24)} j`
-}
-
-function notificationIcon(type: string): ReactNode {
-  const normalizedType = type.toLowerCase()
-
-  if (normalizedType.includes('account') || normalizedType.includes('security') || normalizedType.includes('login')) {
-    return <ShieldCheck size={19} aria-hidden="true" />
-  }
-  if (normalizedType.includes('billing') || normalizedType.includes('payment') || normalizedType.includes('finance')) {
-    return <CreditCard size={19} aria-hidden="true" />
-  }
-  if (normalizedType.includes('event')) return <CalendarDays size={19} aria-hidden="true" />
-  if (normalizedType.includes('application') || normalizedType.includes('candidate') || normalizedType.includes('user')) {
-    return <UsersRound size={19} aria-hidden="true" />
-  }
-  if (normalizedType.includes('file') || normalizedType.includes('verification')) {
-    return <FileCheck2 size={19} aria-hidden="true" />
-  }
-  if (normalizedType.includes('message')) return <MessageCircle size={19} aria-hidden="true" />
-  return <Sparkles size={19} aria-hidden="true" />
 }
 
 function notificationLabel(type: string): string {
@@ -137,7 +110,6 @@ export default function NotificationsClient({ initialNotifications }: { initialN
       <div className={styles.content}>
         <header className={styles.header}>
           <div className={styles.heading}>
-            <span className={styles.headingIcon} aria-hidden="true"><BellRing size={20} /></span>
             <div>
               <h1>Notifications</h1>
               <p>Les informations importantes liées à ton compte et à ton activité.</p>
@@ -145,12 +117,6 @@ export default function NotificationsClient({ initialNotifications }: { initialN
           </div>
 
           <div className={styles.headerActions}>
-            <section className={styles.summary} aria-label="Résumé des notifications">
-              <span className={`${styles.summaryItem} ${unreadCount > 0 ? styles.summaryUnread : ''}`}>
-                <strong>{unreadCount}</strong> non lue{unreadCount === 1 ? '' : 's'}
-              </span>
-              <span className={styles.summaryItem}><strong>{notifications.length}</strong> au total</span>
-            </section>
             {unreadCount > 0 ? (
               <Button
                 variant="secondary"
@@ -234,7 +200,6 @@ export default function NotificationsClient({ initialNotifications }: { initialN
                       aria-label={`${notification.read ? '' : 'Non lue : '}${notification.title}`}
                       className={styles.notification}
                     >
-                      <span className={styles.notificationIcon}>{notificationIcon(notification.type)}</span>
                       <span className={styles.notificationContent}>
                         <span className={styles.notificationTopRow}>
                           <span className={styles.notificationTitle}>
@@ -243,7 +208,7 @@ export default function NotificationsClient({ initialNotifications }: { initialN
                           </span>
                           <span className={styles.notificationBadge}>{notificationLabel(notification.type)}</span>
                         </span>
-                        {notification.body ? <span className={styles.notificationPreview}>{notification.body}</span> : null}
+                        {notification.body && !expanded ? <span className={styles.notificationPreview}>{notification.body}</span> : null}
                       </span>
                       <span className={styles.notificationMeta}><time dateTime={notification.createdAt}>{timeAgo(notification.createdAt)}</time></span>
                       <ChevronDown className={styles.expandIcon} size={18} aria-hidden="true" style={{ transform: expanded ? 'rotate(180deg)' : 'none' }} />

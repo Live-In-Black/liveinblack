@@ -16,6 +16,7 @@ const contentSecurityPolicy = [
   // le composant décide de le charger.
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://va.vercel-scripts.com`,
   "style-src 'self' 'unsafe-inline'",
+  "frame-src 'self' https://www.google.com https://www.openstreetmap.org",
   "img-src 'self' data: blob: https://res.cloudinary.com https://firebasestorage.googleapis.com https://images.unsplash.com https://e-cdns-images.dzcdn.net https://*.mzstatic.com https://www.googletagmanager.com",
   "media-src 'self' blob: https://res.cloudinary.com https://audio-ssl.itunes.apple.com",
   // google-analytics.com : envoi des hits gtag (mesure) une fois le script chargé.

@@ -6,7 +6,7 @@ import { Button, Card, Mascot } from '@/app/components/ui'
 
 // Port de src/pages/BoostActivePage.jsx. Différence d'architecture vs
 // legacy : l'activation (création du doc Boost) est intégralement côté
-// serveur — webhook Stripe -> finalizeBoost() (lib/server/finalizeBoost.ts).
+// serveur — webhook FedaPay -> finalizeFedapayBoost().
 // Cette page ne fait qu'attendre/relire ce statut via
 // GET /api/checkout/boost, jamais générer le boost elle-même.
 
@@ -62,7 +62,7 @@ export default function BoostActiveClient({ sessionId, boostId }: { sessionId: s
         setErrorMsg(
           data && typeof data.paymentStatus === 'string'
             ? `Paiement non confirmé (${data.paymentStatus}).`
-            : 'Impossible de vérifier le paiement. Si tu as été débité, écris-nous à hagechady@liveinblack.com — on régularise ton boost.'
+            : 'Impossible de vérifier le paiement. Si tu as été débité, écris-nous à contact@liveinblack.com — on régularise ton boost.'
         )
         return
       }
@@ -142,7 +142,7 @@ export default function BoostActiveClient({ sessionId, boostId }: { sessionId: s
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 24 }}>
               <a
-                href="mailto:hagechady@liveinblack.com?subject=Probl%C3%A8me%20de%20boost"
+                href="mailto:contact@liveinblack.com?subject=Probl%C3%A8me%20de%20boost"
                 style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px 20px', borderRadius: 12, fontSize: 'var(--font-size-body-sm)', fontWeight: 700, background: COLORS.gold, border: 'none', color: 'var(--danger-ink)', textDecoration: 'none' }}>
                 <IconMail size={15} />
                 Contacter le support

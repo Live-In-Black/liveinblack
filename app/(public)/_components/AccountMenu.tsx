@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { signOut, useSession } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 import { Ticket, User, LayoutDashboard, LogOut, Check, ChevronDown, Globe, Bell } from 'lucide-react'
 import { Avatar, Button, ConfirmDialog } from '@/app/components/ui'
 import { DASHBOARD_BY_ROLE } from '@/lib/shared/dashboardRoutes'
@@ -26,10 +26,8 @@ export default function AccountMenu({
   dashboardMode?: boolean
 }) {
   const router = useRouter()
-  const { update } = useSession()
   const [accountOpen, setAccountOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
-  const [switchingRole, setSwitchingRole] = useState(false)
   const [notifUnread, setNotifUnread] = useState(0)
   const [resolvedDirection, setResolvedDirection] = useState<'up' | 'down'>(menuDirection === 'up' ? 'up' : 'down')
   const rootRef = useRef<HTMLDivElement>(null)
@@ -70,37 +68,11 @@ export default function AccountMenu({
     }
   }, [])
 
-  // Un compte peut porter plusieurs rôles à la fois (voir lib/models/User.ts)
-  // — bascule activeRole côté serveur (POST /api/account/active-role, seule
-  // source de vérité) puis rafraîchit le JWT côté client via `update()` avant
-  // de naviguer, sans quoi la page de destination verrait encore l'ancien
-  // activeRole tant que le token n'est pas rafraîchi. `router.refresh()` est
-  // nécessaire en plus de `push()` : app/(app)/layout.tsx (server component,
-  // lit `session.user.activeRole` pour la sidebar) est partagé entre toutes
-  // les routes `(app)` et n'est PAS ré-exécuté par une simple navigation
-  // client — sans refresh(), la sidebar affichait encore l'ancien rôle après
-  // le switch alors que la page de destination, elle, était la bonne.
-  async function handleDashboardClick(role: string, href: string) {
+  // Chaque compte métier possède un seul espace. Le menu ne propose donc
+  // qu'une navigation vers le tableau de bord du rôle déjà actif.
+  function handleDashboardClick(href: string) {
     setAccountOpen(false)
-    if (role === user.activeRole) {
-      router.push(href)
-      return
-    }
-    setSwitchingRole(true)
-    try {
-      const res = await fetch('/api/account/active-role', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role }),
-      })
-      if (res.ok) {
-        await update({ activeRole: role })
-        router.push(href)
-        router.refresh()
-      }
-    } finally {
-      setSwitchingRole(false)
-    }
+    router.push(href)
   }
 
   useEffect(() => {
@@ -123,9 +95,9 @@ export default function AccountMenu({
     }
   }, [accountOpen])
 
-  const dashboards = (user.roles ?? [])
-    .map((role) => (DASHBOARD_BY_ROLE[role] ? { role, ...DASHBOARD_BY_ROLE[role] } : null))
-    .filter((d): d is { role: string; href: string; label: string } => d !== null)
+  const dashboards = user.activeRole && DASHBOARD_BY_ROLE[user.activeRole]
+    ? [{ role: user.activeRole, ...DASHBOARD_BY_ROLE[user.activeRole] }]
+    : []
 
   async function handleLogoutConfirm() {
     setLogoutConfirmOpen(false)
@@ -209,8 +181,7 @@ export default function AccountMenu({
               <Button
                 key={d.role}
                 variant="ghost"
-                disabled={switchingRole}
-                onClick={() => handleDashboardClick(d.role, d.href)}
+                onClick={() => handleDashboardClick(d.href)}
                 aria-label={d.role === user.activeRole ? `${d.label} (actif)` : d.label}
                 style={{
                   display: 'flex',
@@ -250,7 +221,7 @@ export default function AccountMenu({
                 width: '100%',
                 padding: '8px 10px',
                 borderRadius: 8,
-                color: 'var(--pink)',
+                color: 'var(--danger)',
                 fontSize: 'var(--font-size-footnote-lg)',
                 fontWeight: 700,
                 justifyContent: 'flex-start',

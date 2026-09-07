@@ -7,7 +7,7 @@ export type BillingContext = {
 }
 
 export function deriveDefaultBillingRegionFromApplication(country: unknown): string {
-  return normalizeProviderBillingRegion(country) || 'france'
+  return normalizeProviderBillingRegion(country) || 'benin'
 }
 
 export function canChangeProviderBillingRegion(prestataireSubActive: boolean | null | undefined): boolean {
@@ -18,7 +18,10 @@ export function buildProviderBillingContext(input: {
   billingRegionId: unknown
   prestataireSubActive?: boolean | null
 }): BillingContext {
-  const billingRegionId = normalizeProviderBillingRegion(input.billingRegionId) || 'france'
+  void input.billingRegionId
+  // V1 Benin : la facturation prestataire active est exclusivement locale,
+  // meme si un ancien compte porte encore une region historique.
+  const billingRegionId = 'benin'
   return {
     billingRegionId,
     currency: providerBillingCurrency(billingRegionId),

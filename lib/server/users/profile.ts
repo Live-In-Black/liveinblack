@@ -7,14 +7,16 @@ import { uploadDataUri } from '@/lib/server/cloudinary'
 import {
   issueVerificationToken,
   consumeVerificationToken,
+  resolveVerificationTokenSubject,
   invalidateVerificationTokens,
 } from '@/lib/auth/verification-tokens'
 import { emailChangeVerificationEmail, passwordChangedEmail } from '@/lib/server/emails'
 import { sendEmail } from '@/lib/server/email'
 import { notifyUserById } from '@/lib/server/emails/notify'
 import { scrubAccountPII } from './accountPurge'
-import { isValidPhone } from '@/lib/shared/applicationValidation'
+import { normalizeContactPhoneParts } from '@/lib/shared/contactPhone'
 import { isPasswordPolicyCompliant } from '@/lib/shared/passwordPolicy'
+import { normalizeBudgetId } from '@/lib/shared/recommendations'
 
 // Port de la section "Paramètres du compte" de ProfilePage.jsx (#6 phase
 // profil) — identité, démographie facultative, avatar, confidentialité,
@@ -77,8 +79,14 @@ export async function getMyProfile(caller: ProfileCaller): Promise<MyProfileView
       readReceipts: user.privacy?.readReceipts ?? true,
       personalizedRecommendations: user.privacy?.personalizedRecommendations ?? true,
     },
-    preferences: (user.preferences as Record<string, unknown>) ?? null,
+    preferences: normalizeProfilePreferences(user.preferences as Record<string, unknown> | null),
   }
+}
+
+function normalizeProfilePreferences(preferences: Record<string, unknown> | null): Record<string, unknown> | null {
+  if (!preferences) return null
+  if (typeof preferences.budget !== 'string') return preferences
+  return { ...preferences, budget: normalizeBudgetId(preferences.budget) }
 }
 
 type ErrResult = { ok: false; status: number; error: string }
@@ -207,16 +215,10 @@ export async function updateDemographics(
 // libre-service est nécessaire. Même validation que les formulaires
 // d'onboarding organisateur/prestataire (isValidPhone,
 // lib/shared/applicationValidation.ts — dialCode + numéro national séparés,
-// jamais une regex maison réinventée ici) et même règle anti-doublon que
-// l'inscription (normalizePhone + blocage uniquement sur les comptes déjà
-// vérifiés, voir app/api/auth/register/route.ts) pour ne pas laisser deux
-// comptes actifs revendiquer le même numéro.
+// jamais une regex maison réinventée ici). Les comptes dedies peuvent partager
+// un contact ; seul l'e-mail est un identifiant globalement unique.
 
 export type UpdatePhoneResult = ErrResult | { ok: true; phone: string }
-
-function normalizePhoneDigits(phone: string) {
-  return phone.replace(/\D/g, '')
-}
 
 export async function updatePhone(caller: ProfileCaller, input: { dialCode: string; phone: string }): Promise<UpdatePhoneResult> {
   await getDb()
@@ -224,20 +226,8 @@ export async function updatePhone(caller: ProfileCaller, input: { dialCode: stri
   const dialCode = input.dialCode?.trim()
   const rawNumber = input.phone?.trim()
   if (!dialCode || !rawNumber) return { ok: false, status: 400, error: 'phone_required' }
-  if (!isValidPhone(dialCode, rawNumber)) return { ok: false, status: 400, error: 'invalid_phone' }
-
-  const national = rawNumber.replace(/^0+/, '')
-  const normalizedPhone = `${dialCode}${national}`.replace(/\s/g, '')
-
-  const normalizedDigits = normalizePhoneDigits(normalizedPhone)
-  if (normalizedDigits.length >= 6) {
-    const verifiedWithPhone = await User.find(
-      { _id: { $ne: caller.id }, phone: { $exists: true, $ne: '' }, emailVerifiedAt: { $ne: null } },
-      { phone: 1 }
-    ).lean()
-    const phoneTaken = verifiedWithPhone.some((u) => normalizePhoneDigits(u.phone || '') === normalizedDigits)
-    if (phoneTaken) return { ok: false, status: 409, error: 'phone_taken' }
-  }
+  const normalizedPhone = normalizeContactPhoneParts(dialCode, rawNumber)
+  if (!normalizedPhone) return { ok: false, status: 400, error: 'invalid_phone' }
 
   const updated = await User.findByIdAndUpdate(caller.id, { $set: { phone: normalizedPhone } }, { returnDocument: 'after' })
   if (!updated) return { ok: false, status: 404, error: 'user_not_found' }
@@ -316,10 +306,11 @@ export async function updatePreferences(caller: ProfileCaller, input: Record<str
 
   if (JSON.stringify(input ?? {}).length > 20_000) return { ok: false, status: 400, error: 'preferences_too_large' }
 
-  const updated = await User.findByIdAndUpdate(caller.id, { $set: { preferences: input } }, { returnDocument: 'after' })
+  const normalizedInput = typeof input.budget === 'string' ? { ...input, budget: normalizeBudgetId(input.budget) } : input
+  const updated = await User.findByIdAndUpdate(caller.id, { $set: { preferences: normalizedInput } }, { returnDocument: 'after' })
   if (!updated) return { ok: false, status: 404, error: 'user_not_found' }
 
-  return { ok: true, preferences: (updated.preferences as Record<string, unknown>) ?? {} }
+  return { ok: true, preferences: normalizeProfilePreferences((updated.preferences as Record<string, unknown>) ?? {}) ?? {} }
 }
 
 // ───────────────────────────── requestEmailChange ───────────────────────────
@@ -398,7 +389,9 @@ export async function confirmEmailChange(input: { email: string; token: string }
   const email = input.email?.trim().toLowerCase()
   if (!email || !input.token) return { ok: false, status: 400, error: 'invalid_input' }
 
-  const user = await User.findOne({ pendingEmail: email })
+  const subjectId = await resolveVerificationTokenSubject(email, 'change-email', input.token)
+  if (!subjectId) return { ok: false, status: 400, error: 'invalid_or_expired_token' }
+  const user = await User.findOne({ _id: subjectId, pendingEmail: email })
   if (!user) return { ok: false, status: 404, error: 'no_pending_change' }
 
   const valid = await consumeVerificationToken(String(user._id), email, 'change-email', input.token)
@@ -409,11 +402,16 @@ export async function confirmEmailChange(input: { email: string; token: string }
   const takenByAnother = await User.findOne({ email, _id: { $ne: user._id } }).lean()
   if (takenByAnother) return { ok: false, status: 409, error: 'email_taken' }
 
-  user.email = email
-  user.pendingEmail = null
-  user.emailVerifiedAt = new Date()
-  user.sessionVersion = (user.sessionVersion || 0) + 1
-  await user.save()
+  try {
+    const changed = await User.updateOne(
+      { _id: user._id, pendingEmail: email, email: user.email },
+      { $set: { email, pendingEmail: null, emailVerifiedAt: new Date() }, $inc: { sessionVersion: 1 } },
+    )
+    if (changed.modifiedCount !== 1) return { ok: false, status: 409, error: 'no_pending_change' }
+  } catch (error) {
+    if ((error as { code?: number }).code === 11000) return { ok: false, status: 409, error: 'email_taken' }
+    throw error
+  }
 
   return { ok: true, email }
 }

@@ -11,7 +11,7 @@ const slug = process.env.VERCEL_EDGE_CONFIG_SLUG || 'liveinblack-ops'
 const items = [
   { operation: 'upsert', key: 'maintenance_mode', value: false },
   { operation: 'upsert', key: 'checkout_enabled', value: true },
-  { operation: 'upsert', key: 'ticket_resale_enabled', value: true },
+  { operation: 'upsert', key: 'ticket_resale_enabled', value: false },
   { operation: 'upsert', key: 'search_min_query_length', value: 2 },
   { operation: 'upsert', key: 'public_cache_ttl_seconds', value: 45 },
 ]

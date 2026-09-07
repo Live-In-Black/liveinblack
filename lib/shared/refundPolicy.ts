@@ -67,22 +67,28 @@ export function hashRefundPickupCode(code: string): string {
 }
 
 function refundSecretKey(): Buffer {
-  const secret = process.env.REFUND_CODE_SECRET || process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || 'live-in-black-local-refund-secret'
+  const secret = process.env.REFUND_CODE_SECRET || process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET
+  if (!secret?.trim()) throw new Error('refund_encryption_secret_required')
   return crypto.createHash('sha256').update(secret).digest()
 }
 
 export function encryptRefundPickupCode(code: string): string {
+  return encryptRefundValue(String(code).trim().toUpperCase())
+}
+
+function encryptRefundValue(value: string): string {
   const iv = crypto.randomBytes(12)
   const cipher = crypto.createCipheriv('aes-256-gcm', refundSecretKey(), iv)
-  const encrypted = Buffer.concat([cipher.update(String(code).trim().toUpperCase(), 'utf8'), cipher.final()])
+  const encrypted = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()])
   const tag = cipher.getAuthTag()
   return [iv.toString('base64url'), tag.toString('base64url'), encrypted.toString('base64url')].join('.')
 }
 
 export function decryptRefundPickupCode(value: string | null | undefined): string | null {
   if (!value) return null
-  const [ivRaw, tagRaw, encryptedRaw] = value.split('.')
-  if (!ivRaw || !tagRaw || !encryptedRaw) return null
+  const parts = value.split('.')
+  const [ivRaw, tagRaw, encryptedRaw] = parts
+  if (parts.length !== 3 || !ivRaw || !tagRaw || encryptedRaw === undefined) return null
   try {
     const decipher = crypto.createDecipheriv('aes-256-gcm', refundSecretKey(), Buffer.from(ivRaw, 'base64url'))
     decipher.setAuthTag(Buffer.from(tagRaw, 'base64url'))
@@ -93,7 +99,7 @@ export function decryptRefundPickupCode(value: string | null | undefined): strin
 }
 
 export function encryptRefundSensitiveValue(value: string): string {
-  return encryptRefundPickupCode(value)
+  return encryptRefundValue(value)
 }
 
 export function decryptRefundSensitiveValue(value: string | null | undefined): string | null {

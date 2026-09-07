@@ -1,4 +1,4 @@
-// Emails transverses liés au compte multi-rôles.
+// Emails transverses liés aux comptes et à leurs espaces dédiés.
 // Branché depuis app/api/account/active-role/route.ts.
 import type { Email } from '../types'
 import { DEFAULT_SITE } from '../theme'

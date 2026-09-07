@@ -6,7 +6,7 @@ import Ticket from '@/lib/models/Ticket'
 import PromoCode from '@/lib/models/PromoCode'
 import { resolvePromo, promoUnitDiscount } from './promos'
 import { findGroupTieForEvent, groupTieBuyMessage } from '../messaging/groupTicketGuard'
-import { computeTicketFeeCents, computeTicketFeeXOF, computeCancellationProtectionFeeCents, computeCancellationProtectionFeeXOF } from '@/lib/shared/fees'
+import { computeTicketFeeCents, computeTicketFeeXOF, computeGroupTicketFeeXOF, computeCancellationProtectionFeeXOF } from '@/lib/shared/fees'
 import { isBeforeCancellationOptionDeadline } from '@/lib/shared/refundPolicy'
 import { isEventEnded } from '@/lib/shared/event-time'
 import { normalizeShowOptions } from '@/lib/shared/showOptions'
@@ -59,7 +59,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
 
   const qty = Math.max(1, Math.min(MAX_QTY, Math.floor(Number(input.qty) || 1)))
   const isTable = Boolean(input.isTable)
-  if (isTable && !(place.groupType === 'group' && (place.groupMax || 0) >= 2)) {
+  if (place.groupType === 'group' && !isTable) return { ok: false, status: 400, error: 'group_place_requires_bundle' }
+  if (isTable && !(place.groupType === 'group' && Number.isSafeInteger(place.groupMax) && (place.groupMax || 0) >= 2)) {
     return { ok: false, status: 400, error: 'not_a_group_place' }
   }
 
@@ -84,7 +85,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     }
   }
 
-  const currency = event.currency === 'XOF' ? 'XOF' : 'EUR'
+  const currency = event.currency === 'EUR' ? 'EUR' : 'XOF'
   if (currency !== 'XOF') return { ok: false, status: 409, error: 'benin_xof_launch_scope_required' }
   if (input.rail !== 'fedapay' && input.rail !== 'free') return { ok: false, status: 400, error: 'fedapay_required_for_launch' }
   const minorPerMajor = currency === 'XOF' ? 1 : 100
@@ -147,20 +148,18 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
   const preorders = [...aggregate.values()]
 
   const feeMinor =
-    currency === 'XOF' ? computeTicketFeeXOF(unitPriceMinor, isTable ? 1 : qty) : computeTicketFeeCents(unitPriceMinor, isTable ? 1 : qty)
+    currency === 'XOF'
+      ? isTable ? computeGroupTicketFeeXOF(unitPriceMinor, place.groupMax!) : computeTicketFeeXOF(unitPriceMinor, qty)
+      : computeTicketFeeCents(unitPriceMinor, isTable ? 1 : qty)
 
-  // Gratuit exclu (rien à assurer) — même garde que pour les frais de service.
-  const cancellationProtectionPurchased =
-    Boolean(input.cancellationProtection) &&
-    Boolean(place.cancellationOptionEnabled) &&
-    currency === 'XOF' &&
-    unitPriceMinor > 0 &&
-    isBeforeCancellationOptionDeadline(event.closingDate)
+  const cancellationProtectionPurchased = Boolean(input.cancellationProtection)
   const cancellationProtectionFeeMinor = cancellationProtectionPurchased
-    ? currency === 'XOF'
-      ? computeCancellationProtectionFeeXOF(unitPriceMinor, isTable ? 1 : qty)
-      : computeCancellationProtectionFeeCents(unitPriceMinor, isTable ? 1 : qty)
+    ? computeCancellationProtectionFeeXOF(unitPriceMinor, isTable ? 1 : qty)
     : 0
+  if (cancellationProtectionPurchased && (
+    currency !== 'XOF' || !place.cancellationOptionEnabled || cancellationProtectionFeeMinor <= 0 ||
+    !isBeforeCancellationOptionDeadline(event.closingDate)
+  )) return { ok: false, status: 409, error: 'cancellation_option_unavailable' }
 
   // Vendeur / mode de répartition (Stripe Connect vs ledger interne). Le
   // rail FedaPay est toujours 'ledger' (Connect ne couvre pas la zone XOF).
@@ -183,6 +182,12 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       if (!freshEvent) throw new OrderError(404, 'event_not_found')
       const freshPlace = freshEvent.places?.find((p) => p.id === input.placeId)
       if (!freshPlace) throw new OrderError(404, 'place_not_found')
+      if (cancellationProtectionPurchased && (
+        !freshPlace.cancellationOptionEnabled || !isBeforeCancellationOptionDeadline(freshEvent.closingDate)
+      )) throw new OrderError(409, 'cancellation_option_unavailable')
+      if (freshPlace.price !== place.price || freshPlace.groupType !== place.groupType || freshPlace.groupMax !== place.groupMax) {
+        throw new OrderError(409, 'place_changed')
+      }
       if ((freshPlace.available || 0) < totalRequestedStock) throw new OrderError(409, 'insufficient_stock')
 
       freshPlace.available = (freshPlace.available || 0) - totalRequestedStock

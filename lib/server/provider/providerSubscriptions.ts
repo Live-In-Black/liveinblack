@@ -4,11 +4,8 @@
 // prestataire mensuel (annuaire/profil/contact organisateurs) — AUCUNE
 // commission de service (les prestations se paient en direct, hors plateforme).
 //
-// Deux rails distincts, jamais mélangés (voir providerBillingCurrency) :
-//  - EUR → Stripe Billing, abonnement RÉCURRENT, statut = la source de vérité
-//    Stripe elle-même (webhook customer.subscription.*).
-//  - XOF → FedaPay, paiement PONCTUEL, renouvellement MANUEL tous les
-//    PROVIDER_SUB.periodDays jours (lib/shared/providerSubscription.ts).
+// V1 Benin : rail actif unique XOF/FedaPay, paiement PONCTUEL, renouvellement
+// MANUEL tous les PROVIDER_SUB.periodDays jours.
 import type Stripe from 'stripe'
 import stripe from '../payments/stripeClient'
 import { createTransaction, createToken, transactionAmountMatches } from '../payments/fedapayClient'
@@ -127,166 +124,42 @@ async function recordSubscriptionPayment(input: { userId: string; rail: 'stripe'
   )
 }
 
-// ── Rail EUR (Stripe Billing) ──
+// ── Rail EUR (Stripe Billing) historique, ferme V1 ──
 export type CheckoutResult =
   | { ok: true; url: string }
   | { ok: true; alreadyActive: true; status: string }
   | { ok: false; status: number; error: string }
 
 export async function createStripeSubscriptionCheckout(caller: { id: string; email?: string | null }): Promise<CheckoutResult> {
-  await getDb()
-  const billing = await getProviderBillingContext(caller)
-  if (billing.currency !== 'EUR') return { ok: false, status: 409, error: 'wrong_rail_use_fedapay' }
-
-  const user = await User.findById(caller.id).lean()
-  if (user?.prestataireSubActive) return { ok: true, alreadyActive: true, status: user.prestataireSubStatus || 'active' }
-
-  if (user?.stripeSubscriptionId) {
-    try {
-      const existing = await stripe.subscriptions.retrieve(user.stripeSubscriptionId)
-      if (stripeSubIsActive(existing)) {
-        await mirrorStripeStatus(caller.id, {
-          active: true,
-          status: existing.status,
-          end: stripeSubPeriodEnd(existing),
-          stripeSubscriptionId: existing.id,
-          stripeCustomerId: typeof existing.customer === 'string' ? existing.customer : existing.customer?.id || null,
-        })
-        return { ok: true, alreadyActive: true, status: existing.status }
-      }
-    } catch {
-      // abonnement introuvable côté Stripe — on retente une nouvelle session ci-dessous.
-    }
-  }
-
-  // Verrou anti-double-clic (25 s) — un CronLock générique sert ici de verrou
-  // court plutôt que de créer un modèle dédié pour ce seul usage transitoire.
-  const lockId = `sub_checkout_${caller.id}`
-  try {
-    await CronLock.create({ _id: lockId, lockedUntil: new Date(Date.now() + 25_000) })
-  } catch {
-    return { ok: false, status: 409, error: 'checkout_in_progress' }
-  }
-
-  try {
-    const plan = SUBSCRIPTION.PRESTATAIRE
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      ...(user?.stripeCustomerId ? { customer: user.stripeCustomerId } : caller.email ? { customer_email: caller.email } : {}),
-      client_reference_id: caller.id,
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: plan.currency,
-            product_data: { name: plan.label, description: plan.description },
-            unit_amount: plan.amountCents,
-            recurring: { interval: plan.interval },
-          },
-        },
-      ],
-      metadata: { uid: caller.id, type: 'prestataire_subscription' },
-      subscription_data: { metadata: { uid: caller.id, type: 'prestataire_subscription' } },
-      success_url: `${SITE}/offer-services?sub=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${SITE}/offer-services?sub=cancel`,
-      allow_promotion_codes: true,
-      locale: 'fr',
-    })
-    return { ok: true, url: session.url! }
-  } catch (err) {
-    console.error('[createStripeSubscriptionCheckout] Stripe session creation failed:', err)
-    return { ok: false, status: 502, error: 'stripe_error' }
-  } finally {
-    await CronLock.deleteOne({ _id: lockId })
-  }
+  void caller
+  return { ok: false, status: 410, error: 'stripe_subscription_disabled_v1' }
 }
 
 export type ConfirmResult = { ok: true; active: true; status: string } | { ok: false; status: number; error: string }
 
 export async function confirmStripeSubscriptionCheckout(caller: { id: string }, sessionId: string): Promise<ConfirmResult> {
-  await getDb()
-  const session = await stripe.checkout.sessions.retrieve(sessionId)
-  if (session.mode !== 'subscription' || session.payment_status !== 'paid') return { ok: false, status: 409, error: 'subscription_not_active' }
-  if (session.metadata?.type !== 'prestataire_subscription') return { ok: false, status: 409, error: 'subscription_not_active' }
-  const owner = session.metadata?.uid || session.client_reference_id
-  if (String(owner || '') !== String(caller.id)) return { ok: false, status: 403, error: 'forbidden' }
-
-  const subId = typeof session.subscription === 'string' ? session.subscription : session.subscription?.id
-  if (!subId) return { ok: false, status: 409, error: 'subscription_not_active' }
-  const subscription = await stripe.subscriptions.retrieve(subId)
-  if (!stripeSubIsActive(subscription)) return { ok: false, status: 409, error: 'subscription_not_active' }
-
-  await mirrorStripeStatus(caller.id, {
-    active: true,
-    status: subscription.status,
-    end: stripeSubPeriodEnd(subscription),
-    stripeSubscriptionId: subscription.id,
-    stripeCustomerId: typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id || null,
-  })
-  return { ok: true, active: true, status: subscription.status }
+  void caller
+  void sessionId
+  return { ok: false, status: 410, error: 'stripe_subscription_disabled_v1' }
 }
 
 // Webhook checkout.session.completed (mode subscription) — activation immédiate
 // au retour, avant même que customer.subscription.* n'affine le statut.
 export async function handleStripeSubscriptionCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
-  const uid = session.metadata?.uid || session.client_reference_id
-  if (!uid) {
-    console.warn('[providerSubscriptions] session abonnement sans uid', session.id)
-    return
-  }
-  await mirrorStripeStatus(String(uid), {
-    active: true,
-    status: 'active',
-    end: null,
-    stripeSubscriptionId: (typeof session.subscription === 'string' ? session.subscription : session.subscription?.id) || null,
-    stripeCustomerId: (typeof session.customer === 'string' ? session.customer : session.customer?.id) || null,
-  })
+  void session
 }
 
 // Webhook customer.subscription.created/updated/deleted — statut fin (source
 // de vérité pour tout le cycle de vie après l'activation initiale).
 export async function handleStripeSubscriptionEvent(sub: Stripe.Subscription, deleted: boolean): Promise<void> {
-  const uid = sub.metadata?.uid
-  if (!uid) {
-    console.warn('[providerSubscriptions] event abonnement sans uid', sub.id)
-    return
-  }
-  const status = deleted ? 'canceled' : sub.status || 'active'
-  const active = !deleted && (status === 'active' || status === 'trialing')
-  await mirrorStripeStatus(uid, {
-    active,
-    status,
-    end: stripeSubPeriodEnd(sub),
-    stripeSubscriptionId: sub.id,
-    stripeCustomerId: typeof sub.customer === 'string' ? sub.customer : sub.customer?.id || null,
-  })
+  void sub
+  void deleted
 }
 
 // `invoice.paid` est la source de vérité pour l'historique Stripe : il couvre
 // le premier paiement et chaque renouvellement sans dépendre du retour client.
 export async function handleStripeSubscriptionInvoicePaid(invoice: Stripe.Invoice): Promise<void> {
-  const details = invoice.parent?.subscription_details
-  if (!details || invoice.amount_paid <= 0) return
-
-  const subscriptionId = typeof details.subscription === 'string' ? details.subscription : details.subscription.id
-  const metadata = details.metadata || (typeof details.subscription === 'string' ? null : details.subscription.metadata)
-  let uid = metadata?.uid || null
-  if (!uid) {
-    const user = await User.findOne({ stripeSubscriptionId: subscriptionId }).select('_id').lean()
-    uid = user?._id?.toString() || null
-  }
-  if (!uid) return
-
-  await recordSubscriptionPayment({
-    userId: uid,
-    rail: 'stripe',
-    externalId: invoice.id,
-    amountMinor: invoice.amount_paid,
-    currency: 'EUR',
-    paidAt: new Date(invoice.status_transitions.paid_at ? invoice.status_transitions.paid_at * 1000 : invoice.created * 1000),
-    receiptUrl: invoice.invoice_pdf || invoice.hosted_invoice_url || null,
-  })
+  void invoice
 }
 
 // ── Rail XOF (FedaPay, renouvellement manuel) ──
@@ -389,7 +262,16 @@ export async function cancelProviderSubscriptionForDeletion(uid: string): Promis
 
   await User.updateOne(
     { _id: uid },
-    { $set: { prestataireSubActive: false, prestataireSubStatus: 'canceled' } }
+    {
+      $set: {
+        prestataireSubActive: false,
+        prestataireSubStatus: 'canceled',
+        prestataireSubEnd: null,
+        prestataireSubRail: null,
+        stripeSubscriptionId: null,
+        stripeCustomerId: null,
+      },
+    }
   )
   await ProviderProfile.updateOne({ userId: uid }, { $set: { subscriptionActive: false, subscriptionStatus: 'expired' } })
 

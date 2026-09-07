@@ -9,6 +9,17 @@ import { scopedWrap, heading, paragraph, note, button, escapeHtml } from '../lay
 
 const wrap = scopedWrap('refund')
 
+export function refundRequestCreatedEmail(eventName: string, amountLabel: string, pickup: { code?: string; point?: string | null; address?: string | null }, site: string = DEFAULT_SITE): Email {
+  const details = pickup.code
+    ? note(`Code de retrait : <strong>${escapeHtml(pickup.code)}</strong><br/>Point : ${escapeHtml(pickup.point || '')}<br/>Adresse : ${escapeHtml(pickup.address || '')}`) + paragraph('Toute personne présentant ce code peut retirer le montant. Garde-le confidentiel. La signature est obligatoire à la remise. Si tu ne peux pas te déplacer, demande le passage en remboursement individuel depuis ton dossier.')
+    : paragraph('Le remboursement individuel sera effectué par l’organisateur dans les meilleurs délais. Consulte ton dossier pour fournir les informations nécessaires.')
+  return {
+    subject: `Demande de remboursement enregistrée pour ${eventName}`,
+    html: wrap(`${heading('Ton dossier de remboursement est créé')}${paragraph(`Montant à rembourser : <strong>${escapeHtml(amountLabel)}</strong> pour ${escapeHtml(eventName)}. Ton billet est invalidé. Aucun versement n’est confirmé à ce stade.`)}${details}${button(`${site}/profile/billets`, 'Voir mon dossier')}`, { site, preheader: 'Demande enregistrée, paiement non encore effectué.' }),
+    inApp: { type: 'refund', title: 'Dossier de remboursement créé', body: `${amountLabel} à rembourser par l’organisateur pour ${eventName}.`, link: `${site}/profile/billets`, push: true },
+  }
+}
+
 export function eventCancelledRefundEmail(eventName: string, amountLabel: string, delayLabel: string, reason: string | null, site: string = DEFAULT_SITE): Email {
   const evName = escapeHtml(eventName)
   const inner = `
@@ -89,6 +100,22 @@ export function refundConfirmedEmail(eventName: string, amountLabel: string, del
   }
 }
 
+export function cashRefundCollectedEmail(eventName: string, amountLabel: string, site: string = DEFAULT_SITE): Email {
+  return {
+    subject: `Retrait en espèces enregistré pour ${eventName}`,
+    html: wrap(`${heading('Remise en espèces enregistrée')}${paragraph(`L’agent a enregistré la remise de <strong>${escapeHtml(amountLabel)}</strong> au porteur du code de remboursement pour ${escapeHtml(eventName)}, avec une signature.`)}${note('Le code a été utilisé et ne permet plus de retrait. Aucun virement supplémentaire ne sera effectué pour ce remboursement.')}${button(`${site}/profile/billets`, 'Consulter mon dossier')}`, { site, preheader: 'Remise en espèces enregistrée, code utilisé.' }),
+    inApp: { type: 'refund', title: 'Retrait en espèces enregistré', body: `${amountLabel} pour ${eventName}. Le code a été utilisé.`, link: `${site}/profile/billets`, push: true },
+  }
+}
+
+export function refundDeclaredEmail(eventName: string, amountLabel: string, reference: string, channel: string, site: string = DEFAULT_SITE): Email {
+  return {
+    subject: `Remboursement déclaré par l’organisateur pour ${eventName}`,
+    html: wrap(`${heading('L’organisateur déclare avoir effectué ton remboursement')}${paragraph(`Montant déclaré : <strong>${escapeHtml(amountLabel)}</strong> pour ${escapeHtml(eventName)}.`)}${note(`Référence : ${escapeHtml(reference)}<br/>Canal : ${escapeHtml(channel)}`)}${paragraph('Cette déclaration ne confirme pas que tu as reçu les fonds. Vérifie ton compte et consulte la preuve dans ton dossier. Tu peux confirmer la réception ou sélectionner « Je n’ai pas reçu le remboursement ».')}${button(`${site}/profile/billets`, 'Vérifier mon remboursement')}`, { site, preheader: 'Vérifie la réception des fonds et la preuve dans ton dossier.' }),
+    inApp: { type: 'refund', title: 'Remboursement déclaré', body: `${amountLabel} déclarés pour ${eventName}. Vérifie la réception des fonds.`, link: `${site}/profile/billets`, push: true },
+  }
+}
+
 export function refundFailedEmail(eventName: string, reason: string | null, supportUrl: string, site: string = DEFAULT_SITE): Email {
   const evName = escapeHtml(eventName)
   const inner = `
@@ -100,6 +127,13 @@ export function refundFailedEmail(eventName: string, reason: string | null, supp
     subject: `Ton remboursement pour ${eventName} a rencontré un problème`,
     html: wrap(inner, { site, preheader: 'Une action est nécessaire de ta part.' }),
     inApp: { type: 'refund', title: 'Problème avec ton remboursement', body: `${eventName} — action requise.`, link: supportUrl, push: true },
+  }
+}
+
+export function refundContestResolvedEmail(eventName: string, resolution: string, site: string = DEFAULT_SITE): Email {
+  return {
+    subject: `Réponse à ta contestation pour ${eventName}`,
+    html: wrap(`${heading('L’organisateur a répondu à ta contestation')}${paragraph(`Événement : ${escapeHtml(eventName)}.`)}${note(escapeHtml(resolution).replace(/\n/g, '<br/>'))}${paragraph('Cette décision ne confirme pas la réception des fonds et ne déclenche aucun nouveau paiement. Ton billet reste invalide. Si le litige persiste, poursuis les échanges avec le support de l’organisateur depuis ton dossier.')}${button(`${site}/profile/billets`, 'Consulter mon dossier')}`, { site, preheader: 'Consulte la décision motivée de l’organisateur.' }),
   }
 }
 

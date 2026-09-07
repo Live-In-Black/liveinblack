@@ -51,7 +51,7 @@
     "seed:e2e": "MONGODB_URI=mongodb://127.0.0.1:27017/liveinblack_e2e_test node --import tsx scripts/seed-e2e.ts",
     "test:e2e:seeded": "LIB_RUN_SEEDED_E2E=1 LIB_E2E_DISABLE_RATE_LIMIT=1 MONGODB_URI=mongodb://127.0.0.1:27017/liveinblack_e2e_test AUTH_TRUST_HOST=true PLAYWRIGHT_PORT=3002 playwright test e2e/seeded-*.spec.ts",
     "test:e2e:seeded:local": "LIB_RUN_SEEDED_E2E=1 LIB_E2E_DISABLE_RATE_LIMIT=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 playwright test e2e/seeded-*.spec.ts",
-    "seed:blog": "node --env-file=.env.local --import tsx scripts/seed-blog.ts",
+    "seed:blog": "node --env-file=.env.local --import tsx scripts/seed-blog-benin.ts",
     "seed:blog:benin": "node --env-file=.env.local --import tsx scripts/seed-blog-benin.ts",
     "audit:growth": "npm run audit:seo && npm run audit:blog:benin && npm run audit:ui-density && npm run audit:theme && npm run audit:growth-analytics && npm run audit:custom-images",
     "audit:vercel-pro": "node scripts/audit-vercel-pro.mjs",
@@ -99,6 +99,7 @@
     "react-dom": "19.2.4",
     "recharts": "^3.10.1",
     "resend": "^6.17.2",
+    "sharp": "0.35.3",
     "stripe": "^22.3.2",
     "web-push": "^3.6.7",
     "zod": "^4.4.3"

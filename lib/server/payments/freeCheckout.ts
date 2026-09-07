@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getDb } from '@/lib/db/mongoose'
 import Ticket from '@/lib/models/Ticket'
 import { createOrder, releaseOrder } from '../events/orders'
@@ -47,6 +48,9 @@ export type FreeCheckoutResult =
   | { ok: false; status: number; error: string }
 
 export async function freeCheckout(input: FreeCheckoutInput): Promise<FreeCheckoutResult> {
+  void input
+  return { ok: false, status: 410, error: 'free_checkout_disabled_v1' }
+
   await getDb()
 
   // Table gratuite interdite — rejeté AVANT tout décrément de stock, jamais

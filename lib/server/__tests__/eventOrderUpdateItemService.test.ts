@@ -111,8 +111,8 @@ describe('eventOrderUpdateItemService', () => {
     })
   })
 
-  it('met à jour la quantité et journalise la mutation', async () => {
-    const item = { id: 'item-1', addedBy: 'u1', servedAt: null, paidAt: null, status: 'sent', quantity: 1, ticketId: 'T1', name: 'Coca' }
+  it('reduit une ancienne ligne non payee et journalise la mutation', async () => {
+    const item = { id: 'item-1', kind: 'order', addedBy: 'u1', servedAt: null, paidAt: null, status: 'sent', quantity: 5, ticketId: 'T1', name: 'Coca' }
     const save = vi.fn().mockResolvedValue(undefined)
     vi.mocked(EventOrder.findOne).mockReturnValueOnce({
       session: vi.fn().mockResolvedValue({
@@ -134,10 +134,30 @@ describe('eventOrderUpdateItemService', () => {
       'event-1',
       expect.objectContaining({
         action: 'edit',
-        oldValue: { quantity: 1 },
+        oldValue: { quantity: 5 },
         newValue: { quantity: 4 },
       }),
       session as unknown as mongoose.ClientSession,
     )
+  })
+
+  it.each([0, 1, 2, 3])('refuse une augmentation pour le rang %i sans mutation', async rank => {
+    vi.mocked(deps.loadEventContext).mockResolvedValueOnce({ ok: true, ctx: { rank, role: 'test', event: {} as never } })
+    const item = { id: 'item-1', kind: 'order', addedBy: 'u1', quantity: 1, status: 'sent' }
+    const save = vi.fn()
+    vi.mocked(EventOrder.findOne).mockReturnValueOnce({ session: vi.fn().mockResolvedValue({ items: [item], save }) } as never)
+    expect(await updateEventOrderItemQuantity(caller, { eventId: 'event-1', itemId: 'item-1', quantity: 2 }, deps)).toMatchObject({ ok: false, error: 'standalone_orders_disabled_v1' })
+    expect(item.quantity).toBe(1)
+    expect(save).not.toHaveBeenCalled()
+    expect(deps.appendLog).not.toHaveBeenCalled()
+  })
+
+  it.each(['preorder', 'included'])('ne modifie pas une ligne %s meme sans paidAt', async kind => {
+    const item = { id: 'item-1', kind, addedBy: 'u1', quantity: 2, status: 'sent' }
+    const save = vi.fn()
+    vi.mocked(EventOrder.findOne).mockReturnValueOnce({ session: vi.fn().mockResolvedValue({ items: [item], save }) } as never)
+    expect(await updateEventOrderItemQuantity(caller, { eventId: 'event-1', itemId: 'item-1', quantity: 1 }, deps)).toMatchObject({ ok: false, error: 'purchased_quantity_locked' })
+    expect(save).not.toHaveBeenCalled()
+    expect(item.quantity).toBe(2)
   })
 })

@@ -19,6 +19,7 @@ export function clampCatalogDescription(description: string | null | undefined):
 export function buildCatalogItemMessageContent(input: {
   providerId: string | undefined
   providerName: string | null | undefined
+  currency?: string | null
   item: {
     id: string
     name: string
@@ -37,6 +38,7 @@ export function buildCatalogItemMessageContent(input: {
     name: input.item.name,
     description: clampCatalogDescription(input.item.description),
     price: input.item.price ?? null,
+    currency: input.currency ?? null,
     unit: input.item.unit || '',
     category: input.item.category || '',
     image: media?.url ?? null,
@@ -49,6 +51,7 @@ export function buildEventMessageContent(event: {
   dateDisplay?: string | null
   date?: string | null
   imageUrl?: string | null
+  currency?: string | null
   places?: Array<{ price?: number | null }> | null
 }): string {
   const price = event.places && event.places.length > 0 ? Math.min(...event.places.map((place) => place.price ?? 0)) : 0
@@ -57,6 +60,7 @@ export function buildEventMessageContent(event: {
     name: event.name,
     date: event.dateDisplay || event.date || '',
     price,
+    currency: event.currency || 'XOF',
     image: event.imageUrl ?? null,
   })
 }

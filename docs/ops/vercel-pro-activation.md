@@ -12,7 +12,7 @@ Actif cote repo:
 - Evenements business via `lib/client/growthAnalytics.ts`.
 - 8 Cron Jobs declares dans `vercel.json`.
 - Logs structures communs sur les Cron Jobs via `runVercelCron`: `cron_start`, `cron_done`, `cron_failed`, duree et identifiant Vercel.
-- Logs structures sur les APIs critiques via `runObservedRoute`: checkout, Stripe/FedaPay webhooks, search, register, password reset.
+- Logs structures sur les APIs critiques via `runObservedRoute`: checkout, webhooks FedaPay, search, register, password reset.
 - Script Firewall en dry-run/staging: `npm run ops:vercel:firewall:stage`.
 - Script de scan erreurs runtime post-deploy: `npm run ops:vercel:logs`, integre a `npm run ops:deploy:prod`.
 - Audit live Vercel prepare: `npm run audit:vercel-live`.
@@ -31,7 +31,7 @@ Actif cote repo:
 - Registre des decisions Vercel Pro prepare: `config/vercel-pro-decisions.json`, lu par `npm run audit:vercel-pro`.
 - Setup Edge Config prepare: `npm run ops:vercel:edge-config:setup`.
 - Activation Edge Config preparee: `npm run ops:vercel:edge-config:activate`.
-- Edge Config consomme par le runtime via `getVercelOpsConfig`: maintenance, checkout, revente, longueur minimale de recherche et TTL cache public.
+- Edge Config consomme par le runtime via `getVercelOpsConfig`: maintenance, checkout, longueur minimale de recherche et TTL cache public. La revente reste exclue V1.
 - Setup webhooks plateforme prepare: `npm run ops:vercel:webhooks:setup`.
 - Setup Drain prepare: `npm run ops:vercel:drain:setup`.
 - Endpoint interne de reception drain prepare: `/api/ops/vercel-drain`, signature HMAC verifiee via `DRAIN_SECRET`, stockage court en base avec expiration automatique.
@@ -243,8 +243,8 @@ Pilotage Edge Config depuis l'espace agent:
 - `/agent/vercel` lit `/api/agent/vercel/ops-config`.
 - En lecture seule, la page affiche les flags actifs.
 - En ecriture, ajouter `VERCEL_API_TOKEN`, `VERCEL_TEAM_ID` et `VERCEL_EDGE_CONFIG_ID` pour permettre aux agents de changer les flags sans redéploiement.
-- Flags pilotables: maintenance, checkout, revente, longueur minimale de recherche et TTL cache recherche.
-- Actions sensibles protegees par confirmation: maintenance, checkout, revente et presets normal/urgence.
+- Flags pilotables: maintenance, checkout, longueur minimale de recherche et TTL cache recherche. La cle revente est historique et forcee hors V1.
+- Actions sensibles protegees par confirmation: maintenance, checkout et presets normal/urgence. La revente ne doit pas etre reactivee par preset.
 - Le barometre Pro met en evidence les briques encore manquantes: webhook plateforme, webhook budget, Log Drain et capacite de reponse incident.
 - Le barometre ne lit jamais les valeurs secretes. Il affiche seulement si les secrets attendus sont configures: `VERCEL_ACCOUNT_WEBHOOK_SECRET`, `VERCEL_SPEND_WEBHOOK_SECRET`, `DRAIN_SECRET`, `VERCEL_DRAIN_URL` ou `ERROR_WEBHOOK_URL`.
 - Si un webhook est configure mais n'a pas encore recu d'evenement, le barometre le signale comme pret et en attente du prochain signal.
@@ -308,16 +308,16 @@ Bons candidats:
 
 - `maintenance_mode`;
 - `checkout_enabled`;
-- `ticket_resale_enabled`;
+- `ticket_resale_enabled` historique, force a `false`;
 - `search_min_query_length`;
 - `public_cache_ttl_seconds`;
 - messages operationnels temporaires.
 
 Consommation runtime actuelle:
 
-- `maintenance_mode`: coupe les APIs checkout, search et revente avec une reponse 503 ou vide selon le contexte.
-- `checkout_enabled`: coupe les achats Stripe/FedaPay sans redeployer.
-- `ticket_resale_enabled`: coupe la bourse de revente, la mise en vente et l'achat de billets revendus.
+- `maintenance_mode`: coupe les APIs checkout et search avec une reponse 503 ou vide selon le contexte.
+- `checkout_enabled`: coupe les achats FedaPay sans redeployer.
+- `ticket_resale_enabled`: cle historique conservee a `false`; elle ne reactive pas la bourse de revente V1.
 - `search_min_query_length`: ajuste la pression sur `/api/search`.
 - `public_cache_ttl_seconds`: ajuste le TTL CDN des resultats de recherche.
 
@@ -345,7 +345,7 @@ Ne pas y mettre:
 Candidats Workflows/Queues:
 
 - recap evenement;
-- expiration resale;
+- revente maintenue hors V1 ;
 - rappels cash sale;
 - rappels interested events;
 - import blog/campaign;
@@ -367,7 +367,7 @@ Sources:
 
 Premier lot recommande:
 
-- `resale-expiry`: priorite haute, frequent, doit rester idempotent.
+- `resale-expiry`: retire du planning V1 ; ne pas migrer comme workflow actif.
 - `payouts`: priorite haute, financier, necessite audit trail fort.
 
 Strategie de migration:
@@ -443,7 +443,7 @@ Ordre recommande:
 2. Finaliser Spend Management: garde-fou cout avant d'augmenter les usages.
 3. Publier Firewall apres observation: protection sans faux positifs.
 4. Activer Log Drain seulement si l'equipe accepte l'export des logs runtime.
-5. Migrer `resale-expiry` vers Workflow, puis seulement ensuite les flux financiers comme `payouts`.
+5. Maintenir `resale-expiry` hors V1, puis migrer les flux financiers applicables comme `payouts`.
 
 Regle de completion:
 
@@ -460,7 +460,7 @@ Regle de completion:
 Consigner une preuve apres action live:
 
 ```bash
-npm run ops:vercel:evidence:record -- --key live-gates-closed --status complete --evidence "Firewall publie, Spend Management actif, webhook/drain confirmes, workflow resale-expiry migre." --next "Relancer audit:vercel-pro-suite -- --strict --include-live"
+npm run ops:vercel:evidence:record -- --key live-gates-closed --status complete --evidence "Firewall publie, Spend Management actif, webhook/drain confirmes, resale-expiry hors V1." --next "Relancer audit:vercel-pro-suite -- --strict --include-live"
 ```
 
 Pour mettre a jour une decision Pro en meme temps:

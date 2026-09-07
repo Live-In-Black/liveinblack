@@ -1,5 +1,5 @@
-// Emails de la bourse de revente officielle de billets.
-// Branchés depuis lib/server/resale.ts (via notifyUserById).
+// Templates historiques de la bourse de revente officielle de billets.
+// La revente est exclue de la V1 : ne pas exposer ces e-mails dans le catalogue actif.
 import type { Email } from '../types'
 import { DEFAULT_SITE } from '../theme'
 import { scopedWrap, heading, paragraph, note, button, escapeHtml } from '../layout'
@@ -25,7 +25,7 @@ export function resaleListingSoldEmail(eventName: string, netAmountLabel: string
   const inner = `
     ${heading('Ton billet a trouvé preneur 💸', 'accent')}
     ${paragraph(`Ton billet pour <strong style="color:inherit;">${evName}</strong> a été vendu ! Tu recevras <strong style="color:inherit;">${netAmountLabel}</strong> (net de commission).`)}
-    ${note(`Le versement arrive généralement sous ${payoutDelayLabel} après l'événement.`)}
+    ${note(`Suivi historique : ${escapeHtml(payoutDelayLabel)}.`)}
   `
   return {
     subject: `Ton billet pour ${eventName} a trouvé preneur 💸`,

@@ -56,15 +56,15 @@ const ACTUALITE_ACCENTS: Record<string, { dot: string; soft: string; border: str
 }
 
 const HOME_EVENT_FALLBACKS = [
-  'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1200&q=80',
+  '/images/live-in-black/night-benin/night-benin-dancefloor.png',
+  '/images/live-in-black/night-benin/night-benin-concert.png',
+  '/images/live-in-black/night-benin/night-benin-lounge.png',
 ]
 
 const HOME_PROVIDER_FALLBACKS = [
-  'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=1200&q=80',
+  '/images/live-in-black/night-benin/night-benin-organizer.png',
+  '/images/live-in-black/night-benin/night-benin-dj.png',
+  '/images/live-in-black/night-benin/night-benin-lounge.png',
 ]
 
 function firstOfferImage(catalog: CatalogItem[] = []): string | null {
@@ -244,16 +244,23 @@ export default async function AccueilPage() {
         )}
 
         {session?.user && needsPreferences && (
-          <section style={{ maxWidth: 860, margin: '38px auto 0', padding: '0 22px' }}>
-            <Card
-              accent="var(--primary-a35)"
-              style={{ borderRadius: card.borderRadius, boxShadow: card.boxShadow, padding: '22px 24px', background: 'var(--surface)' }}
-            >
-              <p style={{ margin: 0, color: 'var(--accent-text)', fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.07em' }}>Personnalise ton expérience</p>
-              <h2 style={{ margin: '7px 0 5px', fontSize: 'var(--font-size-headline-lg)' }}>Des soirées vraiment faites pour toi</h2>
-              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote-lg)', lineHeight: 1.55 }}>Indique tes styles, tes villes et ton budget. Cela prend moins d&apos;une minute et reste modifiable.</p>
-              <Link href="/profile" style={{ ...btnPrimary, marginTop: 14, padding: '10px 17px', fontSize: 'var(--font-size-footnote-lg)' }}>Régler mes goûts</Link>
-            </Card>
+          <section className={styles.preferenceSection} aria-labelledby="preference-title">
+            <div className={styles.preferenceCard}>
+              <div className={styles.preferenceContent}>
+                <p className={styles.preferenceKicker}>Personnalise ton expérience</p>
+                <h2 id="preference-title" className={styles.preferenceTitle}>Des soirées vraiment faites pour toi</h2>
+                <p className={styles.preferenceDescription}>Indique ce que tu aimes pour recevoir des suggestions plus pertinentes. Tu pourras modifier tes choix à tout moment.</p>
+                <ul className={styles.preferenceTags} aria-label="Préférences à renseigner">
+                  <li>Styles</li>
+                  <li>Villes</li>
+                  <li>Budget</li>
+                </ul>
+              </div>
+              <div className={styles.preferenceAction}>
+                <span>Moins d&apos;une minute</span>
+                <Link href="/profile">Régler mes goûts <span aria-hidden="true">→</span></Link>
+              </div>
+            </div>
           </section>
         )}
 
@@ -333,9 +340,9 @@ export default async function AccueilPage() {
         {!session?.user && <Section eyebrow="Simple" title="Comment ça marche" actionHref="/about" actionLabel="En savoir plus">
           <div className={styles.contentGrid}>
             {[
-              ['01', 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80', 'Deux amis découvrent les lieux de sortie disponibles', 'Découvre une soirée', 'Parcours les événements près de chez toi et trouve l’ambiance qui te ressemble.'],
-              ['02', 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1200&q=80', 'Des amis réservent leur billet depuis un téléphone', 'Réserve ton billet', 'Choisis ton offre et paie en quelques secondes dans un parcours clair et sécurisé.'],
-              ['03', 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80', 'Un billet numérique est contrôlé à l’entrée d’un événement', 'Présente ton QR', 'Retrouve ton billet dans ton compte, fais-le scanner à l’entrée et profite.'],
+              ['01', '/images/live-in-black/night-benin/night-benin-hero.png', 'Deux amis découvrent les lieux de sortie disponibles', 'Découvre une soirée', 'Parcours les événements près de chez toi et trouve l’ambiance qui te ressemble.'],
+              ['02', '/images/live-in-black/night-benin/night-benin-rooftop.png', 'Des amis réservent leur billet depuis un téléphone', 'Réserve ton billet', 'Choisis ton offre et paie en quelques secondes dans un parcours clair et sécurisé.'],
+              ['03', '/images/live-in-black/night-benin/night-benin-concert.png', 'Un billet numérique est contrôlé à l’entrée d’un événement', 'Présente ton QR', 'Retrouve ton billet dans ton compte, fais-le scanner à l’entrée et profite.'],
             ].map(([n, src, alt, title, description]) => (
               <EditorialImageCard key={n} src={src} alt={alt} badge={n} title={title} description={description} />
             ))}
@@ -347,7 +354,7 @@ export default async function AccueilPage() {
           <div className={styles.roleGrid}>
             <article className={styles.roleCard}>
               <div className={styles.roleVisual}>
-                <Image src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1200&q=80" alt="Organisateur préparant un événement" fill className={styles.roleImage} sizes="(max-width: 640px) 100vw, 42vw" />
+                <Image src="/images/live-in-black/night-benin/night-benin-rooftop.png" alt="Organisateur préparant un événement" fill className={styles.roleImage} sizes="(max-width: 640px) 100vw, 42vw" />
                 <div className={styles.roleImageScrim} />
                 <span className={styles.roleNumber}>01</span>
                 <p className={styles.roleVisualCaption}>Tout piloter.<br />Au même endroit.</p>
@@ -376,7 +383,7 @@ export default async function AccueilPage() {
 
             <article className={styles.roleCard}>
               <div className={styles.roleVisual}>
-                <Image src="https://images.unsplash.com/photo-1598387993441-a364f854c3e1?auto=format&fit=crop&w=1200&q=80" alt="Prestataire événementiel en action" fill className={styles.roleImage} sizes="(max-width: 640px) 100vw, 42vw" />
+                <Image src="/images/live-in-black/night-benin/night-benin-organizer.png" alt="Prestataire événementiel en action" fill className={styles.roleImage} sizes="(max-width: 640px) 100vw, 42vw" />
                 <div className={styles.roleImageScrim} />
                 <span className={styles.roleNumber}>02</span>
                 <p className={styles.roleVisualCaption}>Ton savoir-faire.<br />Bien présenté.</p>
@@ -530,4 +537,3 @@ function EmptyCard({ kind, ctaHref, ctaLabel }: { kind: keyof typeof EMPTY_STATE
 
 const card: React.CSSProperties = { maxWidth: 360, width: '100%', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 24, boxShadow: '0 20px 56px rgba(var(--black-rgb), .22)', overflow: 'hidden' }
 const CARD_OVERRIDE: React.CSSProperties = { background: card.background, borderRadius: card.borderRadius, boxShadow: card.boxShadow }
-const btnPrimary: React.CSSProperties = { minHeight: 44, padding: '10px 18px', borderRadius: 'var(--radius-control)', fontSize: 'var(--font-size-headline)', fontWeight: 700, color: 'var(--primary-ink)', background: 'var(--primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }

@@ -87,7 +87,7 @@ if (missingCronRoutes.length > 0) {
 }
 
 console.log('')
-console.log('Prochaine action recommandee: migrer resale-expiry en premier, puis payouts apres observation, en gardant les crons comme declencheurs.')
+console.log('Prochaine action recommandee: maintenir resale-expiry hors V1, puis migrer payouts apres observation en gardant les crons applicables comme declencheurs.')
 
 if (!workflowReady) {
   process.exitCode = 1

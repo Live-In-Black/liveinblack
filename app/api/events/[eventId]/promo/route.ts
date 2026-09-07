@@ -36,7 +36,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ eventId
   const result = await resolvePromo(PromoCode, eventId, parsed.data.code, requestedUses, parsed.data.placeId)
   if (!result.ok) return NextResponse.json({ error: 'invalid_promo', message: result.message }, { status: 400 })
 
-  const currency = event.currency === 'XOF' ? 'XOF' : 'EUR'
+  const currency = event.currency === 'EUR' ? 'EUR' : 'XOF'
+  if (currency !== 'XOF') return NextResponse.json({ error: 'benin_xof_launch_scope_required' }, { status: 409 })
   const minorPerMajor = currency === 'XOF' ? 1 : 100
   const priceMinor = Math.max(0, Math.round(Number(place.price) * minorPerMajor))
   const discountMinor = promoUnitDiscount(result.promo, priceMinor, minorPerMajor)

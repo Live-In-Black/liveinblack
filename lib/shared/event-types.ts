@@ -22,7 +22,7 @@ export type EventLike = {
   closingDate?: string | Date | null
   cancelled?: boolean
   isDemo?: boolean
-  demoLabel?: string
+  demoLabel?: string | null
   publishAt?: string | Date | null
   name?: string
   title?: string
