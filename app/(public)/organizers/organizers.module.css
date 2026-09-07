@@ -2,9 +2,21 @@
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
   width: 100%;
   overflow: hidden;
+  position: relative;
+  isolation: isolate;
   color: var(--text);
   font-family: var(--font);
   background: var(--obsidian);
+}
+
+.page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(rgba(var(--night-rgb), .89), rgba(var(--night-rgb), .95)), url('/images/live-in-black/night-benin/night-benin-organizer.png') center/cover;
+  opacity: .32;
 }
 
 .hero {

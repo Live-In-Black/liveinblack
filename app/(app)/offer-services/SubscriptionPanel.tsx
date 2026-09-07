@@ -27,12 +27,6 @@ function fmtDate(value: string | null | undefined): string {
   }
 }
 
-function daysUntil(value: string | null | undefined): number {
-  if (!value) return 0
-  const ms = new Date(value).getTime() - Date.now()
-  return Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)))
-}
-
 function fmtPaymentAmount(amountMinor: number, currency: 'EUR' | 'XOF'): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: currency === 'XOF' ? 0 : 2 }).format(currency === 'EUR' ? amountMinor / 100 : amountMinor)
 }
@@ -50,7 +44,6 @@ export default function SubscriptionPanel({ profile, subscription }: { profile: 
   const [renewing, setRenewing] = useState(false)
   const [msg, setMsg] = useState('')
 
-  const currency = subscription.currency
   const zone = regions.find((r) => r.id === subscription.billingRegionId) || null
 
   async function handleFedapaySubscribe() {
@@ -71,28 +64,19 @@ export default function SubscriptionPanel({ profile, subscription }: { profile: 
     }
   }
 
-  let title: string
-  let message: string
-  let color: string
-  let statusLabel: string
-  let showCta: boolean
-  let cta: string
-  let daysLeft = 0
-  let expiresAt: string | null = null
-
   const subWindow: SubWindow = {
     subscriptionExpiresAt: profile.subscriptionExpiresAt ? new Date(profile.subscriptionExpiresAt) : null,
     gracePeriodEndsAt: profile.gracePeriodEndsAt ? new Date(profile.gracePeriodEndsAt) : null,
   }
   const p = subPresentation(subWindow)
-  color = p.color
-  title = p.title
-  statusLabel = p.status === 'active' ? 'Actif' : p.status === 'expiring_soon' ? 'Expire bientôt' : p.status === 'grace' ? 'Période de grâce' : p.status === 'expired' ? 'Expiré' : 'Inactif'
-  message = p.message
-  showCta = true
-  cta = p.cta
-  expiresAt = profile.subscriptionExpiresAt
-  daysLeft = p.daysLeft
+  const color = p.color
+  const title = p.title
+  const statusLabel = p.status === 'active' ? 'Actif' : p.status === 'expiring_soon' ? 'Expire bientôt' : p.status === 'grace' ? 'Période de grâce' : p.status === 'expired' ? 'Expiré' : 'Inactif'
+  const message = p.message
+  const showCta = true
+  const cta = p.cta
+  const expiresAt = profile.subscriptionExpiresAt
+  const daysLeft = p.daysLeft
 
   return (
     <section aria-labelledby="provider-subscription-title">

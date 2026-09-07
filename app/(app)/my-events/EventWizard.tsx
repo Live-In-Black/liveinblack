@@ -800,7 +800,7 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
     )
   }
 
-  const currency: 'XOF' = 'XOF'
+  const currency = 'XOF' as const
 
   return (
     <main className="lb-event-wizard" style={{ width: '100%', padding: 'var(--space-6) var(--page-gutter) 80px', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>

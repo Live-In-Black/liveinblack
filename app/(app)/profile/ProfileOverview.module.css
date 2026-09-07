@@ -242,8 +242,7 @@
 .quickImage {
   min-height: 86px;
   display: block;
-  background-image: url('/images/profile/profile-navigation-sprite.png');
-  background-size: 200% auto;
+  background-size: cover;
   background-repeat: no-repeat;
   background-color: var(--surface-2);
 }

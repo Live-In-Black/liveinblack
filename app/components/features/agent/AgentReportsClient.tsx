@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, CheckCircle2, Clock3, MessageSquareWarning, RefreshCw, Search, UserRound } from 'lucide-react'
-import { Button, Card, Input, Textarea, Pagination, SkeletonRow, pagedSlice, EmptyState, ToastViewport } from '@/app/components/ui'
+import { Button, Card, Input, Textarea, Pagination, Skeleton, pagedSlice, EmptyState, ToastViewport } from '@/app/components/ui'
 import { useQueryParamState, useSetQueryParams } from '@/lib/client/useQueryParamState'
 import styles from './AgentReportsClient.module.css'
 
@@ -232,7 +232,7 @@ export default function AgentReportsClient() {
         {listLoading ? (
           <div className={styles.loadingGrid}>
             {Array.from({ length: 4 }).map((_, i) => (
-              <SkeletonRow key={i} columns={2} />
+              <ReportCardSkeleton key={i} />
             ))}
           </div>
         ) : sorted.length === 0 ? (
@@ -295,5 +295,32 @@ export default function AgentReportsClient() {
 
       <ToastViewport items={toast ? [{ id: 'signalements', message: toast.message, kind: toast.kind === 'success' ? 'success' : 'error' }] : []} />
     </main>
+  )
+}
+
+function ReportCardSkeleton() {
+  return (
+    <Card className={styles.reportCard} aria-hidden="true">
+      <div className={styles.cardTop}>
+        <div className={styles.people}>
+          <Skeleton width={42} height={42} radius={999} />
+          <div className={styles.peopleCopy} style={{ flex: 1 }}>
+            <Skeleton width="68%" height={16} />
+            <Skeleton width="44%" height={11} />
+          </div>
+        </div>
+        <Skeleton width={82} height={26} radius={999} />
+      </div>
+      <div className={styles.meta}>
+        <Skeleton width="100%" height={34} radius={12} />
+        <Skeleton width="100%" height={34} radius={12} />
+      </div>
+      <div className={styles.reason}>
+        <Skeleton width={70} height={12} />
+        <Skeleton width="96%" height={12} style={{ marginTop: 10 }} />
+        <Skeleton width="70%" height={12} style={{ marginTop: 7 }} />
+      </div>
+      <Skeleton width="100%" height={38} radius={12} />
+    </Card>
   )
 }

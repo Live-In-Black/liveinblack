@@ -951,28 +951,31 @@ function ConfirmModal({ action, busy, onCancel, onConfirm }: { action: ConfirmAc
     if (action.type !== 'completeRefund') return
     const stored = readStoredCashOperation(action.refundId)
     if (!stored) return
-    setRefundCode(stored.code)
-    setOperationId(stored.operationId)
-    setPrepareBusy(true)
-    setPrepareError('')
-    fetch(`/api/agent/payments/refunds/${action.refundId}/prepare`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(stored),
-    })
-      .then(async (res) => ({ res, data: await res.json().catch(() => ({})) }))
-      .then(({ res, data }) => {
-        if (!res.ok || !data.ok) {
-          clearStoredCashOperation(action.refundId)
-          resetPreparedState()
-          setRefundCode('')
-          setPrepareError('Reprise impossible. Revalidez le code avant toute remise.')
-          return
-        }
-        setOperationId(data.operationId)
-        setPreparedAmount(Number(data.amountXOF))
+    const timer = window.setTimeout(() => {
+      setRefundCode(stored.code)
+      setOperationId(stored.operationId)
+      setPrepareBusy(true)
+      setPrepareError('')
+      fetch(`/api/agent/payments/refunds/${action.refundId}/prepare`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(stored),
       })
-      .finally(() => setPrepareBusy(false))
+        .then(async (res) => ({ res, data: await res.json().catch(() => ({})) }))
+        .then(({ res, data }) => {
+          if (!res.ok || !data.ok) {
+            clearStoredCashOperation(action.refundId)
+            resetPreparedState()
+            setRefundCode('')
+            setPrepareError('Reprise impossible. Revalidez le code avant toute remise.')
+            return
+          }
+          setOperationId(data.operationId)
+          setPreparedAmount(Number(data.amountXOF))
+        })
+        .finally(() => setPrepareBusy(false))
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [action])
 
   async function prepareRefund() {

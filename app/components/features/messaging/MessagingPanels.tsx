@@ -132,7 +132,7 @@ export function FriendsPanel({ received, sent, friends, newFriendIds, onDismissN
           <Button variant="primary" onClick={() => { const trimmed = email.trim(); if (trimmed.includes('@')) void sendRequest(trimmed) }} disabled={!email.includes('@')} size="md">Envoyer</Button>
         </div>
         {showSuggestions ? (
-          <div className={styles.modalPeopleList} style={{ marginTop: 8 }}>
+          <div className={`${styles.modalPeopleList} ${styles.modalSuggestionList}`} style={{ marginTop: 8 }}>
             {suggestions.length === 0 ? <p className={styles.modalEmpty}>Aucune suggestion pour cette recherche.</p> : suggestions.map((user) => (
               <div key={user.userId} className={styles.modalPersonRow}>
                 {renderAvatar(user.userId, user.name, 40)}

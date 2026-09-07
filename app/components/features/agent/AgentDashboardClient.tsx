@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Activity, ArrowUpRight, CalendarCheck2, FileCheck2, ShieldAlert, TicketCheck, TrendingUp, UsersRound, WalletCards } from 'lucide-react'
 import { fmtMoney } from '@/lib/shared/money'
-import { Button, Card, SkeletonCard } from '@/app/components/ui'
+import { Button, Card, Skeleton } from '@/app/components/ui'
 import { DonutChart } from '@/app/components/ui/charts/DonutChart'
 import { LineChartCard } from '@/app/components/ui/charts/LineChartCard'
 import styles from './AgentDashboardClient.module.css'
@@ -119,12 +119,7 @@ export default function AgentDashboardClient() {
         )}
 
         {loading || !stats ? (
-          <div aria-label="Chargement du tableau de bord" className="lb-dashboard-card-grid">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </div>
+          <AgentDashboardSkeleton />
         ) : (
           <>
             <section className={styles.prioritySection} aria-labelledby="priority-title">
@@ -222,5 +217,61 @@ export default function AgentDashboardClient() {
         )}
       </div>
     </main>
+  )
+}
+
+function AgentDashboardSkeleton() {
+  return (
+    <div aria-label="Chargement du tableau de bord" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <section className={styles.prioritySection}>
+        <div className={styles.sectionHeading}>
+          <div><Skeleton width={32} height={12} /><Skeleton width={210} height={24} style={{ marginTop: 8 }} /></div>
+          <Skeleton width={260} height={12} />
+        </div>
+        <div className={styles.actionGrid}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className={`${styles.action}${i === 0 ? ` ${styles.actionPrimary}` : ''}`}>
+              <Skeleton width={44} height={44} radius={14} style={{ flexShrink: 0 }} />
+              <span className={styles.actionBody}>
+                <Skeleton width={i === 0 ? 58 : 96} height={28} />
+                <Skeleton width={150} height={13} />
+                <Skeleton width={190} height={11} />
+              </span>
+              <Skeleton width={19} height={19} radius={9} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.pulseSection}>
+        <div className={styles.sectionHeading}>
+          <div><Skeleton width={32} height={12} /><Skeleton width={150} height={24} style={{ marginTop: 8 }} /></div>
+          <Skeleton width={210} height={12} />
+        </div>
+        <div className={styles.pulseRail}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className={styles.pulseItem}>
+              <Skeleton width={38} height={38} radius={13} />
+              <div style={{ minWidth: 0, flex: 1 }}><Skeleton width={52 + i * 10} height={20} /><Skeleton width="70%" height={11} style={{ marginTop: 6 }} /></div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.overviewSection}>
+        <div className={styles.bentoGrid}>
+          <Card className={styles.revenueCard}><Skeleton width={160} height={14} /><Skeleton width="68%" height={42} style={{ marginTop: 18 }} /><Skeleton width="100%" height={72} radius={16} style={{ marginTop: 18 }} /></Card>
+          <Card className={styles.volumeCard}><Skeleton width={145} height={14} /><Skeleton width="72%" height={34} style={{ marginTop: 18 }} /><Skeleton width="100%" height={58} radius={14} style={{ marginTop: 18 }} /></Card>
+          <Card className={styles.ecosystemCard}><Skeleton width={120} height={14} /><Skeleton width="58%" height={36} style={{ marginTop: 18 }} /><Skeleton width="100%" height={118} radius={16} style={{ marginTop: 18 }} /></Card>
+        </div>
+      </section>
+
+      <section className={styles.insightsSection}>
+        <div className={styles.insightsGrid}>
+          <Card className={styles.chartCard}><Skeleton width={190} height={18} /><Skeleton width="100%" height={180} radius={18} style={{ marginTop: 18 }} /></Card>
+          <Card className={styles.chartCard}><Skeleton width={210} height={18} /><Skeleton width={160} height={160} radius={80} style={{ margin: '18px auto 0' }} /></Card>
+        </div>
+      </section>
+    </div>
   )
 }

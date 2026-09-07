@@ -1569,7 +1569,7 @@ function PayoutSection({
               Encaissement FedaPay Marketplace
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: 'var(--font-size-footnote)', color: 'var(--text-muted)' }}>
-              Pour le lancement Bénin, chaque achat FCFA est réparti au paiement via FedaPay. Aucun Stripe Connect ni versement différé n'est proposé dans cet espace.
+              Pour le lancement Bénin, chaque achat FCFA est réparti au paiement via FedaPay. Aucun Stripe Connect ni versement différé n&apos;est proposé dans cet espace.
             </p>
           </div>
         </div>
@@ -1581,7 +1581,7 @@ function PayoutSection({
               {fmtMoney(status.amountDueXOF, 'XOF')}
             </p>
             <p style={{ margin: '6px 0 0', fontSize: 'var(--font-size-caption-lg)', color: 'var(--text-muted)' }}>
-              Ce montant est affiché pour contrôle interne si un ancien flux n'a pas été rapproché ; il ne déclenche pas une demande de reversement organisateur.
+              Ce montant est affiché pour contrôle interne si un ancien flux n&apos;a pas été rapproché ; il ne déclenche pas une demande de reversement organisateur.
             </p>
           </div>
         </div>

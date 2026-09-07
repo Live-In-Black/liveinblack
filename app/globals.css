@@ -431,6 +431,63 @@ textarea::placeholder {
   letter-spacing: 0;
 }
 
+/* Les mascottes sont des PNG opaques : ce masque organique évite que leur
+   canevas carré reste visible dans les états flottants. */
+.lb-mascot-image {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  overflow: visible;
+  border-radius: 53% 47% 62% 38% / 42% 56% 44% 58%;
+}
+
+.lb-mascot-image::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 8% 3% 5%;
+  border-radius: 47% 53% 39% 61% / 58% 42% 58% 42%;
+  background: var(--primary-a08);
+  transform: rotate(-7deg);
+}
+
+.lb-mascot-image img {
+  display: block;
+  border-radius: inherit;
+  filter: drop-shadow(0 18px 24px rgba(var(--black-rgb), .24));
+}
+
+.lb-mascot-image[data-mascot-mood='confused'],
+.lb-mascot-image[data-mascot-mood='error'] {
+  border-radius: 41% 59% 52% 48% / 56% 43% 57% 44%;
+}
+
+.lb-mascot-image[data-mascot-mood='success'],
+.lb-mascot-image[data-mascot-mood='happy'] {
+  border-radius: 58% 42% 45% 55% / 46% 60% 40% 54%;
+}
+
+.lb-mascot-image[data-mascot-mood='message'],
+.lb-mascot-image[data-mascot-mood='search'],
+.lb-mascot-image[data-mascot-mood='sad'],
+.lb-mascot-image[data-mascot-mood='sleeping'] {
+  border-radius: 48% 52% 61% 39% / 39% 57% 43% 61%;
+}
+
+/* Même traitement pour les illustrations publiques autonomes. Les sélecteurs
+   excluent volontairement les avatars, logos et images de couverture. */
+.lb-public-layout :where(.visual, .roleVisual, .emptyVisual, .emptyStateImage),
+.lb-public-layout .lb-editorial-card__media {
+  border-radius: 57% 43% 49% 51% / 46% 58% 42% 54%;
+  overflow: hidden;
+}
+
+.lb-public-layout :where(.visual, .roleVisual, .emptyVisual, .emptyStateImage)::after,
+.lb-public-layout .lb-editorial-card__media::after {
+  border-radius: inherit;
+}
+
 /* Autofill browser overlay fix to maintain dark theme background & contrast */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
