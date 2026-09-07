@@ -1,14 +1,14 @@
 // Visuels de secours réels libres de droits (Unsplash) pour les événements sans photo.
 // Le choix reste déterministe afin qu'une même fiche garde la même identité.
 const NIGHTLIFE_PHOTOS = [
-  'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1200&q=80',
+  '/images/live-in-black/night-benin/night-benin-hero.png',
+  '/images/live-in-black/night-benin/night-benin-concert.png',
+  '/images/live-in-black/night-benin/night-benin-dancefloor.png',
+  '/images/live-in-black/night-benin/night-benin-rooftop.png',
+  '/images/live-in-black/night-benin/night-benin-lounge.png',
+  '/images/live-in-black/night-benin/night-benin-organizer.png',
+  '/images/live-in-black/night-benin/night-benin-dj.png',
+  '/images/live-in-black/night-benin/night-benin-rooftop.png',
 ]
 
 // Identifiants d'images distantes réellement cassées ou inaccessibles.

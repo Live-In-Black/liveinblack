@@ -211,7 +211,7 @@ export default async function EventsPage({
           <div className={styles.emptyState}>
             <div className={styles.emptyVisual} aria-hidden="true">
               <Image
-                src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80"
+                src="/images/live-in-black/night-benin/night-benin-hero.png"
                 alt=""
                 fill
                 className={styles.emptyImage}

@@ -12,6 +12,12 @@ export function isFedapayConfigured(): boolean {
   return Boolean(process.env.FEDAPAY_SECRET_KEY)
 }
 
+export function isFedapaySandboxMode(): boolean {
+  const key = process.env.FEDAPAY_SECRET_KEY || ''
+  const base = process.env.FEDAPAY_API_BASE || ''
+  return key.toLowerCase().includes('sandbox') || base.toLowerCase().includes('sandbox')
+}
+
 export function isApprovedTransactionEvent(name: string, entity: { status?: string } | null | undefined): boolean {
   return name === 'transaction.approved' || (name === 'transaction.updated' && entity?.status === 'approved')
 }

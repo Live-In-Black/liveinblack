@@ -131,8 +131,13 @@
     {
       "id": "BEN-10",
       "requirement": "assurer des cartes de lieu utilisables et des liens d'itinéraire pertinents sur web, Android et iOS, avec repli en cas d'échec.",
-      "status": "unverified",
-      "evidence": []
+      "status": "partially_verified_locally",
+      "evidence": [
+        "Lot 78 web : EventVenueMap utilise un embed Google Maps par adresse, conserve les liens Google Maps/OpenStreetMap et ajoute un repli explicite ; CSP frame-src autorise google.com/openstreetmap.org ; TypeScript et build Next passent."
+      ],
+      "remaining": [
+        "Recette navigateur sur production et parité Android/iOS à vérifier."
+      ]
     },
     {
       "id": "CPT-01",
@@ -1340,12 +1345,12 @@
   "lastProgress": {
     "date": "2026-09-07",
     "classification": "progress",
-    "lot": "77 : checkout gratuit public ferme pour la V1 payante",
-    "unitTests": "Suite complete web 768 tests / 143 fichiers passee au lot 77 ; test cible gratuit/revente/webhook 11 tests / 3 fichiers passe au lot 77 ; test cible applicationValidation 8/8 passe au lot 75 ; TypeScript passe au lot 77. Test cible eventWizardUtils 5/5 passe au lot 67. Lot 62 : test unitaire boost 7/7 passe. Lot 61 : tests cibles boost/money/gaps/payout utils 21 tests / 4 fichiers passent",
+    "lot": "79 : checkout FedaPay sandbox avant compte organisateur live",
+    "unitTests": "Suite complete web 768 tests / 143 fichiers passee au lot 77 ; test cible fedapayClient/fedapayMarketplace 11/11 passe au lot 79 ; test cible gratuit/revente/webhook 11 tests / 3 fichiers passe au lot 77 ; test cible applicationValidation 8/8 passe au lot 75 ; TypeScript passe au lot 79. Test cible eventWizardUtils 5/5 passe au lot 67. Lot 62 : test unitaire boost 7/7 passe. Lot 61 : tests cibles boost/money/gaps/payout utils 21 tests / 4 fichiers passent",
     "integrationTests": "Lot 75 : applications.integration.test.ts et applicationsPrestataire.integration.test.ts adaptes pour ne plus proteger SIRET/Lome/Togo ni exiger business_doc/insurance/exploitation_proof, mais non executes car les integrations sont exclues sans run Mongo dedie. Lot 71 : agentDashboard.integration.test.ts et agentBoosts.integration.test.ts adaptes pour separer le revenu historique EUR du revenu XOF et relocaliser les boosts positifs Benin/FCFA, mais non executes car les integrations sont exclues par la configuration de test sans run Mongo dedie. Lot 65 : agentDeletion.integration.test.ts adapte pour verifier la purge de prestataireSubRail/stripeSubscriptionId/stripeCustomerId apres annulation d'un ancien abonnement Stripe, mais non execute car l'approbation d'acces Mongo local a ete rejetee au tour precedent. Lot 64 : providerSubscriptions.integration.test.ts adapte pour prouver Stripe refuse/no-op et FedaPay force Benin/XOF, mais non execute pour la meme raison. Lot 62 : test MongoDB de finalisation boost FedaPay ajoute mais non execute pour la meme raison. Lot 61 : organizerPayouts passe 6 tests MongoDB avec refus Stripe Connect et demande manuelle. Lot 59 : organizerEventLifecycle passe 16 tests et resale.integration est skippe comme historique avec 13 tests exclus",
     "browserTests": "Pas de recette navigateur complete du lot 59. Seeded E2E mise a jour au lot 57 pour attendre un refus V1 mais non executee",
     "typecheck": "passed",
-    "build": "Build Next 16.3.3 webpack passe au lot 77 apres fermeture du checkout gratuit public et suppression des routes de revente : 183 pages statiques. Lot 60 regenere le catalogue e-mails. Dernier export Expo local au lot 56 dans /tmp/lib-mobile-v1-cash-recovery. Aucune app signee ni publication store",
+    "build": "Build Next 16.3.3 webpack passe au lot 79 apres activation du fallback sandbox FedaPay pour les checkouts billet/blocage et la publication : 183 pages statiques. Lot 78 corrige la carte de lieu et CSP frame-src. Lot 77 ferme le checkout gratuit public et supprime les routes de revente. Lot 60 regenere le catalogue e-mails. Dernier export Expo local au lot 56 dans /tmp/lib-mobile-v1-cash-recovery. Aucune app signee ni publication store",
     "lint": "Dernier ESLint cible et git diff --check documentes au lot 54. Lot 55 : pas de nouvelle passe lint dediee",
     "production": "not_deployed",
     "previousLots": "Lots 1 a 74 documentes dans docs/IMPLEMENTATION_LIB_V1_SUIVI.md ; le registre complet reste a reauditer exigence par exigence.",
@@ -1354,9 +1359,9 @@
     "nextCriticalWork": [
       "Consommations : auditer gardes paid/revoked de materialisation/remise, stocks et statistiques ; ecrans web/natif convertis et ajout ferme, recette appareil encore requise.",
       "Notifications : recette deployee, effets post-commit/retries client et seuils definitifs ; message/conversation/reveil atomiques pour envoi standard, transferts et sondages, rappel attente OU accumulation et presence web/native implementes localement. Le catalogue e-mails actif ne genere plus les quatre scenarios de revente au lot 60.",
-      "R58 et FedaPay : recette appareil/navigateur de la reprise cash, destinations verifiees, migration cles/references historiques, paiement de bout en bout et preuve des remboursements.",
-      "Paiements : ancien Stripe Connect organisateur, demande manuelle, checkout public Stripe, webhook Stripe actif, solde de blocage Stripe et abonnement prestataire Stripe fermes aux lots 61, 63 et 64 ; suppression de compte nettoie les anciens identifiants d'abonnement externe au lot 65 ; fallbacks EUR retires des paiements actifs au lot 66 ; checkout boost FedaPay cable au lot 62 ; exposition UI revente retiree des surfaces client/organisateur au lot 69 ; centre ops aligne sur revente exclue au lot 70 ; dashboard/boosts agent FCFA au lot 71 ; panneau paiements agent sans actions/libelles EUR/Stripe visibles au lot 72 ; webhook FedaPay et services internes revente neutralises au lot 76 ; checkout gratuit public ferme au lot 77, mais integrations Mongo boost/subscription/deletion/orders/seat-holds et paiement/webhook FedaPay sandbox restent a verifier.",
-      "Benin : donnees reelles, prix, filtres, cartes et articles ; telephones normalises au profil et aux trois inscriptions ; devise par defaut XOF au lot 61 ; creation/edition evenement forcees Benin/XOF au lot 67 ; seeds E2E/dev/bulk/blog relocalises Benin/FCFA au lot 68 ; dashboard/boosts agent affiches en FCFA au lot 71 ; annuaires publics sans selecteur multi-region au lot 73 ; categories blog limitees au lancement Benin au lot 74 ; dossiers prestataires simplifies au lot 75 ; migration historique et recette a traiter.",
+      "R58 et FedaPay : recette appareil/navigateur de la reprise cash, destinations verifiees, migration cles/references historiques, paiement de bout en bout et preuve des remboursements. Le fallback sandbox FedaPay des checkouts web est implemente au lot 79, mais doit etre deployee avec les variables sandbox et teste via FedaPay.",
+      "Paiements : ancien Stripe Connect organisateur, demande manuelle, checkout public Stripe, webhook Stripe actif, solde de blocage Stripe et abonnement prestataire Stripe fermes aux lots 61, 63 et 64 ; suppression de compte nettoie les anciens identifiants d'abonnement externe au lot 65 ; fallbacks EUR retires des paiements actifs au lot 66 ; checkout boost FedaPay cable au lot 62 ; exposition UI revente retiree des surfaces client/organisateur au lot 69 ; centre ops aligne sur revente exclue au lot 70 ; dashboard/boosts agent FCFA au lot 71 ; panneau paiements agent sans actions/libelles EUR/Stripe visibles au lot 72 ; webhook FedaPay et services internes revente neutralises au lot 76 ; checkout gratuit public ferme au lot 77 ; fallback sandbox FedaPay web ajoute au lot 79, mais integrations Mongo boost/subscription/deletion/orders/seat-holds et paiement/webhook FedaPay sandbox reels restent a verifier.",
+      "Benin : donnees reelles, prix, filtres et articles ; telephones normalises au profil et aux trois inscriptions ; devise par defaut XOF au lot 61 ; creation/edition evenement forcees Benin/XOF au lot 67 ; seeds E2E/dev/bulk/blog relocalises Benin/FCFA au lot 68 ; dashboard/boosts agent affiches en FCFA au lot 71 ; annuaires publics sans selecteur multi-region au lot 73 ; categories blog limitees au lancement Benin au lot 74 ; dossiers prestataires simplifies au lot 75 ; carte web de lieu corrigee au lot 78 ; migration historique et recette a traiter.",
       "Mobile : poursuivre la parite et la recette sur appareils ; bundles locaux ne sont pas des applications signees publiees.",
       "Comptes : migration des anciens profils sans perte et recette exhaustive des permissions."
     ]

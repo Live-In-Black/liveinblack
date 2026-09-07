@@ -1,7 +1,7 @@
 // Port du sous-ensemble signature/webhook de scripts/fedapay.test.mjs
 import { describe, it, expect } from 'vitest'
 import crypto from 'node:crypto'
-import { verifyWebhookSignature, isApprovedTransactionEvent, transactionAmountMatches, isFedapayConfigured } from '../payments/fedapayClient'
+import { verifyWebhookSignature, isApprovedTransactionEvent, transactionAmountMatches, isFedapayConfigured, isFedapaySandboxMode } from '../payments/fedapayClient'
 
 function signedHeader(payload: string, secret: string, timestamp = Math.floor(Date.now() / 1000)): string {
   const sig = crypto.createHmac('sha256', secret).update(`${timestamp}.${payload}`, 'utf8').digest('hex')
@@ -61,5 +61,24 @@ describe('isFedapayConfigured', () => {
     process.env.FEDAPAY_SECRET_KEY = 'sandbox-key'
     expect(isFedapayConfigured()).toBe(true)
     process.env.FEDAPAY_SECRET_KEY = previous
+  })
+
+  it('détecte le mode sandbox depuis la clé ou la base API', () => {
+    const previousKey = process.env.FEDAPAY_SECRET_KEY
+    const previousBase = process.env.FEDAPAY_API_BASE
+
+    process.env.FEDAPAY_SECRET_KEY = 'sk_sandbox_demo'
+    delete process.env.FEDAPAY_API_BASE
+    expect(isFedapaySandboxMode()).toBe(true)
+
+    process.env.FEDAPAY_SECRET_KEY = 'sk_live_demo'
+    process.env.FEDAPAY_API_BASE = 'https://sandbox-api.fedapay.com/v1'
+    expect(isFedapaySandboxMode()).toBe(true)
+
+    process.env.FEDAPAY_API_BASE = 'https://api.fedapay.com/v1'
+    expect(isFedapaySandboxMode()).toBe(false)
+
+    process.env.FEDAPAY_SECRET_KEY = previousKey
+    process.env.FEDAPAY_API_BASE = previousBase
   })
 })

@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react'
 import styles from './home.module.css'
 
 const SLIDES = [
-  'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1920&q=80',
-  'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1920&q=80',
-  'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=1920&q=80',
+  '/images/live-in-black/night-benin/night-benin-hero.png',
+  '/images/live-in-black/night-benin/night-benin-concert.png',
+  '/images/live-in-black/night-benin/night-benin-rooftop.png',
 ]
 
 export default function HomeHeroCarousel() {

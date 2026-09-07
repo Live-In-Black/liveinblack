@@ -6,8 +6,8 @@ import { completeSeatHold, completeSeatHoldOrder } from '@/lib/server/events/sea
 import { releaseOrder } from '@/lib/server/events/orders'
 import Order from '@/lib/models/Order'
 import { fulfillOrder } from '@/lib/server/payments/fulfillOrder'
-import { createTransaction, createToken, isFedapayConfigured } from '@/lib/server/payments/fedapayClient'
-import { fedapayMarketplaceCommissions } from '@/lib/server/payments/fedapayMarketplace'
+import { createTransaction, createToken, isFedapayConfigured, isFedapaySandboxMode } from '@/lib/server/payments/fedapayClient'
+import { fedapayMarketplaceCommissions, fedapaySandboxSubAccountReference } from '@/lib/server/payments/fedapayMarketplace'
 
 // Paiement du SOLDE d'un blocage de place actif — rail FedaPay/XOF.
 const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
@@ -35,7 +35,8 @@ export async function POST(req: Request) {
     await releaseOrder(orderId, session.user.id)
     return NextResponse.json({ error: 'amount_below_minimum' }, { status: 400 })
   }
-  if (order.sellerUid && !order.fedapaySubAccountReference && process.env.NODE_ENV === 'production') {
+  const marketplaceSubAccountReference = order.fedapaySubAccountReference || (isFedapaySandboxMode() ? fedapaySandboxSubAccountReference() : null)
+  if (order.sellerUid && !marketplaceSubAccountReference && process.env.NODE_ENV === 'production' && !isFedapaySandboxMode()) {
     await releaseOrder(orderId, session.user.id)
     return NextResponse.json({ error: 'fedapay_marketplace_account_required' }, { status: 409 })
   }
@@ -69,7 +70,7 @@ export async function POST(req: Request) {
       customer: session.user.email ? { email: session.user.email } : null,
       metadata: { orderId },
       reference: orderId,
-      subAccountsCommissions: fedapayMarketplaceCommissions(order.fedapaySubAccountReference, order.unitPriceMinor),
+      subAccountsCommissions: fedapayMarketplaceCommissions(marketplaceSubAccountReference, order.unitPriceMinor),
     })
     const tok = await createToken(txn.id)
 

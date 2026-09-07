@@ -731,3 +731,24 @@ Migration des anciens comptes multi-profils sans perte, arbitrages cash/OTP/acom
 - Les documents fonctionnels et architecture audites ne presentent plus Stripe, revente ou billet gratuit comme parcours actif de lancement ; les mentions restantes qualifient ces sujets comme historiques, exclus V1 ou lies aux guestlists.
 - Tests et controles : test cible `freeCheckoutDisabledV1` + revente/webhook 11 tests / 3 fichiers passe ; TypeScript web passe ; suite unitaire complete web 768 tests / 143 fichiers passe ; build Next 16.3.3 webpack passe avec 183 pages statiques.
 - Limites : les anciens rails `free` restent dans des modeles/services pour les guestlists, ventes agent cash et donnees historiques. Ce lot ferme le checkout public gratuit, pas toute representation interne d'une invitation sans paiement.
+
+## Lot 78 : carte de lieu evenement fonctionnelle
+
+- Ecart traite : la fiche evenement affichait une zone de carte cassee sur le bloc "Lieu" malgre une adresse Benin disponible, comme sur l'evenement `TECHNO PARTY Oxygene` a Parakou.
+- La carte integree n'utilise plus l'URL OpenStreetMap `export/embed.html?query=...`, qui ne fournit pas un embed fiable par recherche d'adresse. L'iframe utilise maintenant l'embed Google Maps par adresse (`q=...&output=embed`), adapte aux lieux sans coordonnees stockees.
+- Les liens d'itineraire restent disponibles vers Google Maps et OpenStreetMap, avec l'adresse encodee depuis les champs `location`, `city` et `region`.
+- Un repli explicite "Carte indisponible" est conserve si l'iframe ne charge pas, afin de ne plus laisser une icone de ressource cassee sans consigne utilisateur.
+- La CSP autorise maintenant explicitement les frames `https://www.google.com` et `https://www.openstreetmap.org`; auparavant `default-src 'self'` bloquait toute carte externe integree.
+- Tests et controles : TypeScript web passe ; build Next 16.3.3 webpack passe avec 183 pages statiques.
+- Limites : la verification a ete faite localement par compilation/build. Une recette navigateur sur le domaine de production reste necessaire pour confirmer le rendu avec les politiques reseau du navigateur et les donnees reelles deployees.
+
+## Lot 79 : checkout FedaPay sandbox avant compte organisateur live
+
+- Ecart traite : en ligne, un checkout billet pouvait afficher "Le paiement de cet evenement n'est pas encore configure" parce que l'organisateur n'avait pas encore sa reference de sous-compte FedaPay, alors que la recette doit d'abord passer par le compte sandbox.
+- Le client FedaPay detecte maintenant explicitement le mode sandbox depuis `FEDAPAY_SECRET_KEY` ou `FEDAPAY_API_BASE` quand ces valeurs contiennent `sandbox`.
+- Les checkouts FedaPay billet, acompte de blocage et solde de blocage utilisent la reference organisateur si elle existe, sinon la reference `FEDAPAY_SANDBOX_SUB_ACCOUNT_REFERENCE` lorsque le mode sandbox est actif.
+- En mode sandbox, l'absence de sous-compte organisateur reel ne bloque plus le checkout. En mode live production, le blocage `fedapay_marketplace_account_required` reste actif pour eviter d'encaisser de l'argent reel sans repartition organisateur.
+- La creation d'evenement applique le meme principe : le garde-fou Mobile Money/sous-compte reste exige hors sandbox, mais ne bloque plus une recette sandbox.
+- `.env.example` documente `FEDAPAY_SANDBOX_SUB_ACCOUNT_REFERENCE`.
+- Tests et controles : TypeScript web passe ; tests cibles `fedapayClient` et `fedapayMarketplace` 11/11 passent ; build Next 16.3.3 webpack passe avec 183 pages statiques.
+- Limites : il faut deployer ces variables dans l'environnement en ligne de test pour que le comportement change reellement. Sans cle sandbox FedaPay ou sans `FEDAPAY_API_BASE` sandbox, le site se comporte comme du live et garde le blocage.

@@ -210,7 +210,7 @@ export default async function PublicPrestatairesPage({
           <div className={styles.emptyState}>
             <div className={styles.emptyVisual} aria-hidden="true">
               <Image
-                src="https://images.unsplash.com/photo-1598387993441-a364f854c3e1?auto=format&fit=crop&w=1200&q=80"
+                src="/images/live-in-black/night-benin/night-benin-organizer.png"
                 alt=""
                 fill
                 className={styles.emptyImage}

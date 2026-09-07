@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MapPin, ExternalLink, Maximize2 } from 'lucide-react'
 import SlideOverModal from '@/app/components/ui/SlideOverModal'
 import Button from '@/app/components/ui/Button'
@@ -8,14 +8,33 @@ import Button from '@/app/components/ui/Button'
 export default function EventVenueMap({ address }: { address: string }) {
   const [openModal, setOpenModal] = useState(false)
   const [mapFailed, setMapFailed] = useState(false)
+  const fallbackTimerRef = useRef<number | null>(null)
   const encoded = encodeURIComponent(address)
-  const osmEmbedSrc = `https://www.openstreetmap.org/export/embed.html?layer=mapnik&query=${encoded}`
+  const googleEmbedSrc = `https://www.google.com/maps?q=${encoded}&output=embed`
   const googleMapsHref = `https://www.google.com/maps/search/?api=1&query=${encoded}`
   const osmMapsHref = `https://www.openstreetmap.org/search?query=${encoded}`
 
+  useEffect(() => {
+    setMapFailed(false)
+
+    fallbackTimerRef.current = window.setTimeout(() => {
+      setMapFailed(true)
+    }, 8_000)
+
+    return () => {
+      if (fallbackTimerRef.current) window.clearTimeout(fallbackTimerRef.current)
+      fallbackTimerRef.current = null
+    }
+  }, [address])
+
+  const handleMapLoaded = () => {
+    if (fallbackTimerRef.current) window.clearTimeout(fallbackTimerRef.current)
+    fallbackTimerRef.current = null
+  }
+
   return (
     <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
-      {/* Carte OpenStreetMap intégrée directement */}
+      {/* Carte intégrée par adresse, avec repli explicite si le fournisseur ne répond pas. */}
       <div
         style={{
           position: 'relative',
@@ -36,12 +55,13 @@ export default function EventVenueMap({ address }: { address: string }) {
           </div>
         ) : (
           <iframe
-            title={`Carte OpenStreetMap — ${address}`}
-            src={osmEmbedSrc}
+            title={`Carte du lieu — ${address}`}
+            src={googleEmbedSrc}
             style={{ border: 0, width: '100%', height: '100%' }}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             onError={() => setMapFailed(true)}
+            onLoad={handleMapLoaded}
           />
         )}
 
@@ -124,7 +144,7 @@ export default function EventVenueMap({ address }: { address: string }) {
 
       {/* Modal Plein écran */}
       {openModal && (
-        <SlideOverModal onClose={() => setOpenModal(false)} ariaLabel="Carte interactive OpenStreetMap" contentStyle={{ padding: 0, overflow: 'hidden' }}>
+        <SlideOverModal onClose={() => setOpenModal(false)} ariaLabel="Carte interactive du lieu" contentStyle={{ padding: 0, overflow: 'hidden' }}>
           <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <p style={{ margin: 0, fontSize: 'var(--font-size-body)', fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{address}</p>
           </div>
@@ -136,12 +156,13 @@ export default function EventVenueMap({ address }: { address: string }) {
               </div>
             ) : (
               <iframe
-                title={`Carte Plein Écran — ${address}`}
-                src={osmEmbedSrc}
+                title={`Carte plein écran — ${address}`}
+                src={googleEmbedSrc}
                 style={{ border: 0, width: '100%', height: '100%' }}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 onError={() => setMapFailed(true)}
+                onLoad={handleMapLoaded}
               />
             )}
           </div>
