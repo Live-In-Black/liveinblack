@@ -159,7 +159,7 @@ export default function OrganizerFollowButtonClient({
         </Modal>
       )}
 
-      {error && <p style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, fontSize: 'var(--font-size-caption-lg)', color: 'var(--pink)', whiteSpace: 'nowrap' }}>{error}</p>}
+      {error && <p className={styles.errorMessage} role="status">{error}</p>}
     </div>
   )
 }

@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { isEventEnded } from '@/lib/shared/event-time'
 import { fmtMoney } from '@/lib/shared/money'
 import EventInterestButtonClient from '@/app/components/features/events/EventInterestButtonClient'
-import { ArrowLeft } from 'lucide-react'
 import { ActionLink, Card, EmptyState, Pagination, pagedSlice } from '@/app/components/ui'
 import { placeholderPhotoUrl } from '@/lib/shared/placeholderImage'
 import styles from './InterestedEventsClient.module.css'
@@ -67,19 +66,15 @@ export default function InterestedEventsClient({ initialItems }: { initialItems:
 
   return (
     <main className="lb-dashboard-page">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <Link href="/profile" style={{ minHeight: 40, display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 'var(--font-size-callout)', fontWeight: 700, color: 'var(--text-muted)', textDecoration: 'none' }}>
-            <ArrowLeft size={17} aria-hidden="true" />
-            Profil
-          </Link>
+      <div className={styles.pageContent}>
+        <div className={styles.headerRow}>
+          <header className={styles.header}>
+            <p>Ta sélection</p>
+            <h1>Mes favoris</h1>
+            <span>Retrouve les événements sauvegardés et prépare ta prochaine sortie.</span>
+          </header>
           <ActionLink href="/events">Explorer les événements</ActionLink>
         </div>
-
-        <header>
-          <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(24px,3vw,32px)', fontWeight: 720, letterSpacing: '-.045em' }}>Mes favoris</h1>
-          <p style={{ maxWidth: 620, margin: '7px 0 0', color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote-lg)', lineHeight: 1.4 }}>Retrouve les événements sauvegardés et prépare ta prochaine sortie.</p>
-        </header>
 
         {items.length === 0 ? (
           <EmptyState
@@ -122,10 +117,10 @@ export default function InterestedEventsClient({ initialItems }: { initialItems:
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <h2 style={{ fontSize: 'var(--font-size-headline-lg)', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '-.01em', margin: '0 0 12px' }}>{label}</h2>
+    <section className={styles.section}>
+      <h2>{label}</h2>
       {children}
-    </div>
+    </section>
   )
 }
 
@@ -148,7 +143,7 @@ function InterestCard({ item, inactive, onRemoved }: { item: EventInterestItemVi
   const card = (
     <Card
       className={ev ? 'lb-card' : undefined}
-      style={{ padding: 0, overflow: 'hidden', opacity: inactive ? 0.72 : 1, cursor: ev ? 'pointer' : 'default', position: 'relative', borderRadius: 8 }}
+      style={{ padding: 0, overflow: 'hidden', opacity: inactive ? 0.72 : 1, cursor: ev ? 'pointer' : 'default', position: 'relative' }}
     >
       <div className={styles.image} style={{ background: 'var(--surface-3)' }}>
         {ev && (

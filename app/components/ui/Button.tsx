@@ -102,6 +102,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
         ...(isLink ? {} : SIZE_STYLES[size]),
         ...variantStyle(variant, isDisabled),
         ...style,
+        ...(!isLink ? { borderRadius: 'var(--radius-control)' } : {}),
       }}
     >
       {loading ? <Spinner text={loadingText} /> : (

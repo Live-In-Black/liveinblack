@@ -32,6 +32,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(function Card({ children, sty
         boxShadow: 'none',
         overflow: 'hidden',
         ...style,
+        borderRadius: 'var(--radius-card)',
       }}
     >
       {children}

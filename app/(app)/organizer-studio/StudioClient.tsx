@@ -296,11 +296,11 @@ export default function StudioClient({
       <style>{`
         .studio-root {
           width: 100%;
-          max-width: 1140px;
+          max-width: none;
           margin: 0 auto;
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 14px;
         }
         .studio-header {
           display: flex;
@@ -311,23 +311,27 @@ export default function StudioClient({
           padding: 6px 0 2px;
         }
         .studio-tabs-bar {
-          display: inline-flex;
+          display: flex;
           align-items: center;
-          background: var(--surface);
-          padding: 4px;
-          border-radius: 999px;
+          width: 100%;
+          background: var(--surface-2);
+          padding: 3px;
+          border-radius: var(--radius-control);
           border: 1px solid var(--border);
-          gap: 4px;
+          gap: 3px;
         }
         .studio-tab-btn {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 8px 18px;
-          border-radius: 999px;
+          flex: 1;
+          justify-content: center;
+          min-height: 40px;
+          padding: 8px 12px;
+          border-radius: calc(var(--radius-control) - 3px);
           border: 0;
           font-size: var(--font-size-body-sm);
-          font-weight: 700;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
           color: var(--text-muted);
@@ -336,26 +340,27 @@ export default function StudioClient({
         .studio-tab-btn.active {
           background: var(--primary);
           color: var(--primary-ink);
-          box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.35);
+          box-shadow: none;
         }
         .studio-stats-grid {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 12px;
+          gap: 10px;
         }
         .studio-stat-card {
-          padding: 16px 18px;
-          border-radius: 16px;
-          background: var(--surface);
+          min-height: 78px;
+          padding: 14px 16px;
+          border-radius: var(--radius-card);
+          background: var(--card-bg);
           border: 1px solid var(--border);
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 12px;
         }
         .studio-grid-2col {
           display: grid;
-          grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.95fr);
-          gap: 16px;
+          grid-template-columns: minmax(0, 1.55fr) minmax(280px, .75fr);
+          gap: 12px;
           align-items: start;
         }
         .studio-banner-hero {
@@ -379,10 +384,22 @@ export default function StudioClient({
           box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
           z-index: 2;
         }
+        .studio-root .lb-card {
+          border-radius: var(--radius-card) !important;
+          border-color: var(--border) !important;
+          background: var(--card-bg) !important;
+          box-shadow: 0 10px 26px rgba(var(--black-rgb), .10) !important;
+        }
+        .studio-root :is(h2, h3, h4) {
+          font-weight: 500 !important;
+          letter-spacing: -.015em !important;
+        }
         @media (max-width: 900px) {
           .studio-stats-grid { grid-template-columns: 1fr; }
           .studio-grid-2col { grid-template-columns: 1fr; }
           .studio-banner-hero { height: 150px; }
+          .studio-tabs-bar { overflow-x: auto; justify-content: flex-start; }
+          .studio-tab-btn { flex: 0 0 auto; white-space: nowrap; }
         }
       `}</style>
 
@@ -391,7 +408,7 @@ export default function StudioClient({
         <header className="studio-header">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(24px,2.8vw,32px)', fontWeight: 800, letterSpacing: '-.03em' }}>
+              <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(24px,2.8vw,32px)', fontWeight: 500, letterSpacing: '-.03em' }}>
                 Studio Organisateur
               </h1>
               <span
@@ -495,7 +512,7 @@ export default function StudioClient({
         )}
 
         {/* Barres d'onglets principales */}
-        <div style={{ display: 'flex', justifyContent: 'flex-start', borderBottom: '1px solid var(--border)', paddingBottom: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
           <div className="studio-tabs-bar" role="tablist" aria-label="Sections du studio">
             <button
               type="button"
@@ -550,7 +567,7 @@ export default function StudioClient({
                   <Users size={22} />
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontSize: 'var(--font-size-title-4)', fontWeight: 800, color: 'var(--text)' }}>{profile.followersCount}</p>
+                  <p style={{ margin: 0, fontSize: 'var(--font-size-title-4)', fontWeight: 600, color: 'var(--text)' }}>{profile.followersCount}</p>
                   <p style={{ margin: 0, fontSize: 'var(--font-size-caption)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em' }}>Abonnés fidèles</p>
                 </div>
               </div>
@@ -560,7 +577,7 @@ export default function StudioClient({
                   <Eye size={22} />
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontSize: 'var(--font-size-title-4)', fontWeight: 800, color: 'var(--text)' }}>{profile.viewsCount}</p>
+                  <p style={{ margin: 0, fontSize: 'var(--font-size-title-4)', fontWeight: 600, color: 'var(--text)' }}>{profile.viewsCount}</p>
                   <p style={{ margin: 0, fontSize: 'var(--font-size-caption)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em' }}>Vues de la page</p>
                 </div>
               </div>
@@ -570,7 +587,7 @@ export default function StudioClient({
                   <Calendar size={22} />
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontSize: 'var(--font-size-title-4)', fontWeight: 800, color: 'var(--text)' }}>{profile.totalEventsCount}</p>
+                  <p style={{ margin: 0, fontSize: 'var(--font-size-title-4)', fontWeight: 600, color: 'var(--text)' }}>{profile.totalEventsCount}</p>
                   <p style={{ margin: 0, fontSize: 'var(--font-size-caption)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em' }}>Événements créés</p>
                 </div>
               </div>

@@ -244,16 +244,23 @@ export default async function AccueilPage() {
         )}
 
         {session?.user && needsPreferences && (
-          <section style={{ maxWidth: 860, margin: '38px auto 0', padding: '0 22px' }}>
-            <Card
-              accent="var(--primary-a35)"
-              style={{ borderRadius: card.borderRadius, boxShadow: card.boxShadow, padding: '22px 24px', background: 'var(--surface)' }}
-            >
-              <p style={{ margin: 0, color: 'var(--accent-text)', fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.07em' }}>Personnalise ton expérience</p>
-              <h2 style={{ margin: '7px 0 5px', fontSize: 'var(--font-size-headline-lg)' }}>Des soirées vraiment faites pour toi</h2>
-              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote-lg)', lineHeight: 1.55 }}>Indique tes styles, tes villes et ton budget. Cela prend moins d&apos;une minute et reste modifiable.</p>
-              <Link href="/profile" style={{ ...btnPrimary, marginTop: 14, padding: '10px 17px', fontSize: 'var(--font-size-footnote-lg)' }}>Régler mes goûts</Link>
-            </Card>
+          <section className={styles.preferenceSection} aria-labelledby="preference-title">
+            <div className={styles.preferenceCard}>
+              <div className={styles.preferenceContent}>
+                <p className={styles.preferenceKicker}>Personnalise ton expérience</p>
+                <h2 id="preference-title" className={styles.preferenceTitle}>Des soirées vraiment faites pour toi</h2>
+                <p className={styles.preferenceDescription}>Indique ce que tu aimes pour recevoir des suggestions plus pertinentes. Tu pourras modifier tes choix à tout moment.</p>
+                <ul className={styles.preferenceTags} aria-label="Préférences à renseigner">
+                  <li>Styles</li>
+                  <li>Villes</li>
+                  <li>Budget</li>
+                </ul>
+              </div>
+              <div className={styles.preferenceAction}>
+                <span>Moins d&apos;une minute</span>
+                <Link href="/profile">Régler mes goûts <span aria-hidden="true">→</span></Link>
+              </div>
+            </div>
           </section>
         )}
 
@@ -530,4 +537,3 @@ function EmptyCard({ kind, ctaHref, ctaLabel }: { kind: keyof typeof EMPTY_STATE
 
 const card: React.CSSProperties = { maxWidth: 360, width: '100%', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 24, boxShadow: '0 20px 56px rgba(var(--black-rgb), .22)', overflow: 'hidden' }
 const CARD_OVERRIDE: React.CSSProperties = { background: card.background, borderRadius: card.borderRadius, boxShadow: card.boxShadow }
-const btnPrimary: React.CSSProperties = { minHeight: 44, padding: '10px 18px', borderRadius: 'var(--radius-control)', fontSize: 'var(--font-size-headline)', fontWeight: 700, color: 'var(--primary-ink)', background: 'var(--primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }

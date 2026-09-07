@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { listMyStaffedEvents } from '@/lib/server/organizer/staffEvents'
 import { Card, Mascot } from '@/app/components/ui'
+import styles from './my-shifts.module.css'
 
 // Port de src/pages/MesSoireesPage.jsx — point d'entrée du MEMBRE STAFF
 // (serveur / contrôle entrée / DJ) invité sur la soirée d'un autre
@@ -88,7 +89,7 @@ export default async function MesSoireesPage() {
             </p>
           </div>
         ) : (
-          <div className="lb-dashboard-card-grid">
+          <div className={styles.grid}>
             {events.map((ev) => {
               const meta = ROLE_META[ev.role] ? ROLE_META[ev.role] : { ...FALLBACK_ROLE_META, label: ev.role }
               const dateLine = [ev.dateDisplay, ev.city].filter(Boolean).join(' · ')
@@ -97,24 +98,16 @@ export default async function MesSoireesPage() {
                 <Card
                   key={ev.eventId}
                   accent={ev.live ? meta.border : undefined}
-                  style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16, boxShadow: '0 8px 24px var(--scrim-mid)' }}
+                  className={styles.card}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                  <div className={styles.cardHeader}>
                     <div style={{ minWidth: 0 }}>
                       <p
-                        style={{
-                          fontSize: 'var(--font-size-headline-lg)',
-                          fontWeight: 800,
-                          letterSpacing: '-0.4px',
-                          color: 'var(--text)',
-                          margin: 0,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
+                        className={styles.eventName}
                       >
                         {ev.eventName || 'Événement'}
                       </p>
-                      {dateLine && <p style={{ fontSize: 'var(--font-size-footnote-lg)', color: 'var(--text-muted)', margin: '4px 0 0' }}>{dateLine}</p>}
+                      {dateLine && <p className={styles.date}>{dateLine}</p>}
                     </div>
                     <span
                       style={{
@@ -134,7 +127,7 @@ export default async function MesSoireesPage() {
                     </span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <div className={styles.statusRow}>
                     {ev.live ? (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--font-size-caption-lg)', fontWeight: 700, color: meta.color }}>
                         <span style={{ width: 7, height: 7, borderRadius: '50%', background: meta.color }} /> En cours
@@ -144,29 +137,12 @@ export default async function MesSoireesPage() {
                     ) : (
                       <span style={{ fontSize: 'var(--font-size-caption-lg)', color: 'var(--text-faint)' }}>À venir</span>
                     )}
-                    <span style={{ fontSize: 'var(--font-size-caption-lg)', color: 'var(--text-faint)' }}>· {meta.desc}</span>
+                    <span className={styles.description}>{meta.desc}</span>
                   </div>
 
                   <Link
                     href={roleHref(ev.eventId, ev.role)}
-                    style={{
-                      width: '100%',
-                      padding: '14px',
-                      minHeight: 'var(--density-action-min)',
-                      borderRadius: 'var(--radius-control)',
-                      border: '1px solid var(--border-strong)',
-                      fontSize: 'var(--font-size-body-sm)',
-                      fontWeight: 700,
-                      textTransform: 'none',
-                      letterSpacing: 'normal',
-                      color: 'var(--primary-ink)',
-                      background: meta.color,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 8,
-                      textDecoration: 'none',
-                    }}
+                    className={styles.action}
                   >
                     {roleCta(ev.role)}
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">

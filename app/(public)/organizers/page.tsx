@@ -11,7 +11,7 @@ import { getEntityRegionIds, getRegionName, normalizeRegionId } from '@/lib/shar
 import { reliablePhotoUrl } from '@/lib/shared/placeholderImage'
 import OrganizerFollowButtonClient from '@/app/components/features/organizer/OrganizerFollowButtonClient'
 import FilterSelect from '../_components/FilterSelect'
-import { Button, Checkbox, Input, Mascot, PageLinks } from '@/app/components/ui'
+import { Button, Input, Mascot, PageLinks } from '@/app/components/ui'
 import styles from './organizers.module.css'
 
 const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   },
 }
 
-type DirectoryParams = { q?: string; region?: string; upcoming?: string; sort?: string; page?: string }
+type DirectoryParams = { q?: string; region?: string; sort?: string; page?: string }
 
 export default async function PublicOrganizersPage({ searchParams }: { searchParams: Promise<DirectoryParams> }) {
   const [{ q, region: rawRegion = '', upcoming, sort = 'popular', page: pageParam }, cookieStore] = await Promise.all([
@@ -46,8 +46,8 @@ export default async function PublicOrganizersPage({ searchParams }: { searchPar
 
   const { organizers, total, totalPages, pageSize } = await getCachedPublicOrganizersDirectory({
     q: search,
-    region,
-    upcoming: upcomingOnly,
+    region: 'benin',
+    upcoming: false,
     sort: sort === 'recent' ? 'recent' : 'popular',
     page: requestedPage,
     pageSize: 24,
@@ -56,7 +56,7 @@ export default async function PublicOrganizersPage({ searchParams }: { searchPar
   const followResult = session?.user ? await listMyFollowedOrganizers({ id: session.user.id }) : { ok: true as const, follows: [] }
   const followedIds = new Set(followResult.ok ? followResult.follows.map((follow) => follow.organizerId) : [])
 
-  const hasFilters = Boolean(search || region || upcomingOnly || sort !== 'popular')
+  const hasFilters = Boolean(search || sort !== 'popular')
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
@@ -86,8 +86,6 @@ export default async function PublicOrganizersPage({ searchParams }: { searchPar
   function makeHref(page: number) {
     const params = new URLSearchParams()
     if (search) params.set('q', search)
-    if (region) params.set('region', region)
-    if (upcomingOnly) params.set('upcoming', '1')
     if (sort !== 'popular') params.set('sort', sort)
     if (page > 1) params.set('page', String(page))
     const query = params.toString()
@@ -108,7 +106,6 @@ export default async function PublicOrganizersPage({ searchParams }: { searchPar
           </div>
           <FilterSelect name="region" defaultValue="benin" ariaLabel="Périmètre du lancement" options={[{ value: 'benin', label: '🇧🇯 Bénin uniquement' }]} style={{ minHeight: 36, borderRadius: 15, background: 'var(--field-bg)', borderColor: 'var(--border)', fontSize: 'var(--font-size-body)', padding: '0 12px' }} />
           <FilterSelect name="sort" defaultValue={sort} ariaLabel="Trier les organisateurs" options={[{ value: 'popular', label: 'Plus populaires' }, { value: 'recent', label: 'Plus récents' }]} style={{ minHeight: 36, borderRadius: 15, background: 'var(--field-bg)', borderColor: 'var(--border)', fontSize: 'var(--font-size-body)', padding: '0 12px' }} />
-          <div className={styles.upcomingFilter}><Checkbox name="upcoming" value="1" defaultChecked={upcomingOnly} label="Événement à venir" style={{ minHeight: 36, fontSize: 'var(--font-size-body)', color: 'var(--text-muted)' }} /></div>
           <Button type="submit" className={styles.submitButton} style={{ minHeight: 36, borderRadius: 14, background: 'var(--primary)', color: 'var(--primary-ink)', fontSize: 'var(--font-size-body-sm)' }}>Appliquer</Button>
         </form>
       </section>

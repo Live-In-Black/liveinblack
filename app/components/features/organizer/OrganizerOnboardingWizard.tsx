@@ -96,6 +96,7 @@ export default function OrganizerOnboardingWizard({
   const [regPassword, setRegPassword] = useState('')
   const [regPasswordConfirm, setRegPasswordConfirm] = useState('')
   const [showRegPassword, setShowRegPassword] = useState(false)
+  const [showRegPasswordConfirm, setShowRegPasswordConfirm] = useState(false)
   const [documents, setDocuments] = useState<Record<string, DocState[]>>({})
   const [candidateNote, setCandidateNote] = useState(initialCandidateNote ?? '')
   const [error, setError] = useState<string | null>(null)
@@ -350,28 +351,28 @@ export default function OrganizerOnboardingWizard({
                         <Label htmlFor="organizer-password" style={labelStyle}>Mot de passe {requiredMark}</Label>
                         <PasswordPolicyHint />
                       </div>
-                        <div style={{ position: 'relative', minWidth: 0 }}>
-                          <Input
-                            id="organizer-password"
-                            aria-label="Mot de passe"
-                            autoComplete="new-password"
-                            style={{ ...inputStyle, paddingRight: 44 }}
-                            type={showRegPassword ? 'text' : 'password'}
-                            value={regPassword}
-                            onChange={(e) => setRegPassword(e.target.value)}
-                            placeholder="Ton mot de passe"
-                          />
-                          <Button
-                            variant="ghost"
-                            type="button"
-                            aria-label={showRegPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                            aria-pressed={showRegPassword}
-                            onClick={() => setShowRegPassword((v) => !v)}
-                            style={{ position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)', width: 36, minHeight: 36, height: 36, padding: 4, color: 'var(--text-muted)' }}
-                          >
-                            <IconEye open={showRegPassword} size={13} />
-                          </Button>
-                        </div>
+                      <div style={{ position: 'relative', minWidth: 0 }}>
+                        <Input
+                          id="organizer-password"
+                          aria-label="Mot de passe"
+                          autoComplete="new-password"
+                          style={{ ...inputStyle, paddingRight: 44 }}
+                          type={showRegPassword ? 'text' : 'password'}
+                          value={regPassword}
+                          onChange={(e) => setRegPassword(e.target.value)}
+                          placeholder="Ton mot de passe"
+                        />
+                        <Button
+                          variant="ghost"
+                          type="button"
+                          aria-label={showRegPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                          aria-pressed={showRegPassword}
+                          onClick={() => setShowRegPassword((v) => !v)}
+                          style={{ position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)', width: 36, minHeight: 36, height: 36, padding: 4, color: 'var(--text-muted)' }}
+                        >
+                          <IconEye open={showRegPassword} size={13} />
+                        </Button>
+                      </div>
                     </div>
                     <div>
                       <Label htmlFor="organizer-password-confirm" style={{ ...labelStyle, minHeight: 28, display: 'flex', alignItems: 'center' }}>Confirmer le mot de passe {requiredMark}</Label>
