@@ -19,6 +19,8 @@
     "vitest.config.ts",
     "vitest.integration.config.ts",
     "vitest.setup.ts",
-    "scripts/check-refund-signature-browser.ts"
+    "scripts/check-refund-signature-browser.ts",
+    "lib/server/events/resale.ts",
+    "lib/server/payments/freeCheckout.ts"
   ]
 }
