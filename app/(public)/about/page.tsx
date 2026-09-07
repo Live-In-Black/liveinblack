@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import TabsSection from './TabsSection'
 import { PageShell } from '@/app/components/layout'
-import { Accordion, ActionLink, EditorialImageCard, SectionHeader } from '@/app/components/ui'
+import { Accordion, ActionLink, EditorialImageCard, SectionHeader, Skeleton } from '@/app/components/ui'
 import styles from './about.module.css'
 
 export const metadata: Metadata = {
@@ -46,7 +46,7 @@ export default function PublicAboutPage() {
             params au prerender, sinon le build échoue (missing-suspense-
             with-csr-bailout). Le fallback null ne dure qu'un instant côté
             client, la page reste prerendue statiquement. */}
-        <Suspense fallback={<div className="lb-loading-panel" style={{ minHeight: 280 }}>Préparation de la présentation…</div>}>
+        <Suspense fallback={<TabsFallback />}>
           <TabsSection />
         </Suspense>
       </Section>
@@ -88,6 +88,28 @@ export default function PublicAboutPage() {
       </section>
       </div>
     </PageShell>
+  )
+}
+
+function TabsFallback() {
+  return (
+    <div aria-label="Chargement de la présentation" style={{ maxWidth: 1120, margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+        <Skeleton width={120} height={38} radius={999} />
+        <Skeleton width={142} height={38} radius={999} />
+        <Skeleton width={134} height={38} radius={999} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14 }}>
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} style={{ padding: 18, border: '1px solid var(--border)', borderRadius: 18, background: 'var(--card-bg)' }}>
+            <Skeleton width={42} height={42} radius={14} />
+            <Skeleton width="62%" height={20} style={{ marginTop: 16 }} />
+            <Skeleton width="94%" height={12} style={{ marginTop: 12 }} />
+            <Skeleton width="78%" height={12} style={{ marginTop: 8 }} />
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 

@@ -127,13 +127,14 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
         .ticket-wallet-event-thumb { width: 44px !important; height: 44px !important; border-radius: 10px !important; }
         .ticket-wallet-event-title { font-size: var(--font-size-body) !important; font-weight: 500 !important; }
         .ticket-wallet-ticket-list { padding: 0 12px 12px !important; gap: 8px !important; }
-        .ticket-wallet-face { display: grid !important; grid-template-columns: minmax(0, 1fr) 112px !important; }
+        .ticket-wallet-face { display: grid !important; grid-template-columns: minmax(0, 1fr) 112px !important; min-height: 172px !important; }
         .ticket-wallet-rail { min-height: 76px !important; padding: 10px 12px !important; }
         .ticket-wallet-card-shell { border-radius: var(--radius-card) !important; box-shadow: none !important; width: 100% !important; }
         .ticket-wallet-card-body { padding: 8px 10px !important; }
         .ticket-wallet-card-actions { padding: 8px 10px !important; gap: 6px !important; }
-        .ticket-wallet-action-grid { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 6px !important; }
-        .ticket-wallet-action-grid > * { width: 100% !important; min-width: 0 !important; min-height: 32px !important; padding: 6px 7px !important; font-size: var(--font-size-caption) !important; }
+        .ticket-wallet-action-grid { display: flex !important; flex-wrap: wrap !important; gap: 6px !important; }
+        .ticket-wallet-action-grid > * { width: 36px !important; min-width: 36px !important; height: 36px !important; min-height: 36px !important; padding: 0 !important; display: inline-grid !important; place-items: center !important; font-size: 0 !important; }
+        .ticket-wallet-action-grid > * svg { width: 15px !important; height: 15px !important; }
         .ticket-wallet-qr { width: auto !important; padding: 8px !important; border-left: 1px dashed var(--border-strong) !important; border-top: 0 !important; gap: 3px !important; }
         .ticket-wallet-qr canvas { width: 80px !important; height: 80px !important; }
         .ticket-wallet-meta > div { padding: 8px 9px !important; }
@@ -1038,25 +1039,25 @@ function PremiumTicketCard({
                 disabled={downloadState === 'busy'}
                 loading={downloadState === 'busy'}
                 loadingText="Préparation…"
+                aria-label={downloadState === 'ok' ? 'Billet prêt' : 'Télécharger le billet en PDF'}
+                title={downloadState === 'ok' ? 'Billet prêt' : 'Télécharger le billet'}
                 icon={downloadState === 'ok' ? <QrCode size={14} aria-hidden="true" /> : <Download size={14} aria-hidden="true" />}
                 style={{ ...actionBtnStyle(false), justifyContent: 'center' }}
-              >
-                {downloadState === 'ok' ? 'Prêt' : 'PDF'}
-              </Button>
-              <ActionBtn onClick={toggleIncluded} icon={<ListChecks size={14} aria-hidden="true" />}>Options</ActionBtn>
+              />
+              <ActionBtn label="Voir les options incluses" onClick={toggleIncluded} icon={<ListChecks size={14} aria-hidden="true" />} />
 
               {event && (
                 <Link
                   href={`/order/${event.id}/${ticket.ticketCode}`}
-                  style={{ ...actionBtnStyle(false), background: 'var(--primary)', color: 'var(--primary-ink)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5, boxSizing: 'border-box' }}
+                  aria-label="Consulter le suivi des consommations"
+                  style={{ ...actionBtnStyle(false), background: 'var(--primary)', color: 'var(--primary-ink)', textDecoration: 'none', display: 'inline-grid', placeItems: 'center', boxSizing: 'border-box' }}
                   title="Consulter le suivi des consommations"
                 >
                   <ExternalLink size={14} aria-hidden="true" />
-                  Consommations
                 </Link>
               )}
 
-              <ActionBtn onClick={handleShare} icon={<Share2 size={14} aria-hidden="true" />}>Partager</ActionBtn>
+              <ActionBtn label="Partager le billet" onClick={handleShare} icon={<Share2 size={14} aria-hidden="true" />} />
               <Button
                 variant="danger"
                 size="sm"
@@ -1064,14 +1065,13 @@ function PremiumTicketCard({
                 disabled={storyState === 'busy'}
                 loading={storyState === 'busy'}
                 loadingText="Création…"
+                aria-label="Créer une story Instagram"
                 title="Story Instagram"
                 icon={<Sparkles size={14} aria-hidden="true" />}
                 style={{ ...actionBtnStyle(false, 'var(--danger-fill)', 'var(--danger)'), justifyContent: 'center' }}
-              >
-                Story
-              </Button>
+              />
 
-              <ActionBtn onClick={handleCalendar} icon={<CalendarPlus size={14} aria-hidden="true" />}>Agenda</ActionBtn>
+              <ActionBtn label="Ajouter au calendrier" onClick={handleCalendar} icon={<CalendarPlus size={14} aria-hidden="true" />} />
               {canShowRefundButton && (
                 <Button
                   variant="danger"
@@ -1080,11 +1080,11 @@ function PremiumTicketCard({
                   disabled={refundState === 'busy' || refundState === 'done'}
                   loading={refundState === 'busy'}
                   loadingText="Envoi…"
+                  aria-label={refundState === 'done' ? 'Remboursement demandé' : 'Demander un remboursement'}
+                  title={refundState === 'done' ? 'Remboursement demandé' : 'Demander un remboursement'}
                   icon={<HandCoins size={14} aria-hidden="true" />}
                   style={{ ...actionBtnStyle(refundState === 'busy' || refundState === 'done', 'var(--danger-fill)', 'var(--danger)'), justifyContent: 'center' }}
-                >
-                  {refundState === 'done' ? 'Demandé' : 'Rembourser'}
-                </Button>
+                />
               )}
             </div>
             {downloadState === 'err' && (
@@ -1150,10 +1150,8 @@ function actionBtnStyle(disabled: boolean, bg = 'var(--surface-2)', color = 'var
   }
 }
 
-function ActionBtn({ children, onClick, disabled, icon }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; icon?: React.ReactNode }) {
+function ActionBtn({ label, onClick, disabled, icon }: { label: string; onClick: () => void; disabled?: boolean; icon?: React.ReactNode }) {
   return (
-    <Button variant="secondary" size="sm" onClick={onClick} disabled={disabled} icon={icon} style={actionBtnStyle(Boolean(disabled))}>
-      {children}
-    </Button>
+    <Button variant="secondary" size="sm" onClick={onClick} disabled={disabled} icon={icon} aria-label={label} title={label} style={actionBtnStyle(Boolean(disabled))} />
   )
 }

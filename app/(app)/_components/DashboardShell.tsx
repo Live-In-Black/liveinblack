@@ -5,10 +5,8 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import { ChevronDown, Globe, Menu, X } from 'lucide-react'
 import { Button, IconButton } from '@/app/components/ui'
-import AccountMenu from '@/app/(public)/_components/AccountMenu'
 import AgentWorkspaceShell from './AgentWorkspaceShell'
 import { COMMON_NAV, ROLE_NAV, CLIENT_UPSELL, HIDE_SIDEBAR_PREFIXES, FULL_BLEED_PREFIXES, type DashboardNavItem } from './dashboardNav'
 import { getRoleLabel, type Role } from '@/lib/server/permissions'
@@ -187,7 +185,6 @@ export default function DashboardShell({ activeRole, children }: { activeRole: R
   const notificationUnread = useNotificationBadge()
   const badges = { ...agentBadges, '/notifications': notificationUnread || undefined }
   const hasStaffedEvents = useHasStaffedEvents()
-  const { data: session, status } = useSession()
   const [mobileOpen, setMobileOpen] = useState(false)
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null)
   const mobileDrawerRef = useRef<HTMLElement>(null)
@@ -321,11 +318,6 @@ export default function DashboardShell({ activeRole, children }: { activeRole: R
         </aside>
 
         <div className={styles.workspaceColumn}>
-          <header className={styles.topbar}>
-            <div className={styles.topbarAccount}>
-              {status === 'authenticated' && session?.user ? <AccountMenu user={session.user} menuAlign="right" menuDirection="auto" /> : null}
-            </div>
-          </header>
           <div className={`lb-dashboard-main ${styles.main}${fullBleed ? ` ${styles.mainFull}` : ''}`}>{children}</div>
         </div>
       </div>

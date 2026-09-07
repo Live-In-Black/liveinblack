@@ -260,8 +260,8 @@ export function MessageRow({
           style={{
             padding: message.deletedForAll ? '8px 14px' : ['image', 'poll', 'event_poll', 'story', 'event', 'catalog_item'].includes(message.type) ? 6 : '9px 14px',
             borderRadius: isMine ? '14px 14px 3px 14px' : '14px 14px 14px 3px',
-            background: isMine ? 'var(--primary-a16)' : 'var(--surface)',
-            border: `1px solid ${isMine ? 'var(--primary-a32)' : 'var(--border)'}`,
+            background: isMine ? 'rgba(var(--text-rgb), .08)' : 'var(--surface)',
+            border: `1px solid ${isMine ? 'rgba(var(--text-rgb), .16)' : 'var(--border)'}`,
             maxWidth: '100%',
             cursor: 'context-menu',
             boxShadow: highlighted ? '0 0 0 2px var(--primary-a65)' : 'none',
@@ -281,8 +281,8 @@ export function MessageRow({
                   variant="secondary"
                   onClick={() => onReact(message.id, emoji)}
                   style={{
-                    background: reactedByMe ? 'var(--primary-a14)' : 'var(--surface-2)',
-                    border: `1px solid ${reactedByMe ? 'var(--primary-a32)' : 'var(--border)'}`,
+                    background: reactedByMe ? 'rgba(var(--text-rgb), .10)' : 'var(--surface-2)',
+                    border: `1px solid ${reactedByMe ? 'rgba(var(--text-rgb), .20)' : 'var(--border)'}`,
                     borderRadius: 10,
                     padding: '2px 6px',
                     display: 'flex',
@@ -290,11 +290,11 @@ export function MessageRow({
                     gap: 3,
                     fontSize: 'var(--font-size-caption)',
                     fontWeight: 400,
-                    color: reactedByMe ? 'var(--primary)' : 'var(--text)',
+                    color: reactedByMe ? 'var(--text)' : 'var(--text)',
                   }}
                 >
                   <span>{emoji}</span>
-                  <span style={{ fontSize: 'var(--font-size-mini)', color: reactedByMe ? 'var(--primary)' : 'var(--text-faint)' }}>{users.length}</span>
+                  <span style={{ fontSize: 'var(--font-size-mini)', color: reactedByMe ? 'var(--text-muted)' : 'var(--text-faint)' }}>{users.length}</span>
                 </Button>
               )
             })}
@@ -552,7 +552,7 @@ function PollCard({ message, onVote, currentUserId }: { message: MessageView; on
                 gap: 6,
                 padding: '8px 10px',
                 borderRadius: 8,
-                border: votedByMe ? '1px solid var(--primary)' : '1px solid var(--border-strong)',
+                border: votedByMe ? '1px solid rgba(var(--primary-rgb), .42)' : '1px solid var(--border-strong)',
                 background: 'var(--fill-secondary)',
                 color: 'var(--text)',
                 fontSize: 'var(--font-size-footnote-lg)',
@@ -561,12 +561,12 @@ function PollCard({ message, onVote, currentUserId }: { message: MessageView; on
                 overflow: 'hidden',
               }}
             >
-              <div style={{ position: 'absolute', inset: 0, width: `${pct}%`, background: 'var(--primary-a20)' }} />
+              <div style={{ position: 'absolute', inset: 0, width: `${pct}%`, background: 'rgba(var(--primary-rgb), .12)' }} />
               <span style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6 }}>
-                {votedByMe ? <span style={{ color: 'var(--primary)', display: 'inline-flex', alignItems: 'center' }}><Check size={12} /></span> : null}
+                {votedByMe ? <span style={{ color: 'var(--primary-strong)', display: 'inline-flex', alignItems: 'center' }}><Check size={12} /></span> : null}
                 {option.text}
               </span>
-              <span style={{ position: 'relative', color: 'var(--primary)', fontWeight: 700 }}>{option.voterIds.length}</span>
+              <span style={{ position: 'relative', color: 'var(--primary-strong)', fontWeight: 700 }}>{option.voterIds.length}</span>
             </Button>
           )
         })}

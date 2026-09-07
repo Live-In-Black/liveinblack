@@ -21,16 +21,6 @@ export default function Mascot({ mood = 'happy', size = 140 }: { mood?: MascotMo
       aria-hidden="true"
       style={{ width: size, height: size, margin: '0 auto' }}
     >
-      <style>{`
-        @keyframes lb-mascot-float {
-          0%, 100% { transform: translateY(0) rotate(-0.4deg); }
-          50% { transform: translateY(-6px) rotate(0.4deg); }
-        }
-        .lb-mascot-image { animation: lb-mascot-float 3.8s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) {
-          .lb-mascot-image { animation: none; }
-        }
-      `}</style>
       <Image
         src={MASCOT_IMAGES[mood]}
         width={720}

@@ -2,9 +2,21 @@
   --events-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
   width: 100%;
   overflow: hidden;
+  position: relative;
+  isolation: isolate;
   font-family: var(--events-font);
   color: var(--text);
   background: var(--obsidian);
+}
+
+.page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(rgba(var(--night-rgb), .88), rgba(var(--night-rgb), .94)), url('/images/live-in-black/night-benin/night-benin-concert.png') center/cover;
+  opacity: .34;
 }
 
 .hero {

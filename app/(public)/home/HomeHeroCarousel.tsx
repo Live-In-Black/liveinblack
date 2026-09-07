@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import styles from './home.module.css'
 
 const SLIDES = [
-  '/images/live-in-black/night-benin/night-benin-hero.png',
+  '/images/live-in-black/night-benin/night-benin-dancefloor.png',
   '/images/live-in-black/night-benin/night-benin-concert.png',
   '/images/live-in-black/night-benin/night-benin-rooftop.png',
 ]

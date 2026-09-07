@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { AlertTriangle, Ban, CalendarCheck2, CalendarDays, CalendarX2, ExternalLink, MapPin, RefreshCw, Search, UserRound } from 'lucide-react'
-import { Button, Card, Input, Textarea, Label, Pagination, SkeletonRow, EmptyState, Modal, ToastViewport } from '@/app/components/ui'
+import { Button, Card, Input, Textarea, Label, Pagination, Skeleton, EmptyState, Modal, ToastViewport } from '@/app/components/ui'
 import { useQueryParamState, useSetQueryParams } from '@/lib/client/useQueryParamState'
 import styles from './AgentEventsClient.module.css'
 
@@ -194,7 +194,7 @@ export default function AgentEventsClient() {
         {listLoading ? (
           <div className={styles.loadingGrid}>
             {Array.from({ length: 4 }).map((_, i) => (
-              <SkeletonRow key={i} columns={2} />
+              <EventCardSkeleton key={i} />
             ))}
           </div>
         ) : events.length === 0 ? (
@@ -226,6 +226,33 @@ export default function AgentEventsClient() {
 
       <ToastViewport items={toast ? [{ id: 'evenements', message: toast.message, kind: toast.kind === 'success' ? 'success' : 'error' }] : []} />
     </main>
+  )
+}
+
+function EventCardSkeleton() {
+  return (
+    <Card className={styles.eventCard} aria-hidden="true">
+      <div className={styles.visual}>
+        <Skeleton width="100%" height="100%" radius={0} />
+        <span className={styles.scrim} aria-hidden="true" />
+        <Skeleton width={82} height={26} radius={999} style={{ position: 'absolute', top: 12, left: 12 }} />
+        <Skeleton width={116} height={26} radius={999} style={{ position: 'absolute', top: 12, right: 12 }} />
+        <div className={styles.visualTitle}>
+          <Skeleton width="72%" height={22} />
+          <Skeleton width="38%" height={12} style={{ marginTop: 6 }} />
+        </div>
+      </div>
+      <div className={styles.body}>
+        <div className={styles.facts}>
+          <Skeleton width="100%" height={36} radius={12} />
+          <Skeleton width="100%" height={36} radius={12} />
+        </div>
+        <div className={styles.actions}>
+          <Skeleton width={126} height={36} radius={11} style={{ marginRight: 'auto' }} />
+          <Skeleton width={114} height={36} radius={11} />
+        </div>
+      </div>
+    </Card>
   )
 }
 
