@@ -106,7 +106,7 @@ const GENERIC_ERROR = "Enregistrement impossible — vérifie ta connexion (ou d
 
 export default function PromoCodesPanel({ event, onClose }: PromoCodesPanelProps) {
   const eventId = event.id
-  const currency: 'EUR' | 'XOF' = event.currency === 'XOF' ? 'XOF' : 'EUR'
+  const currency: 'EUR' | 'XOF' = event.currency === 'EUR' ? 'EUR' : 'XOF'
   const curLabel = currencySymbol(currency)
 
   const [items, setItems] = useState<PromoCode[]>([])

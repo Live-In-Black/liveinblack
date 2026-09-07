@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeTicketFeeCents, computeTicketFeeXOF, isStripeConnectCountry, resolveCountryISO } from '../fees'
+import { computeTicketFeeCents, computeTicketFeeXOF, computeGroupTicketFeeXOF, isStripeConnectCountry, resolveCountryISO } from '../fees'
 
 describe('computeTicketFeeCents', () => {
   it('5% + 0,49€ par billet, exemple simple', () => {
@@ -40,6 +40,20 @@ describe('computeTicketFeeXOF', () => {
   })
   it('montants entiers (pas de décimales XOF)', () => {
     expect(Number.isInteger(computeTicketFeeXOF(4999, 1))).toBe(true)
+  })
+})
+
+describe('computeGroupTicketFeeXOF', () => {
+  it.each([[120_000, 8, 6_000], [200_000, 10, 10_000], [500_000, 10, 15_000], [10_000, 10, 2_000]])(
+    'facial %i pour %i admissions donne %i FCFA de frais', (facial, admissions, expected) => {
+      expect(computeGroupTicketFeeXOF(facial, admissions)).toBe(expected)
+    },
+  )
+  it('arrondit une seule fois les frais par admission, pas le prix moyen', () => {
+    expect(computeGroupTicketFeeXOF(40_029, 2)).toBe(2_002)
+  })
+  it.each([0, 1, 2.5, NaN, Infinity])('refuse une capacite invalide %s', (admissions) => {
+    expect(() => computeGroupTicketFeeXOF(100_000, admissions)).toThrow('invalid_group_pricing')
   })
 })
 

@@ -7,7 +7,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ refundC
   if (!session?.user?.id) return NextResponse.json({ error: 'auth_required' }, { status: 401 })
 
   const { refundCaseId } = await params
-  const result = await verifyIndividualRefundDestination(session.user.id, refundCaseId, auditContextFromRequest(req))
+  const body = await req.json().catch(() => null)
+  const result = await verifyIndividualRefundDestination(session.user.id, refundCaseId, typeof body?.version === 'string' ? body.version : undefined, auditContextFromRequest(req))
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
   return NextResponse.json({ ok: true })
 }

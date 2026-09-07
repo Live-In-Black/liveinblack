@@ -53,20 +53,22 @@ async function api<T>(page: Page, path: string, init?: RequestInit): Promise<{ s
 }
 
 test.describe.serial('seeded advanced business mutations', () => {
-  test('client can list and withdraw a ticket from official resale', async ({ page }) => {
+  test('client cannot list or buy resale tickets in V1', async ({ page }) => {
     await login(page, 'client@liveinblack.dev')
 
-    const listed = await api<{ ok: boolean; listingId: string; sellerNetMinor: number }>(page, '/api/tickets/resell', {
+    const listed = await api<{ error: string }>(page, '/api/tickets/resell', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ticketCode: 'E2E-RESALE-001', resalePrice: 4500 }),
     })
-    expect(listed.status).toBe(200)
-    expect(listed.body.ok).toBe(true)
-    expect(listed.body.listingId).toBeTruthy()
+    expect(listed).toMatchObject({ status: 410, body: { error: 'resale_disabled_v1' } })
 
-    const withdrawn = await api<{ ok: boolean }>(page, `/api/resale-listings/${listed.body.listingId}`, { method: 'DELETE' })
-    expect(withdrawn).toMatchObject({ status: 200, body: { ok: true } })
+    const bought = await api<{ error: string }>(page, '/api/checkout/resale/fedapay', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listingId: '66e200000000000000000901' }),
+    })
+    expect(bought).toMatchObject({ status: 410, body: { error: 'resale_disabled_v1' } })
   })
 
   test('client can invite and cancel a table seat assignment', async ({ page }) => {

@@ -1,8 +1,6 @@
-// Port TypeScript de src/utils/money.js — formatage monétaire multi-devise
-// (EUR/Stripe, XOF/FedaPay). Règle : XOF sans décimales, EUR avec décimales
-// seulement si nécessaires. La devise d'un événement est EXPLICITE (event.currency),
-// jamais déduite de sa région (voir commentaire d'origine : des events Togo/Bénin
-// créés avant le multi-devise ont des prix saisis en euros).
+// Formatage monétaire V1 Bénin : XOF/FCFA par défaut. Les valeurs explicitement
+// EUR restent affichées en EUR afin de ne pas convertir silencieusement un
+// historique financier qui doit être migré à part.
 import { regions } from './regions'
 import { stripDiacritics } from './diacritics'
 
@@ -21,13 +19,25 @@ const XOF_REGION_KEYS = new Set(
     .map(normKey)
 )
 
+const LEGACY_XOF_REGION_KEYS = new Set([
+  'togo', 'tg', 'cote-d-ivoire', 'ci', 'senegal', 'sn', 'burkina-faso', 'bf',
+  'mali', 'ml', 'niger', 'ne', 'guinee-bissau', 'gw',
+])
+
+const LEGACY_EUR_REGION_KEYS = new Set(['france', 'fr'])
+
 export function regionToCurrency(region: unknown): 'EUR' | 'XOF' {
-  return XOF_REGION_KEYS.has(normKey(region)) ? 'XOF' : 'EUR'
+  const key = normKey(region)
+  if (LEGACY_EUR_REGION_KEYS.has(key)) return 'EUR'
+  if (XOF_REGION_KEYS.has(key) || LEGACY_XOF_REGION_KEYS.has(key)) return 'XOF'
+  return 'XOF'
 }
 
 export function eventCurrency(event: { currency?: string } | null | undefined): 'EUR' | 'XOF' {
-  if (!event) return 'EUR'
-  return String(event.currency || '').toUpperCase() === 'XOF' ? 'XOF' : 'EUR'
+  if (!event) return 'XOF'
+  const currency = String(event.currency || '').toUpperCase()
+  if (currency === 'EUR') return 'EUR'
+  return 'XOF'
 }
 
 export function organizerCurrency(profile: { regionId?: string; country?: string } | null | undefined): 'EUR' | 'XOF' | null {
@@ -37,11 +47,11 @@ export function organizerCurrency(profile: { regionId?: string; country?: string
   return regionToCurrency(anchor)
 }
 
-export function payRailLabel(currency: string = 'EUR'): string {
-  return String(currency).toUpperCase() === 'XOF' ? 'Mobile Money / carte (FedaPay)' : 'Carte bancaire (Stripe)'
+export function payRailLabel(currency: string = 'XOF'): string {
+  return String(currency).toUpperCase() === 'EUR' ? 'Rail historique indisponible en V1' : 'Mobile Money / carte (FedaPay)'
 }
 
-export function fmtMoney(amount: unknown, currency: string = 'EUR'): string {
+export function fmtMoney(amount: unknown, currency: string = 'XOF'): string {
   const n = Number(amount) || 0
   if (String(currency).toUpperCase() === 'XOF') {
     return `${Math.round(n).toLocaleString('fr-FR')} FCFA`
@@ -53,6 +63,6 @@ export function fmtMoney(amount: unknown, currency: string = 'EUR'): string {
   })} €`
 }
 
-export function currencySymbol(currency: string = 'EUR'): string {
+export function currencySymbol(currency: string = 'XOF'): string {
   return String(currency).toUpperCase() === 'XOF' ? 'FCFA' : '€'
 }

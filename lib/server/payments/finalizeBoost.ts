@@ -7,6 +7,7 @@ import stripe from './stripeClient'
 import { getBoostPlan } from '@/lib/shared/boosts'
 import { notifyUserById } from '@/lib/server/emails/notify'
 import { boostConflictEmail, boostActivatedEmail } from '@/lib/server/emails'
+import { transactionAmountMatches, type FedapayTransaction } from './fedapayClient'
 
 const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
 
@@ -120,4 +121,62 @@ export async function finalizeBoost(session: Stripe.Checkout.Session): Promise<v
 
   const ev = await Event.findById(meta.eventId).select('name').lean()
   await notifyUserById(meta.userId, () => boostActivatedEmail(ev?.name || 'ton événement', `${days} jour(s)`, `${SITE}/spaces/organizer/${encodeURIComponent(meta.eventId)}`, SITE))
+}
+
+export type FedapayBoostFinalizeResult =
+  | { status: 'ignored' }
+  | { status: 'pending' }
+  | { status: 'active'; boostId: string }
+  | { status: 'conflict'; boostId: string }
+  | { status: 'amount_mismatch'; boostId: string }
+
+export async function finalizeFedapayBoost(transaction: Pick<FedapayTransaction, 'id' | 'status' | 'amount'>): Promise<FedapayBoostFinalizeResult> {
+  const transactionId = String(transaction.id)
+  const slot = await BoostSlot.findOne({ fedapayTxnId: transactionId })
+  if (!slot) return { status: 'ignored' }
+  if (slot.status === 'active') {
+    const existing = await Boost.findOne({ boostId: slot.boostId }).lean()
+    return existing ? { status: 'active', boostId: slot.boostId } : { status: 'pending' }
+  }
+  if (transaction.status !== 'approved') return { status: 'pending' }
+
+  const existing = await Boost.findOne({ boostId: slot.boostId }).lean()
+  if (existing) return { status: existing.status === 'active' ? 'active' : 'conflict', boostId: slot.boostId }
+
+  const position = Number(slot.position)
+  const days = Number(slot.days) || 0
+  const offer = getBoostPlan(position, days)
+  if (!offer || !transactionAmountMatches(transaction.amount, offer.tier.price)) {
+    await PaymentAlert.updateOne(
+      { key: `boost_fedapay_amount_${slot.boostId}` },
+      { $set: { reason: 'boost_fedapay_amount_mismatch', eventId: slot.eventId, details: { expected: offer?.tier.price ?? null, paid: transaction.amount, transactionId } } },
+      { upsert: true }
+    )
+    return { status: 'amount_mismatch', boostId: slot.boostId }
+  }
+
+  const now = Date.now()
+  const expiresAt = new Date(now + days * 86400000)
+
+  await Boost.create({
+    boostId: slot.boostId,
+    eventId: slot.eventId,
+    position,
+    region: slot.region,
+    price: offer.tier.price,
+    days,
+    userId: slot.userId,
+    purchasedAt: new Date(now),
+    expiresAt,
+    stripeSessionId: null,
+    fedapayTxnId: transactionId,
+    finalizedBy: 'fedapay-webhook',
+    status: 'active',
+  })
+
+  await BoostSlot.updateOne({ _id: slot._id, status: 'pending', boostId: slot.boostId }, { $set: { status: 'active', activeUntil: expiresAt } })
+
+  const ev = await Event.findById(slot.eventId).select('name').lean()
+  await notifyUserById(slot.userId, () => boostActivatedEmail(ev?.name || 'ton événement', `${days} jour(s)`, `${SITE}/spaces/organizer/${encodeURIComponent(slot.eventId)}`, SITE))
+  return { status: 'active', boostId: slot.boostId }
 }

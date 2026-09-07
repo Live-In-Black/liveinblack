@@ -1,22 +1,26 @@
-// Port TypeScript de lib/boosts.js — logique pure du système de boost
-// (Top 1/2/3). Utilisé côté public (calcul du podium) ET plus tard côté achat
-// (phase organisateur).
+// Barème V1 Bénin du système de boost Top 1/2/3, montants en FCFA.
 import { stripDiacritics } from './diacritics'
 export type BoostTier = { label: string; price: number; days: number }
 export type BoostPlan = { position: number; label: string; description: string; color: string; tiers: BoostTier[] }
 
 export const BOOST_PLANS: readonly BoostPlan[] = Object.freeze([
   { position: 1, label: 'Top 1', description: 'Position n°1 · Visibilité maximale', color: '#f53d8d', tiers: [
-    { label: '1 jour', price: 9.99, days: 1 }, { label: '3 jours', price: 24.99, days: 3 },
-    { label: '1 semaine', price: 49.99, days: 7 }, { label: '1 mois', price: 149.99, days: 30 },
+    { label: '1 jour', price: 5000, days: 1 }, { label: '2 jours', price: 9000, days: 2 },
+    { label: '3 jours', price: 13000, days: 3 }, { label: '4 jours', price: 17000, days: 4 },
+    { label: '5 jours', price: 21500, days: 5 }, { label: '6 jours', price: 26000, days: 6 },
+    { label: '7 jours', price: 30000, days: 7 },
   ] },
   { position: 2, label: 'Top 2', description: 'Position n°2 · Très haute visibilité', color: 'rgba(255,255,255,0.65)', tiers: [
-    { label: '1 jour', price: 6.99, days: 1 }, { label: '3 jours', price: 16.99, days: 3 },
-    { label: '1 semaine', price: 34.99, days: 7 }, { label: '1 mois', price: 99.99, days: 30 },
+    { label: '1 jour', price: 3500, days: 1 }, { label: '2 jours', price: 6500, days: 2 },
+    { label: '3 jours', price: 9500, days: 3 }, { label: '4 jours', price: 12500, days: 4 },
+    { label: '5 jours', price: 15000, days: 5 }, { label: '6 jours', price: 17500, days: 6 },
+    { label: '7 jours', price: 20000, days: 7 },
   ] },
   { position: 3, label: 'Top 3', description: 'Position n°3 · Haute visibilité', color: 'rgba(245,61,141,0.6)', tiers: [
-    { label: '1 jour', price: 3.99, days: 1 }, { label: '3 jours', price: 9.99, days: 3 },
-    { label: '1 semaine', price: 19.99, days: 7 }, { label: '1 mois', price: 59.99, days: 30 },
+    { label: '1 jour', price: 2500, days: 1 }, { label: '2 jours', price: 4500, days: 2 },
+    { label: '3 jours', price: 6500, days: 3 }, { label: '4 jours', price: 8500, days: 4 },
+    { label: '5 jours', price: 10000, days: 5 }, { label: '6 jours', price: 11500, days: 6 },
+    { label: '7 jours', price: 12500, days: 7 },
   ] },
 ])
 

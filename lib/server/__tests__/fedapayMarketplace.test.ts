@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   fedapayMarketplaceCommissions,
+  fedapaySandboxSubAccountReference,
   sanitizeFedapaySubAccountReference,
   sellerShareForOrder,
 } from '../payments/fedapayMarketplace'
@@ -26,5 +27,17 @@ describe('fedapayMarketplace', () => {
     ])
     expect(fedapayMarketplaceCommissions(null, 12_500)).toBeUndefined()
     expect(fedapayMarketplaceCommissions('SAC-ORG', 0)).toBeUndefined()
+  })
+
+  it('lit la référence de sous-compte sandbox depuis l’environnement', () => {
+    const previous = process.env.FEDAPAY_SANDBOX_SUB_ACCOUNT_REFERENCE
+
+    process.env.FEDAPAY_SANDBOX_SUB_ACCOUNT_REFERENCE = ' SAC SANDBOX '
+    expect(fedapaySandboxSubAccountReference()).toBe('SACSANDBOX')
+
+    process.env.FEDAPAY_SANDBOX_SUB_ACCOUNT_REFERENCE = ''
+    expect(fedapaySandboxSubAccountReference()).toBeNull()
+
+    process.env.FEDAPAY_SANDBOX_SUB_ACCOUNT_REFERENCE = previous
   })
 })

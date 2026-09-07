@@ -45,7 +45,7 @@ export function emailChangeVerificationEmail(verifyLink: string, site: string = 
 
 export interface DeviceContext {
   deviceLabel?: string | null // ex. "Safari sur iPhone"
-  approxLocation?: string | null // ex. "Lomé, Togo" — best-effort, jamais garanti précis
+  approxLocation?: string | null // ex. "Cotonou, Bénin" — best-effort, jamais garanti précis
   when?: string | null
 }
 

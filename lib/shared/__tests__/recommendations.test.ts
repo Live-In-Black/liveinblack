@@ -40,8 +40,8 @@ describe('recommendations', () => {
   })
 
   it('le budget ne matche que si le prix minimum de l\'event est CONNU et dans la fourchette déclarée', () => {
-    const inBudget = scoreRecommendationEvent({ budget: '10-20' }, new Set(), makeEvent({ id: 'ev-1', places: [{ price: 15 }] }))
-    const outOfBudget = scoreRecommendationEvent({ budget: '10-20' }, new Set(), makeEvent({ id: 'ev-2', places: [{ price: 45 }] }))
+    const inBudget = scoreRecommendationEvent({ budget: '5000-10000' }, new Set(), makeEvent({ id: 'ev-1', places: [{ price: 7500 }] }))
+    const outOfBudget = scoreRecommendationEvent({ budget: '5000-10000' }, new Set(), makeEvent({ id: 'ev-2', places: [{ price: 45000 }] }))
     const unknownPrice = scoreRecommendationEvent({ budget: 'gratuit' }, new Set(), makeEvent({ id: 'ev-3', places: [] }))
 
     expect(inBudget.score).toBe(15)

@@ -82,11 +82,10 @@ function toPositiveInteger(value: unknown, fallback: number, min: number, max: n
 export async function getVercelOpsConfig(): Promise<OpsConfig> {
   if (cachedConfig && cachedConfig.expiresAt > Date.now()) return cachedConfig.value
 
-  const [maintenanceMode, checkoutEnabled, ticketResaleEnabled, searchMinQueryLength, publicCacheTtlSeconds] =
+  const [maintenanceMode, checkoutEnabled, searchMinQueryLength, publicCacheTtlSeconds] =
     await Promise.all([
       readEdgeConfigItem(KEY_MAP.maintenanceMode),
       readEdgeConfigItem(KEY_MAP.checkoutEnabled),
-      readEdgeConfigItem(KEY_MAP.ticketResaleEnabled),
       readEdgeConfigItem(KEY_MAP.searchMinQueryLength),
       readEdgeConfigItem(KEY_MAP.publicCacheTtlSeconds),
     ])
@@ -94,7 +93,9 @@ export async function getVercelOpsConfig(): Promise<OpsConfig> {
   const value = {
     maintenanceMode: toBoolean(maintenanceMode, DEFAULT_OPS_CONFIG.maintenanceMode),
     checkoutEnabled: toBoolean(checkoutEnabled, DEFAULT_OPS_CONFIG.checkoutEnabled),
-    ticketResaleEnabled: toBoolean(ticketResaleEnabled, DEFAULT_OPS_CONFIG.ticketResaleEnabled),
+    // La revente est hors périmètre V1 Bénin. Une valeur Edge Config
+    // historique ne doit pas pouvoir la réactiver par erreur.
+    ticketResaleEnabled: false,
     searchMinQueryLength: toPositiveInteger(searchMinQueryLength, DEFAULT_OPS_CONFIG.searchMinQueryLength, 1, 8),
     publicCacheTtlSeconds: toPositiveInteger(publicCacheTtlSeconds, DEFAULT_OPS_CONFIG.publicCacheTtlSeconds, 5, 300),
   }

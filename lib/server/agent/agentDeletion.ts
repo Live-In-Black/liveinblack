@@ -95,7 +95,7 @@ async function computeDeletionAudit(uid: string): Promise<DeletionAudit> {
   if (user.prestataireSubActive) {
     warnings.push({
       type: 'active_subscription',
-      label: `Abonnement prestataire actif (${user.prestataireSubRail === 'stripe' ? 'Stripe' : 'FedaPay'}) — sera résilié automatiquement à l'approbation.`,
+      label: `Abonnement prestataire actif (${user.prestataireSubRail === 'stripe' ? 'ancien Stripe externe' : 'FedaPay'}) — sera désactivé à l'approbation.`,
     })
   }
 
@@ -224,8 +224,8 @@ export async function rejectDeletion(agent: AgentCaller, requestId: string, note
 // ─────────────────────────────── approveDeletion ────────────────────────────
 // Irréversible. Fail-closed à chaque étape sensible : si l'audit trouve un
 // blocage (recalculé ici, jamais celui affiché il y a potentiellement
-// plusieurs minutes) ou si la résiliation Stripe échoue, AUCUNE mutation
-// n'a lieu. La purge elle-même est une seule transaction Mongo : soit tout
+// plusieurs minutes) ou si l'annulation d'un ancien abonnement externe échoue,
+// AUCUNE mutation n'a lieu. La purge elle-même est une seule transaction Mongo : soit tout
 // s'applique, soit rien (jamais de compte à moitié anonymisé).
 
 export type ApproveDeletionResult = ErrResult | { ok: true }
@@ -320,6 +320,12 @@ export async function approveDeletion(agent: AgentCaller, requestId: string, not
       user.stripeAccountId = null
       user.stripeChargesEnabled = false
       user.providerBillingRegionId = null
+      user.prestataireSubActive = false
+      user.prestataireSubStatus = null
+      user.prestataireSubEnd = null
+      user.prestataireSubRail = null
+      user.stripeSubscriptionId = null
+      user.stripeCustomerId = null
       await user.save({ session })
 
       request.status = 'approved'

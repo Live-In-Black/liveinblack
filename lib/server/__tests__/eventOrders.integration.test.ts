@@ -1,12 +1,9 @@
-// Tests d'INTÉGRATION (vraie base MongoDB, transactions réelles) pour la
-// commande sur place (port de api/event-stock.js, action 'order') — couvre en
-// particulier le modèle d'autorisation par rang (isOwner/manager/serveur/scan),
-// la fermeture des lacunes d'audit H14 (journal) / H15 (lecture cloisonnée) et
-// de la lacune legacy "not_your_ticket" (création de ligne sur le billet d'un
-// tiers), ainsi que l'asymétrie rang0 (erreur dure)/staff (no-op silencieux)
-// sur les lignes déjà servies/payées.
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+// Integration V1: standalone creation is disabled; historical order fixtures
+// preserve tests of real authorization, fulfillment, accounting and audit.
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import mongoose from 'mongoose'
+import { randomUUID } from 'node:crypto'
+import type { AddOrderItemInput } from '../events/eventOrderAddItemService'
 import {
   addOrderItem,
   updateOrderItemQuantity,
@@ -76,7 +73,7 @@ async function seedEvent(ownerId: string, overrides: Record<string, unknown> = {
     date: '2099-01-01',
     time: '22:00',
     endTime: '05:00',
-    currency: 'EUR',
+    currency: 'XOF',
     createdBy: ownerId,
     organizerId: ownerId,
     places: [
@@ -100,7 +97,7 @@ async function seedTicket(eventId: string, userId: string, overrides: Record<str
     place: 'Standard',
     placePrice: 2000,
     totalPrice: 2000,
-    currency: 'EUR',
+    currency: 'XOF',
     paid: true,
     userId,
     preorders: [],
@@ -116,81 +113,188 @@ async function addStaff(eventId: string, uid: string, role: 'scan' | 'serveur' |
   )
 }
 
+// Existing unpaid orders are test fixtures, not new purchases through a disabled API.
+async function seedHistoricalItem(caller: { id: string }, input: AddOrderItemInput) {
+  const event = await Event.findById(input.eventId).lean()
+  const menu = event?.menu?.find((entry) => entry.name === input.menuItemId)
+  if (!menu) throw new Error('missing fixture menu item')
+  const item = {
+    id: randomUUID(), ticketId: input.ticketId, menuItemId: input.menuItemId,
+    name: menu.name, quantity: input.quantity, unitPriceMinor: menu.price ?? 0,
+    kind: 'order', status: 'sent', addedBy: caller.id, addedByName: 'Historical buyer',
+  }
+  await EventOrder.findOneAndUpdate(
+    { eventId: input.eventId },
+    { $setOnInsert: { eventId: input.eventId }, $push: { items: item } },
+    { upsert: true },
+  )
+  await EventOrderLog.findOneAndUpdate(
+    { eventId: input.eventId },
+    { $setOnInsert: { eventId: input.eventId }, $push: { entries: {
+      id: randomUUID(), ts: new Date('2026-08-01T12:00:00Z'), actorId: caller.id,
+      action: 'add', itemId: item.id, note: 'historical_fixture',
+    } } },
+    { upsert: true },
+  )
+  return { ok: true as const, item }
+}
+
 describeIntegration('eventOrders (intégration, transaction réelle)', () => {
-  it("rang 0 : le titulaire d'un billet ajoute une ligne à SA PROPRE addition et la retrouve via listOrdersForTicket", async () => {
+  it('preserve les precommandes et inclus contre la suppression par tous les agents', async () => {
+    const owner = await seedUser()
+    const holder = await seedUser()
+    const event = await seedEvent(owner.id)
+    const ticket = await seedTicket(event.id, holder.id, { place: 'VIP', preorders: [{ name: 'Champagne', price: 15000, qty: 1 }] })
+    await materializeTicketOrders({ id: owner.id }, { eventId: event.id, ticketId: ticket.ticketCode })
+    const before = await EventOrder.findOne({ eventId: event.id }).lean()
+    const logBefore = await EventOrderLog.findOne({ eventId: event.id }).lean()
+    expect(before?.items).toHaveLength(2)
+    const callers = [owner]
+    for (const role of ['scan', 'serveur', 'manager'] as const) {
+      const agent = await seedUser()
+      await addStaff(event.id, agent.id, role)
+      callers.push(agent)
+    }
+    for (const caller of callers) {
+      for (const item of before!.items) {
+        expect(await removeOrderItem({ id: caller.id }, { eventId: event.id, itemId: item.id }))
+          .toEqual({ ok: false, status: 409, error: 'purchased_item_locked' })
+      }
+    }
+    expect(await EventOrder.findOne({ eventId: event.id }).lean()).toEqual(before)
+    expect(await EventOrderLog.findOne({ eventId: event.id }).lean()).toEqual(logBefore)
+  })
+
+  it.each([{ paid: false }, { revoked: true }])('refuse la remise apres invalidation du billet (%j)', async (state) => {
+    const owner = await seedUser()
+    const holder = await seedUser()
+    const event = await seedEvent(owner.id)
+    const ticket = await seedTicket(event.id, holder.id, { preorders: [{ name: 'Coca', price: 500, qty: 1 }] })
+    expect((await materializeTicketOrders({ id: owner.id }, { eventId: event.id, ticketId: ticket.ticketCode })).ok).toBe(true)
+    await Ticket.updateOne({ _id: ticket._id }, { $set: state })
+    const before = await EventOrder.findOne({ eventId: event.id }).lean()
+    const logBefore = await EventOrderLog.findOne({ eventId: event.id }).lean()
+    expect(before?.items).toHaveLength(1)
+    expect(await serveOrderItem({ id: owner.id }, { eventId: event.id, itemId: before!.items[0].id }))
+      .toEqual({ ok: false, status: 409, error: 'ticket_unavailable' })
+    expect(await EventOrder.findOne({ eventId: event.id }).lean()).toEqual(before)
+    expect(await EventOrderLog.findOne({ eventId: event.id }).lean()).toEqual(logBefore)
+  })
+
+  it('deux remises concurrentes produisent une seule remise et un seul journal', async () => {
+    const owner = await seedUser()
+    const holder = await seedUser()
+    const event = await seedEvent(owner.id)
+    const ticket = await seedTicket(event.id, holder.id, { preorders: [{ name: 'Coca', price: 500, qty: 1 }] })
+    await materializeTicketOrders({ id: owner.id }, { eventId: event.id, ticketId: ticket.ticketCode })
+    const order = await EventOrder.findOne({ eventId: event.id }).lean()
+    const input = { eventId: event.id, itemId: order!.items[0].id }
+    const results = await Promise.all([serveOrderItem({ id: owner.id }, input), serveOrderItem({ id: owner.id }, input)])
+    expect(results.every((result) => result.ok)).toBe(true)
+    expect(results.filter((result) => result.ok && result.alreadyServed)).toHaveLength(1)
+    const log = await EventOrderLog.findOne({ eventId: event.id }).lean()
+    expect(log?.entries.filter((entry) => entry.action === 'serve')).toHaveLength(1)
+    expect((await EventOrder.findOne({ eventId: event.id }).lean())?.items[0].status).toBe('served')
+  })
+
+  it.each([{ paid: false }, { revoked: true }])('ne prepare aucune consommation pour un billet indisponible (%j)', async (state) => {
     const owner = await seedUser()
     const event = await seedEvent(owner.id)
     const holder = await seedUser()
+    const ticket = await seedTicket(event.id, holder.id, { ...state, preorders: [{ name: 'Coca', price: 500, qty: 1 }] })
+    const before = await Ticket.findById(ticket.id).lean()
+    expect(await materializeTicketOrders({ id: owner.id }, { eventId: event.id, ticketId: ticket.ticketCode }))
+      .toEqual({ ok: false, status: 409, error: 'ticket_unavailable' })
+    expect(await EventOrder.countDocuments()).toBe(0)
+    expect(await EventOrderLog.countDocuments()).toBe(0)
+    expect(await Ticket.findById(ticket.id).lean()).toEqual(before)
+  })
+
+  it('refuse une revocation survenue juste avant le verrou transactionnel', async () => {
+    const owner = await seedUser()
+    const event = await seedEvent(owner.id)
+    const holder = await seedUser()
+    const ticket = await seedTicket(event.id, holder.id, { preorders: [{ name: 'Coca', price: 500, qty: 1 }] })
+    const original = Ticket.findOneAndUpdate.bind(Ticket)
+    const spy = vi.spyOn(Ticket, 'findOneAndUpdate').mockImplementationOnce(((...args: Parameters<typeof original>) => {
+      return Ticket.updateOne({ _id: ticket._id }, { $set: { revoked: true } }).then(() => original(...args))
+    }) as never)
+    try {
+      expect(await materializeTicketOrders({ id: owner.id }, { eventId: event.id, ticketId: ticket.ticketCode }))
+        .toEqual({ ok: false, status: 409, error: 'ticket_unavailable' })
+      expect(await EventOrder.countDocuments()).toBe(0)
+      expect(await EventOrderLog.countDocuments()).toBe(0)
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('annule lignes et revision du billet si la journalisation echoue', async () => {
+    const owner = await seedUser()
+    const event = await seedEvent(owner.id)
+    const holder = await seedUser()
+    const ticket = await seedTicket(event.id, holder.id, { preorders: [{ name: 'Coca', price: 500, qty: 1 }] })
+    const before = await Ticket.findById(ticket.id).lean()
+    const spy = vi.spyOn(EventOrderLog, 'findOneAndUpdate').mockImplementationOnce(() => { throw new Error('audit unavailable') })
+    try {
+      await expect(materializeTicketOrders({ id: owner.id }, { eventId: event.id, ticketId: ticket.ticketCode })).rejects.toThrow('audit unavailable')
+      expect(await EventOrder.countDocuments()).toBe(0)
+      expect(await EventOrderLog.countDocuments()).toBe(0)
+      expect(await Ticket.findById(ticket.id).lean()).toEqual(before)
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('refuse un nouvel ajout pour client, tiers, organisateur et tous les agents', async () => {
+    const owner = await seedUser()
+    const holder = await seedUser()
+    const stranger = await seedUser()
+    const event = await seedEvent(owner.id)
     const ticket = await seedTicket(event.id, holder.id)
+    const callers = [owner, holder, stranger]
+    for (const role of ['scan', 'serveur', 'manager'] as const) {
+      const agent = await seedUser()
+      await addStaff(event.id, agent.id, role)
+      callers.push(agent)
+    }
+    for (const caller of callers) {
+      expect(await addOrderItem({ id: caller.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 }))
+        .toEqual({ ok: false, status: 410, error: 'standalone_orders_disabled_v1' })
+    }
+    expect(await EventOrder.countDocuments()).toBe(0)
+    expect(await EventOrderLog.countDocuments()).toBe(0)
+  })
 
-    const result = await addOrderItem(
-      { id: holder.id },
-      { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 2 }
-    )
-    expect(result.ok).toBe(true)
-    if (!result.ok) return
-    expect(result.item.name).toBe('Coca')
-    expect(result.item.unitPriceMinor).toBe(500) // résolu serveur depuis event.menu, jamais du client
-    expect(result.item.quantity).toBe(2)
-    expect(result.item.addedBy).toBe(holder.id)
-    expect(result.item.kind).toBe('order')
-    expect(result.item.status).toBe('sent')
+  it('ne fusionne plus les ajouts repetes dans une ligne historique', async () => {
+    const owner = await seedUser()
+    const holder = await seedUser()
+    const event = await seedEvent(owner.id)
+    const ticket = await seedTicket(event.id, holder.id)
+    await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 2 })
+    const before = await EventOrder.findOne({ eventId: event.id }).lean()
+    const logBefore = await EventOrderLog.findOne({ eventId: event.id }).lean()
+    for (let attempt = 0; attempt < 2; attempt++) {
+      expect(await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 }))
+        .toEqual({ ok: false, status: 410, error: 'standalone_orders_disabled_v1' })
+    }
+    expect(await EventOrder.findOne({ eventId: event.id }).lean()).toEqual(before)
+    expect(await EventOrderLog.findOne({ eventId: event.id }).lean()).toEqual(logBefore)
+  })
 
+  it('le titulaire consulte et reduit une ancienne ligne sans pouvoir augmenter sa quantite', async () => {
+    const owner = await seedUser()
+    const holder = await seedUser()
+    const event = await seedEvent(owner.id)
+    const ticket = await seedTicket(event.id, holder.id)
+    const { item } = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 5 })
+    expect(await updateOrderItemQuantity({ id: holder.id }, { eventId: event.id, itemId: item.id, quantity: 6 }))
+      .toEqual({ ok: false, status: 410, error: 'standalone_orders_disabled_v1' })
+    const updated = await updateOrderItemQuantity({ id: holder.id }, { eventId: event.id, itemId: item.id, quantity: 2 })
+    expect(updated.ok).toBe(true)
     const listed = await listOrdersForTicket({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode })
     expect(listed.ok).toBe(true)
-    if (!listed.ok) return
-    expect(listed.items).toHaveLength(1)
-    expect(listed.items[0].id).toBe(result.item.id)
-
-    // Le titulaire peut aussi modifier la quantité de SA propre ligne tant
-    // qu'elle n'est ni servie ni payée.
-    const updated = await updateOrderItemQuantity({ id: holder.id }, { eventId: event.id, itemId: result.item.id, quantity: 5 })
-    expect(updated.ok).toBe(true)
-    if (!updated.ok || updated.noop) return
-    expect(updated.item.quantity).toBe(5)
-  })
-
-  it('fusionne les ajouts répétés du même article dans une seule ligne éditable', async () => {
-    const owner = await seedUser()
-    const event = await seedEvent(owner.id)
-    const holder = await seedUser()
-    const ticket = await seedTicket(event.id, holder.id)
-
-    const first = await addOrderItem(
-      { id: holder.id },
-      { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 }
-    )
-    const second = await addOrderItem(
-      { id: holder.id },
-      { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 2 }
-    )
-
-    expect(first.ok).toBe(true)
-    expect(second.ok).toBe(true)
-    if (!first.ok || !second.ok) return
-    expect(second.item.id).toBe(first.item.id)
-    expect(second.item.quantity).toBe(3)
-
-    const order = await EventOrder.findOne({ eventId: event.id }).lean()
-    expect(order?.items).toHaveLength(1)
-    expect(order?.items[0].quantity).toBe(3)
-  })
-
-  it("ferme la lacune legacy : rang 0 refusé (403 not_your_ticket) pour créer une ligne sur le billet d'un tiers", async () => {
-    const owner = await seedUser()
-    const event = await seedEvent(owner.id)
-    const holder = await seedUser()
-    const intruder = await seedUser()
-    const ticket = await seedTicket(event.id, holder.id)
-
-    const result = await addOrderItem(
-      { id: intruder.id },
-      { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 }
-    )
-    expect(result.ok).toBe(false)
-    if (result.ok) return
-    expect(result.status).toBe(403)
-    expect(result.error).toBe('not_your_ticket')
+    if (listed.ok) expect(listed.items).toEqual([expect.objectContaining({ id: item.id, quantity: 2 })])
   })
 
   it('ferme H15 : un rang 0 ne peut lire que les commandes de SON PROPRE billet', async () => {
@@ -199,7 +303,7 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     const holder = await seedUser()
     const stranger = await seedUser()
     const ticket = await seedTicket(event.id, holder.id)
-    await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
+    await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
 
     const result = await listOrdersForTicket({ id: stranger.id }, { eventId: event.id, ticketId: ticket.ticketCode })
     expect(result.ok).toBe(false)
@@ -208,7 +312,7 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     expect(result.error).toBe('forbidden')
   })
 
-  it('staff (serveur, rang 2) ajoute/sert/encaisse une ligne sur le billet du client ; le client (rang 0) est refusé sur serve/pay/cancel', async () => {
+  it('staff (serveur, rang 2) sert/encaisse une ligne historique sur le billet du client ; le client (rang 0) est refusé sur serve/pay/cancel', async () => {
     const owner = await seedUser()
     const event = await seedEvent(owner.id)
     const serveurUser = await seedUser()
@@ -216,7 +320,7 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     const holder = await seedUser()
     const ticket = await seedTicket(event.id, holder.id)
 
-    const added = await addOrderItem(
+    const added = await seedHistoricalItem(
       { id: serveurUser.id },
       { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Champagne', quantity: 1 }
     )
@@ -268,7 +372,7 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     await addStaff(event.id, scanUser.id, 'scan')
     const holder = await seedUser()
     const ticket = await seedTicket(event.id, holder.id)
-    const added = await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
+    const added = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
     expect(added.ok).toBe(true)
     if (!added.ok) return
 
@@ -296,8 +400,8 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     const holder = await seedUser()
     const ticket = await seedTicket(event.id, holder.id)
 
-    const item1 = await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
-    const item2 = await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
+    const item1 = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
+    const item2 = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
     expect(item1.ok).toBe(true)
     expect(item2.ok).toBe(true)
     if (!item1.ok || !item2.ok) return
@@ -327,7 +431,7 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     const event = await seedEvent(owner.id)
     const holder = await seedUser()
     const ticket = await seedTicket(event.id, holder.id)
-    const item = await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
+    const item = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
     expect(item.ok).toBe(true)
     if (!item.ok) return
 
@@ -346,7 +450,7 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     const holder = await seedUser()
     const ticket = await seedTicket(event.id, holder.id)
 
-    const added = await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
+    const added = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
     expect(added.ok).toBe(true)
     if (!added.ok) return
     await serveOrderItem({ id: serveurUser.id }, { eventId: event.id, itemId: added.item.id })
@@ -393,12 +497,12 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     })
 
     // Ligne à encaisser (500 x 2 = 1000).
-    const payable = await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 2 })
+    const payable = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 2 })
     expect(payable.ok).toBe(true)
     if (!payable.ok) return
 
     // Ligne annulée : ne doit JAMAIS être facturée.
-    const toCancel = await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Champagne', quantity: 1 })
+    const toCancel = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Champagne', quantity: 1 })
     expect(toCancel.ok).toBe(true)
     if (!toCancel.ok) return
     await cancelOrderItem({ id: owner.id }, { eventId: event.id, itemId: toCancel.item.id, reason: 'annulé par erreur' })
@@ -479,7 +583,7 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     await addStaff(event.id, serveurUser.id, 'serveur')
     const holder = await seedUser()
     const ticket = await seedTicket(event.id, holder.id)
-    await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
+    await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
 
     // listOrdersForEvent : rang 0 refusé, rang ≥ 1 (même simple scan) autorisé.
     const eventViewDenied = await listOrdersForEvent({ id: holder.id }, { eventId: event.id })
@@ -517,7 +621,7 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     const holder = await seedUser()
     const ticket = await seedTicket(event.id, holder.id)
 
-    const added = await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
+    const added = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 4 })
     expect(added.ok).toBe(true)
     if (!added.ok) return
 
@@ -525,12 +629,12 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     await serveOrderItem({ id: managerUser.id }, { eventId: event.id, itemId: added.item.id })
     await payTicketOrders({ id: managerUser.id }, { eventId: event.id, ticketId: ticket.ticketCode })
 
-    const added2 = await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Champagne', quantity: 1 })
+    const added2 = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Champagne', quantity: 1 })
     expect(added2.ok).toBe(true)
     if (!added2.ok) return
     await cancelOrderItem({ id: managerUser.id }, { eventId: event.id, itemId: added2.item.id, reason: 'test log' })
 
-    const added3 = await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
+    const added3 = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
     expect(added3.ok).toBe(true)
     if (!added3.ok) return
     await removeOrderItem({ id: holder.id }, { eventId: event.id, itemId: added3.item.id })
@@ -538,7 +642,8 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     const log = await EventOrderLog.findOne({ eventId: event.id }).lean()
     expect(log).toBeTruthy()
     const actions = (log?.entries ?? []).map((e) => e.action)
-    expect(actions).toEqual(expect.arrayContaining(['add', 'edit', 'serve', 'pay', 'cancel', 'remove']))
+    expect(actions).toEqual(expect.arrayContaining(['edit', 'serve', 'pay', 'cancel', 'remove']))
+    expect(log?.entries.filter((entry) => entry.action === 'add').every((entry) => entry.note === 'historical_fixture')).toBe(true)
 
     for (const entry of log?.entries ?? []) {
       expect(entry.id).toBeTruthy()
@@ -563,7 +668,7 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     const holder = await seedUser()
     const ticket = await seedTicket(event.id, holder.id)
 
-    const added = await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Champagne', quantity: 1 })
+    const added = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Champagne', quantity: 1 })
     expect(added.ok).toBe(true)
     if (!added.ok) return
 
@@ -604,7 +709,7 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
 
     // Ligne fraîchement ajoutée (jamais servie, jamais payée), puis annulée
     // par le manager (owner) avant tout service.
-    const added = await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
+    const added = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
     expect(added.ok).toBe(true)
     if (!added.ok) return
     const cancelled = await cancelOrderItem({ id: owner.id }, { eventId: event.id, itemId: added.item.id, reason: 'erreur de saisie' })
@@ -653,7 +758,7 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     const holder = await seedUser()
     // Le billet appartient bien au caller, mais pour eventA — pas eventB.
     const ticketA = await seedTicket(eventA.id, holder.id)
-    await addOrderItem({ id: holder.id }, { eventId: eventA.id, ticketId: ticketA.ticketCode, menuItemId: 'Coca', quantity: 1 })
+    await seedHistoricalItem({ id: holder.id }, { eventId: eventA.id, ticketId: ticketA.ticketCode, menuItemId: 'Coca', quantity: 1 })
 
     const crossEventRead = await listOrdersForTicket({ id: holder.id }, { eventId: eventB.id, ticketId: ticketA.ticketCode })
     expect(crossEventRead.ok).toBe(false)
@@ -705,7 +810,7 @@ describeIntegration('eventOrders (intégration, transaction réelle)', () => {
     const holder = await seedUser()
     const ticket = await seedTicket(event.id, holder.id)
 
-    const added = await addOrderItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
+    const added = await seedHistoricalItem({ id: holder.id }, { eventId: event.id, ticketId: ticket.ticketCode, menuItemId: 'Coca', quantity: 1 })
     expect(added.ok).toBe(true)
     if (!added.ok) return
 

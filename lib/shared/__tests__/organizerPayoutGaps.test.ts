@@ -4,8 +4,8 @@ import { computePayoutGapLabel } from '../organizerPayoutGaps'
 describe('computePayoutGapLabel', () => {
   it("renvoie une chaîne vide quand tout l'encaissement est configuré", () => {
     const label = computePayoutGapLabel(
-      [{ currency: 'EUR', region: 'France', cancelled: false }],
-      { stripeChargesEnabled: true, momos: {} }
+      [{ currency: 'XOF', region: 'Bénin', cancelled: false }],
+      { stripeChargesEnabled: false, momos: { bj: '+2290197000000' } }
     )
     expect(label).toBe('')
   })
@@ -18,12 +18,12 @@ describe('computePayoutGapLabel', () => {
     expect(label).toBe('')
   })
 
-  it("signale le compte bancaire manquant pour un événement EUR sans Stripe Connect actif", () => {
+  it("ignore les événements EUR historiques au lieu de demander Stripe Connect", () => {
     const label = computePayoutGapLabel(
       [{ currency: 'EUR', region: 'France', cancelled: false }],
       { stripeChargesEnabled: false, momos: {} }
     )
-    expect(label).toBe('ton compte bancaire (événements en euros)')
+    expect(label).toBe('')
   })
 
   it('signale un numéro Mobile Money manquant par pays, sans doublon', () => {
@@ -46,7 +46,7 @@ describe('computePayoutGapLabel', () => {
     expect(label).toBe('')
   })
 
-  it('combine les deux manques (EUR + XOF) dans un seul libellé', () => {
+  it('signale seulement les manques Mobile Money XOF, sans compte EUR', () => {
     const label = computePayoutGapLabel(
       [
         { currency: 'EUR', region: 'France', cancelled: false },
@@ -54,6 +54,6 @@ describe('computePayoutGapLabel', () => {
       ],
       { stripeChargesEnabled: false, momos: {} }
     )
-    expect(label).toBe('ton compte bancaire (événements en euros) et un numéro Mobile Money pour Togo')
+    expect(label).toBe('un numéro Mobile Money pour Togo')
   })
 })

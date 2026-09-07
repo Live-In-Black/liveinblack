@@ -1,5 +1,5 @@
-import ProviderProfile from '@/lib/models/ProviderProfile'
-import Event from '@/lib/models/Event'
+import { getProviderByUserId } from '../provider/providers'
+import { getEventById } from '../events/events'
 import type { ConversationDoc } from '@/lib/models/Conversation'
 import type { HydratedDocument } from 'mongoose'
 import type { SendableType } from './messagingSendUtils'
@@ -48,13 +48,14 @@ export async function resolveSendMessageContent(
     if (!catalogItemId) return { ok: false, status: 400, error: 'invalid_input' }
 
     const otherId = conversation.participantIds.find((id) => id !== callerId)
-    const provider = otherId ? await ProviderProfile.findOne({ userId: otherId }).lean() : null
+    const provider = otherId ? await getProviderByUserId(otherId) : null
     const item = provider?.catalog?.find((catalogItem) => catalogItem.id === catalogItemId && catalogItem.available !== false)
     if (!provider || !item) return { ok: false, status: 404, error: 'catalog_item_not_found' }
 
     content = buildCatalogItemMessageContent({
       providerId: otherId,
       providerName: provider.name || '',
+      currency: provider.catalogCurrency,
       item,
     })
 
@@ -64,9 +65,9 @@ export async function resolveSendMessageContent(
   if (input.type === 'event') {
     const eventId = input.eventId?.trim()
     if (!eventId) return { ok: false, status: 400, error: 'invalid_input' }
-    const event = await Event.findById(eventId).lean()
-    if (!event) return { ok: false, status: 404, error: 'event_not_found' }
-    content = buildEventMessageContent(event)
+    const result = await getEventById(eventId)
+    if (result.status !== 'ok') return { ok: false, status: 404, error: 'event_not_found' }
+    content = buildEventMessageContent({ ...result.event, _id: result.event.id })
     return { ok: true, content }
   }
 

@@ -11,7 +11,7 @@ import { isEventEnded } from '@/lib/shared/event-time'
 import { normalizeShowOptions } from '@/lib/shared/showOptions'
 import { reliablePhotoUrl } from '@/lib/shared/placeholderImage'
 import { canBook as canBookFn, getBookingBlockedReason } from '@/lib/server/permissions'
-import { EventCheckoutPanel, EventInterestButtonClient, ResaleListingsSection } from '@/app/components/features'
+import { EventCheckoutPanel, EventInterestButtonClient } from '@/app/components/features'
 import AgeVerificationGate from '@/app/components/layout/AgeVerificationGate'
 import EventShareButton from './EventShareButton'
 import EventVenueMap from './EventVenueMap'
@@ -340,8 +340,6 @@ export default async function EventDetailContent({
           </div>
         </Section>
       ) : null}
-
-      <ResaleListingsSection eventId={event.id} isAuthenticated={Boolean(session?.user)} />
 
       {/* RÉSERVATION */}
       {session?.user ? (

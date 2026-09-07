@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import mongoose from 'mongoose'
 import EventOrder from '@/lib/models/EventOrder'
+import Ticket from '@/lib/models/Ticket'
 import { serveEventOrderItem, type ServeOrderItemDependencies } from '../events/eventOrderServeItemService'
 
 vi.mock('../../models/EventOrder', () => ({
@@ -8,6 +9,7 @@ vi.mock('../../models/EventOrder', () => ({
     findOne: vi.fn(),
   },
 }))
+vi.mock('../../models/Ticket', () => ({ default: { findOneAndUpdate: vi.fn() } }))
 
 describe('eventOrderServeItemService', () => {
   const caller = { id: 'u1' }
@@ -34,6 +36,7 @@ describe('eventOrderServeItemService', () => {
       startSession: vi.fn().mockResolvedValue(session as unknown as mongoose.ClientSession),
     }
     vi.clearAllMocks()
+    vi.mocked(Ticket.findOneAndUpdate).mockResolvedValue({ ticketCode: 'T1' } as never)
   })
 
   it('refuse un non staff', async () => {
@@ -105,6 +108,11 @@ describe('eventOrderServeItemService', () => {
     if (!result.ok || result.alreadyServed) return
     expect(item.status).toBe('served')
     expect(item.servedBy).toBe('u1')
+    expect(Ticket.findOneAndUpdate).toHaveBeenCalledWith(
+      { ticketCode: 'T1', eventId: 'event-1', paid: true, revoked: { $ne: true } },
+      { $inc: { consumptionRevision: 1 } },
+      { session, returnDocument: 'after' },
+    )
     expect(deps.appendLog).toHaveBeenCalledWith(
       'event-1',
       expect.objectContaining({
@@ -114,5 +122,18 @@ describe('eventOrderServeItemService', () => {
       }),
       session as unknown as mongoose.ClientSession,
     )
+  })
+
+  it('ne sert ni ne journalise une ligne dont le billet est indisponible', async () => {
+    const item = { id: 'item-1', status: 'sent', ticketId: 'T1', servedAt: null }
+    const save = vi.fn()
+    vi.mocked(EventOrder.findOne).mockReturnValueOnce({ session: vi.fn().mockResolvedValue({ items: [item], save }) } as never)
+    vi.mocked(Ticket.findOneAndUpdate).mockResolvedValueOnce(null)
+    expect(await serveEventOrderItem(caller, { eventId: 'event-1', itemId: 'item-1' }, deps))
+      .toEqual({ ok: false, status: 409, error: 'ticket_unavailable' })
+    expect(item.status).toBe('sent')
+    expect(item.servedAt).toBeNull()
+    expect(save).not.toHaveBeenCalled()
+    expect(deps.appendLog).not.toHaveBeenCalled()
   })
 })

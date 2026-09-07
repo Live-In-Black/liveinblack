@@ -890,7 +890,7 @@ describeIntegration("POST /api/conversations/[id]/messages — garde canOrderSer
     const requester = await seedUser({ roles: ['prestataire'], activeRole: 'prestataire' })
     const provider = await seedUser({ roles: ['prestataire'], activeRole: 'prestataire' })
     const ProviderProfile = (await import('../../models/ProviderProfile')).default
-    await ProviderProfile.create({ userId: provider.id, name: 'Prestataire Test', catalog: [{ id: 'item-1', name: 'Prestation', available: true }] })
+    await ProviderProfile.create({ userId: provider.id, name: 'Prestataire Test', regionId: 'benin', country: 'Bénin', city: 'Cotonou', subscriptionActive: true, catalogCurrency: 'XOF', catalog: [{ id: 'item-1', name: 'Prestation', available: true, currency: 'XOF' }] })
 
     const conv = await createDirectConversation({ id: requester.id }, { otherUserId: provider.id })
     if (!conv.ok) throw new Error('setup failed')
@@ -915,7 +915,7 @@ describeIntegration("POST /api/conversations/[id]/messages — garde canOrderSer
     const requester = await seedUser({ roles: ['client'], activeRole: 'client' })
     const provider = await seedUser({ roles: ['prestataire'], activeRole: 'prestataire' })
     const ProviderProfile = (await import('../../models/ProviderProfile')).default
-    await ProviderProfile.create({ userId: provider.id, name: 'Prestataire Test', catalog: [{ id: 'item-1', name: 'Prestation', available: true }] })
+    await ProviderProfile.create({ userId: provider.id, name: 'Prestataire Test', regionId: 'benin', country: 'Bénin', city: 'Cotonou', subscriptionActive: true, catalogCurrency: 'XOF', catalog: [{ id: 'item-1', name: 'Prestation', available: true, currency: 'XOF' }] })
 
     const conv = await createDirectConversation({ id: requester.id }, { otherUserId: provider.id })
     if (!conv.ok) throw new Error('setup failed')

@@ -21,7 +21,7 @@ import {
   registerAndSubmitOrganizerApplication,
   type DocumentEntryInput,
 } from '../provider/applications'
-import { validateOrganizerFormData, isValidSiret } from '@/lib/shared/applicationValidation'
+import { validateOrganizerFormData } from '@/lib/shared/applicationValidation'
 import User from '@/lib/models/User'
 import Application from '@/lib/models/Application'
 import type { OrganizerFormData } from '@/lib/shared/applicationValidation'
@@ -36,19 +36,18 @@ const TINY_PNG =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
 
 const VALID_FORM: OrganizerFormData = {
-  nomCommercial: 'Club Neon',
-  siret: '73282932000074', // SIREN/SIRET valide au sens Luhn (INSEE, publiquement connu)
+  nomCommercial: 'Club Cotonou',
   emailPro: 'contact@club-neon.test',
-  telephoneProCode: '+228',
-  telephonePro: '90000000',
-  adresseEtablissement: '12 rue du Test',
+  telephoneProCode: '+229',
+  telephonePro: '0196123456',
+  adresseEtablissement: '12 rue du Test, Cotonou',
   noFixedAddress: false,
   siteWeb: '',
   typeEtablissement: 'Boîte / Club',
   typeEtablissementCustom: '',
   itinerant: false,
-  ville: 'Lomé',
-  pays: 'Togo',
+  ville: 'Cotonou',
+  pays: 'Bénin',
   zonesActivite: [],
   capacite: 200,
   horaires: 'Ven-Sam 23h-07h',
@@ -91,16 +90,7 @@ async function seedUser(overrides: Record<string, unknown> = {}) {
   })
 }
 
-describe('validateOrganizerFormData / isValidSiret (unitaire, pur)', () => {
-  it('accepte un SIRET valide (Luhn)', () => {
-    expect(isValidSiret('732 829 320 00074')).toBe(true)
-  })
-  it('accepte l’échappatoire "que des zéros"', () => {
-    expect(isValidSiret('000000000')).toBe(true)
-  })
-  it('refuse un SIRET invalide', () => {
-    expect(isValidSiret('123456789')).toBe(false)
-  })
+describe('validateOrganizerFormData (unitaire, pur)', () => {
   it('valide un formulaire complet', () => {
     expect(validateOrganizerFormData(VALID_FORM)).toEqual({ ok: true })
   })
@@ -155,7 +145,7 @@ describeIntegration('applications (intégration, vraie base + Cloudinary) — do
 
     it('refuse un formulaire invalide', async () => {
       const alice = await seedUser()
-      const result = await submitOrganizerApplication({ id: alice.id }, { formData: { ...VALID_FORM, siret: 'invalide' }, documents: VALID_DOCS })
+      const result = await submitOrganizerApplication({ id: alice.id }, { formData: { ...VALID_FORM, nomCommercial: '' }, documents: VALID_DOCS })
       expect(result.ok).toBe(false)
     })
 
@@ -186,7 +176,7 @@ describeIntegration('applications (intégration, vraie base + Cloudinary) — do
     it('resoumission après needs_changes passe le statut à resubmitted', async () => {
       const alice = await seedUser()
       await submitOrganizerApplication({ id: alice.id }, { formData: VALID_FORM, documents: VALID_DOCS })
-      await Application.updateOne({ userId: alice.id, type: 'organisateur' }, { $set: { status: 'needs_changes', requestedChanges: 'Ajoute ton SIRET complet.' } })
+      await Application.updateOne({ userId: alice.id, type: 'organisateur' }, { $set: { status: 'needs_changes', requestedChanges: 'Corrige la pièce d’identité du titulaire.' } })
 
       const result = await submitOrganizerApplication({ id: alice.id }, { formData: VALID_FORM, documents: VALID_DOCS, candidateNote: 'Corrigé.' })
       expect(result.ok).toBe(true)

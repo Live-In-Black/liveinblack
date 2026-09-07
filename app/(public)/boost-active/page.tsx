@@ -5,13 +5,13 @@ export const metadata: Metadata = { title: 'Activation du boost — LIVEINBLACK'
 
 export const dynamic = 'force-dynamic'
 
-// Cible de app/api/checkout/boost/route.ts (success_url : ?session_id=&boost_id=).
+// Cible de app/api/checkout/boost/route.ts (FedaPay : ?id= ou ?session_id=&boost_id=).
 // Port de src/pages/BoostActivePage.jsx.
 export default async function BoostActivePage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string; boost_id?: string }>
+  searchParams: Promise<{ session_id?: string; id?: string; boost_id?: string }>
 }) {
   const params = await searchParams
-  return <BoostActiveClient sessionId={params.session_id || null} boostId={params.boost_id || null} />
+  return <BoostActiveClient sessionId={params.session_id || params.id || null} boostId={params.boost_id || null} />
 }

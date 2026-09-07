@@ -21,7 +21,7 @@ const MAX_PAST_EVENTS = 12
 export async function listPastEventsForProvider(providerUserId: string): Promise<PastProviderEventView[]> {
   await getDb()
   const now = new Date().toISOString().slice(0, 10)
-  const events = await Event.find({ 'artists.providerId': providerUserId, date: { $lt: now }, cancelled: { $ne: true } })
+  const events = await Event.find({ 'artists.providerId': providerUserId, region: 'Bénin', currency: 'XOF', date: { $lt: now }, cancelled: { $ne: true } })
     .select('name date dateDisplay city imageUrl')
     .sort({ date: -1 })
     .limit(MAX_PAST_EVENTS)

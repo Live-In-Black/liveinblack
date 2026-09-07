@@ -252,7 +252,7 @@ def main():
     doc.add_heading("1. Résumé exécutif", level=1)
     add_para(doc, "LIVEINBLACK est une plateforme de sorties et d’événements. Elle met en relation des clients, des organisateurs, des prestataires et des agents de contrôle autour de la découverte d’événements, la réservation de billets, la messagerie et la modération.")
     add_bullet(doc, "Découvrir : événements, organisateurs, prestataires, blog et contenus d’aide.")
-    add_bullet(doc, "Convertir : inscription, connexion, achat de billets, invitations, revente et paiements.")
+    add_bullet(doc, "Convertir : inscription, connexion, achat de billets, invitations, paiements et remboursements. La revente est exclue de la V1.")
     add_bullet(doc, "Animer : intérêts, abonnements, amis, notifications, playlists et messagerie.")
     add_bullet(doc, "Opérer : studios organisateur/prestataire, ventes sur place, scanner, paiements et espace agent.")
     add_bullet(doc, "Protéger : rôles, contrôles d’accès, validation des webhooks, confidentialité, export et suppression de compte.")
@@ -263,14 +263,14 @@ def main():
         ("Web connecté", "Profil, billets, social, messagerie et espaces métier", "client, organisateur, prestataire, agent"),
         ("API Next.js", "Authentification, règles métier, données et intégrations", f"{len(api)} routes API détectées"),
         ("Données", "Persistance des utilisateurs, événements, commandes, tickets, social et modération", "MongoDB / Mongoose"),
-        ("Services externes", "Paiements, email, médias, musique, analytics et déploiement", "Stripe, FedaPay, Resend, Cloudinary, Deezer/Apple, Vercel"),
+        ("Services externes", "Paiements, email, médias, musique, analytics et déploiement", "FedaPay, Resend, Cloudinary, Deezer/Apple, Vercel"),
     ], [1600, 3900, 3860])
     add_para(doc, "Le client mobile consomme les mêmes routes web via une base API configurable. Le contrat statique courant relie 207 appels mobiles uniques à une route et une méthode, dont 31 appels de l’espace agent.")
 
     doc.add_heading("3. Rôles et responsabilités", level=1)
     add_table(doc, ["Rôle", "Objectif", "Capacités principales"], [
         ("Visiteur", "Explorer sans compte", "Consulter pages publiques, événements, profils, blog, aide et légal; rechercher; ouvrir les modales publiques."),
-        ("Client", "Participer à une sortie", "Acheter/recevoir des billets, gérer profil, intérêts, organisateurs suivis, amis, notifications, messages, revente et remboursements."),
+        ("Client", "Participer à une sortie", "Acheter/recevoir des billets, gérer profil, intérêts, organisateurs suivis, amis, notifications, messages et remboursements."),
         ("Organisateur", "Créer et exploiter ses événements", "Studio, événements, billets, invités, équipe, promo, playlist, statistiques, ventes et reversements."),
         ("Prestataire", "Présenter et vendre ses services", "Profil public, catalogue, médias, avis, abonnement et facturation."),
         ("Agent", "Modérer et administrer la plateforme", "Dashboard, candidatures, comptes, événements, signalements, avis, paiements, suppressions, homepage, blog et boosts."),
@@ -300,7 +300,7 @@ def main():
     workflows = [
         ("Inscription et activation", ["Le visiteur choisit client, organisateur ou prestataire.", "Le compte est créé puis l’email est vérifié.", "Le profil, les préférences et le rôle actif sont accessibles après connexion.", "Les demandes métier peuvent rester en brouillon avant soumission et modération."]),
         ("Découverte et intérêt", ["Le visiteur filtre par recherche, région, catégorie, ambiance ou date.", "La page détail présente l’événement, l’organisateur, les billets, la playlist et les actions disponibles.", "Le client connecté peut ajouter/retirer son intérêt ou suivre l’organisateur."]),
-        ("Achat de billet", ["Le client sélectionne un type de billet et une quantité.", "Le système crée une commande ou une réservation de places avec expiration si nécessaire.", "Le paiement passe par Stripe/FedaPay ou le parcours gratuit.", "La confirmation produit les billets, le QR/token, l’historique et les notifications."]),
+        ("Achat de billet", ["Le client sélectionne un type de billet et une quantité.", "Le système crée une commande ou une réservation de places avec expiration si nécessaire.", "Le paiement passe par FedaPay pour le lancement Bénin.", "La confirmation produit les billets, le QR/token, l’historique et les notifications."]),
         ("Billet, invitation et contrôle", ["Un billet peut être assigné, transféré, accepté/refusé, revendu ou révoqué selon son état.", "Le scanner vérifie le token et empêche les doublons.", "Les commandes et journaux de service assurent la traçabilité."]),
         ("Organisation d’événement", ["L’organisateur configure informations, places, tarifs, médias, staff, guestlist, promo et playlist.", "La publication rend l’événement découvrable selon son statut.", "Les changements, reports et annulations appliquent des contrôles de propriété et déclenchent remboursements/notifications."]),
         ("Messagerie", ["Les utilisateurs créent une conversation directe ou un groupe.", "Ils envoient textes, médias, réactions, sondages, votes, messages épinglés et favoris.", "Les membres peuvent lire, masquer, quitter, renommer, gérer les rôles et signaler un contenu."]),
@@ -315,7 +315,7 @@ def main():
     modules = [
         ("Identité et profil", "Inscription email, connexion Auth.js, vérification, réinitialisation, changement de mot de passe, nom, email, téléphone, avatar, démographie, préférences, confidentialité, export et suppression."),
         ("Événements", "Création, édition, publication, recherche, détail, catégories, styles musicaux, ambiances, lieux, images, vidéo, date, capacité, tarifs, annulation et report."),
-        ("Billetterie", "Types de billets, commandes, billets gratuits/payants, hold de place, invitations, assignation, annulation, check-in, revente, remboursement et reçus."),
+        ("Billetterie", "Types de billets payants, commandes, hold de place, invitations, assignation, annulation, check-in, remboursement et reçus. Revente exclue V1."),
         ("Social", "Intérêt événement, abonnements organisateurs, amis, demandes, notifications, présence, blocage et signalement utilisateur."),
         ("Messagerie", "Conversations directes/groupes, membres, rôles, mute, avatar, contact téléphone, messages, médias, réactions, édition, suppression, forward, star, polls, read, typing et pin."),
         ("Organisateur", "Studio, événements, statistiques, staff, guestlist, promos, playlist, ventes sur place, shifts, payouts, historique et médias."),
@@ -371,14 +371,13 @@ def main():
             ("Scanner un billet", "Staff autorisé", "Scanner ou saisir le token.", "Billet accepté une fois ou motif de refus explicite."),
         ]),
         ("Billetterie, commandes et paiements", [
-            ("Réserver un billet gratuit", "Client/Visiteur", "Choisir un billet à prix nul et confirmer.", "Commande matérialisée et ticket émis sans paiement."),
-            ("Payer une commande", "Client", "Choisir Stripe ou FedaPay selon disponibilité.", "Checkout créé; commande confirmée après webhook/retour validé."),
+            ("Constater l'absence d'événement gratuit", "Client/Visiteur", "Consulter les offres de billets V1.", "Aucun événement entièrement gratuit n'est présenté comme parcours de lancement."),
+            ("Payer une commande", "Client", "Choisir un moyen actif via FedaPay au Bénin.", "Checkout créé; commande confirmée après webhook/retour validé."),
             ("Maintenir une place", "Client", "Créer un seat hold avec expiration.", "Place réservée temporairement puis libérée si expiration."),
             ("Consulter ses billets", "Client", "Ouvrir l’espace billets.", "Billets filtrés par utilisateur, événement et état."),
             ("Partager/assigner un billet", "Client", "Saisir le destinataire et confirmer.", "Invitation sortante créée; destinataire accepte ou refuse."),
             ("Quitter un billet assigné", "Client", "Demander à quitter le billet reçu.", "Billet rendu disponible selon les règles de l’événement."),
-            ("Revendre un billet", "Client", "Créer une annonce avec prix et conditions.", "Annonce active; acheteur peut lancer le checkout de revente."),
-            ("Acheter une revente", "Client", "Ouvrir une annonce et payer.", "Transfert sécurisé et annonce clôturée."),
+            ("Constater l'absence de revente", "Client", "Ouvrir Mes billets ou une fiche événement.", "Aucun bouton, listing ou checkout de revente n'est proposé en V1."),
             ("Demander un remboursement", "Client", "Ouvrir la commande et envoyer le motif.", "Demande idempotente; traitement selon statut de l’événement."),
             ("Rembourser/compléter côté agent", "Agent", "Ouvrir la file des remboursements et marquer le traitement.", "Alerte résolue et historique conservé."),
             ("Demander un reversement", "Organisateur", "Renseigner moyen et montant éligible.", "Payout request créé avec contrôle de solde."),
@@ -420,7 +419,7 @@ def main():
             ("Consulter les boosts", "Agent", "Voir campagnes actives et créneaux.", "État et disponibilité des boosts visibles."),
         ]),
         ("Système, intégrations et conformité", [
-            ("Recevoir un webhook Stripe", "Stripe", "Vérifier signature et traiter l’événement.", "Réponse 2xx après traitement idempotent."),
+            ("Recevoir un webhook historique Stripe", "Système", "Refuser ou neutraliser les anciens flux hors V1.", "Aucun parcours de paiement Stripe actif n'est exposé au lancement Bénin."),
             ("Recevoir un webhook FedaPay", "FedaPay", "Valider payload et état transaction.", "Commande/abonnement mis à jour."),
             ("Signer un upload média", "Utilisateur autorisé", "Demander une signature pour Cloudinary.", "Upload limité au contexte et au type autorisé."),
             ("Envoyer email transactionnel", "Système", "Déclencher template après événement métier.", "Email envoyé ou erreur journalisée sans casser la transaction."),
@@ -445,7 +444,7 @@ def main():
         ("J-03", "Client", "Suivre un organisateur", "Annuaire → profil organisateur → suivre → réglages d’alertes → liste suivis", "Follow et préférences alertes persistés; compteur cohérent."),
         ("J-04", "Client", "Acheter et utiliser un billet", "Commande → paiement → billet → QR/token → scanner à l’entrée", "Une seule validation; refus explicite si billet annulé, inconnu ou déjà utilisé."),
         ("J-05", "Client", "Transférer un billet", "Billets → assigner → destinataire reçoit invitation → accepter/refuser → propriétaire final", "Transfert atomique; impossibilité de double attribution."),
-        ("J-06", "Client", "Revendre un billet", "Billet éligible → annonce → acheteur → checkout revente → transfert → clôture", "Prix/règles respectés; ticket change de propriétaire sans duplicat."),
+        ("J-06", "Client", "Vérifier la revente exclue", "Mes billets / fiche événement → aucun bouton ni listing de revente → route directe refusée", "La V1 ne permet aucune mise en vente ni achat de revente."),
         ("J-07", "Client", "Demander remboursement", "Commande → remboursement → motif → suivi → décision système/agent", "Une seule demande active; statut visible; notification à chaque étape."),
         ("J-08", "Client", "Créer une conversation", "Messages → nouveau → contact → conversation → message → réaction/lecture", "Conversation et message persistés; participant autorisé uniquement."),
         ("J-09", "Client", "Créer et gérer groupe", "Nouveau groupe → membres → nom/avatar → admin → mute/pin/leave", "Rôles groupe appliqués; départ protégé si dernier admin."),
@@ -468,12 +467,12 @@ def main():
     api_groups = [
         ("Auth, profil et compte", ["/api/auth", "/api/account", "/api/profil", "/api/profile", "/api/push"]),
         ("Découverte publique", ["/api/events", "/api/organizers", "/api/providers", "/api/search", "/api/preferences"]),
-        ("Commandes et billets", ["/api/checkout", "/api/event-orders", "/api/orders", "/api/tickets", "/api/seat-holds", "/api/refund-link", "/api/resale-listings"]),
+        ("Commandes et billets", ["/api/checkout", "/api/event-orders", "/api/orders", "/api/tickets", "/api/seat-holds", "/api/refund-link"]),
         ("Organisateur/prestataire", ["/api/organizer-events", "/api/organizers/me", "/api/providers/me", "/api/applications", "/api/subscriptions", "/api/my-staffed-events"]),
         ("Social et messagerie", ["/api/conversations", "/api/messages", "/api/friends", "/api/notifications", "/api/users"]),
         ("Playlist et avis", ["/api/events/[eventId]/playlist", "/api/reviews", "/api/providers/[providerId]/reviews"]),
         ("Agent", ["/api/agent", "/api/agent-sales"]),
-        ("Paiements et webhooks", ["/api/stripe-webhook", "/api/webhooks/stripe", "/api/webhooks/fedapay", "/api/checkout/fedapay", "/api/seat-holds/fedapay"]),
+        ("Paiements et webhooks", ["/api/webhooks/fedapay", "/api/checkout/fedapay", "/api/seat-holds/fedapay"]),
         ("Tâches système", ["/api/cron", "/api/health", "/api/uploads"]),
     ]
     for title, prefixes in api_groups:
@@ -489,7 +488,7 @@ def main():
         "Une ressource privée est toujours filtrée par l’utilisateur courant et les participants autorisés.",
         "La propriété organisateur est vérifiée par organizerId/createdBy avant toute mutation d’événement.",
         "Les opérations de paiement, remboursement, reversement et annulation sont idempotentes et traçables.",
-        "Les webhooks Stripe/FedaPay doivent vérifier leur signature et répondre en 2xx uniquement après traitement accepté.",
+        "Les webhooks FedaPay doivent vérifier leur signature et répondre en 2xx uniquement après traitement accepté. Les anciens webhooks Stripe restent hors parcours V1 actif.",
         "Un compte supprimé est purgé ou anonymisé selon son statut métier et les contraintes de dossier actif.",
         "Les tickets et tokens sont contrôlés contre la commande, l’événement, l’état du billet et les doublons de check-in.",
         "Les limites de pagination, recherche, upload et rate limit protègent les endpoints publics et connectés.",
@@ -507,11 +506,11 @@ def main():
     doc.add_heading("10. Emails, notifications et événements externes", level=1)
     for text in [
         "Emails d’authentification : vérification, reset password, confirmation et sécurité du compte.",
-        "Emails transactionnels : commande, billet, invitation, remboursement, revente, check-in et changements d’événement.",
+        "Emails transactionnels : commande, billet, invitation, remboursement, check-in et changements d’événement. Les e-mails de revente restent historiques et hors V1.",
         "Emails métier : candidature, modération, avis, suivi organisateur, payouts, abonnements et alertes agent.",
         "Notifications in-app : demandes d’amis, messages, réactions, événements suivis, modération et paiements.",
         "Images et médias : Cloudinary/signature upload, avec URLs publiques ou privées selon le document.",
-        "Paiements : Stripe pour les flux carte/webhook et FedaPay pour les parcours régionaux configurés.",
+        "Paiements : FedaPay Marketplace pour les parcours de lancement Bénin.",
     ]:
         add_bullet(doc, text)
 
@@ -534,7 +533,7 @@ def main():
         ("Organisateur", "Création, gestion, publication, équipe, ventes, stats, playlist et payouts respectent la propriété.", "Tests intégration + compte organisateur"),
         ("Prestataire", "Profil, catalogue, médias, avis et abonnement sont cohérents.", "Tests intégration + compte prestataire"),
         ("Agent", "Files de modération, comptes, paiements, suppressions et homepage sont protégées et actionnables.", "Smoke agent + tests agent"),
-        ("Paiement", "Checkout, webhooks, remboursements et idempotence ne génèrent pas de double traitement.", "Fixtures Stripe/FedaPay + logs"),
+        ("Paiement", "Checkout, webhooks, remboursements et idempotence ne génèrent pas de double traitement.", "Fixtures FedaPay + logs"),
         ("Mobile", "Les appels mobiles trouvent une route/méthode et les exports Web/Android compilent.", "Contrat 207/207 + exports"),
         ("Production", "Health, pages publiques, API, CORS et webhook répondent aux statuts attendus.", "Smoke production + runtime API"),
     ], [1500, 5100, 2760])

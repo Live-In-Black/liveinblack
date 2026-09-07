@@ -1,5 +1,5 @@
 import { stripDiacritics } from '@/lib/shared/diacritics'
-import { regions } from '@/lib/shared/regions'
+import { splitContactPhone } from '@/lib/shared/phoneCallingCodes'
 
 export interface SearchableSettingEntry {
   id: string
@@ -31,8 +31,5 @@ export function filterSettingEntries<T extends SearchableSettingEntry>(entries: 
 }
 
 export function splitPhone(phone: string): { dialCode: string; number: string } {
-  if (!phone) return { dialCode: regions[0].dial, number: '' }
-  const match = [...regions].sort((a, b) => b.dial.length - a.dial.length).find((region) => phone.startsWith(region.dial))
-  if (!match) return { dialCode: regions[0].dial, number: phone.trim() }
-  return { dialCode: match.dial, number: phone.slice(match.dial.length).trim() }
+  return splitContactPhone(phone)
 }

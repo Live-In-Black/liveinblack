@@ -9,7 +9,7 @@ import CashSaleSettlement from '@/lib/models/CashSaleSettlement'
 import SellerBalance from '@/lib/models/SellerBalance'
 import EventPayout from '@/lib/models/EventPayout'
 import PaymentAlert from '@/lib/models/PaymentAlert'
-import { computeTicketFeeCents, computeTicketFeeXOF } from '@/lib/shared/fees'
+import { computeTicketFeeCents, computeTicketFeeXOF, computeGroupTicketFeeXOF } from '@/lib/shared/fees'
 import { isEventEnded } from '@/lib/shared/event-time'
 import { generateUniqueTicketCode } from '../events/ticketCode'
 import { createTransaction, createToken, sendPaymentToUser, type MobileMoneyMode } from '../payments/fedapayClient'
@@ -119,7 +119,8 @@ async function createAgentSaleOrder(
   if (!place) return { ok: false, status: 404, error: 'place_not_found' }
 
   const isTable = Boolean(input.isTable)
-  if (isTable && !(place.groupType === 'group' && (place.groupMax || 0) >= 2)) {
+  if (place.groupType === 'group' && !isTable) return { ok: false, status: 400, error: 'group_place_requires_bundle' }
+  if (isTable && !(place.groupType === 'group' && Number.isSafeInteger(place.groupMax) && (place.groupMax || 0) >= 2)) {
     return { ok: false, status: 400, error: 'not_a_group_place' }
   }
   // Vente à l'entrée : une seule place, jamais de groupe ni de précommande —
@@ -128,7 +129,8 @@ async function createAgentSaleOrder(
   if (opts.atDoor && isTable) return { ok: false, status: 400, error: 'no_group_at_door' }
   const preorders = opts.atDoor ? [] : input.preorders || []
 
-  const currency = event.currency === 'XOF' ? 'XOF' : 'EUR'
+  const currency = event.currency === 'EUR' ? 'EUR' : 'XOF'
+  if (currency !== 'XOF') return { ok: false, status: 409, error: 'xof_required_v1' }
   if (input.method === 'momo' && currency !== 'XOF') return { ok: false, status: 400, error: 'momo_requires_xof_event' }
   const minorPerMajor = currency === 'XOF' ? 1 : 100
   const unitPriceMinor = Math.round(Number(place.price) * minorPerMajor)
@@ -142,7 +144,9 @@ async function createAgentSaleOrder(
     resolvedPreorders.push({ name: menuItem.name, price: Math.round(Number(menuItem.price) * minorPerMajor), qty: reqQty })
   }
 
-  const feeMinor = currency === 'XOF' ? computeTicketFeeXOF(unitPriceMinor, isTable ? 1 : qty) : computeTicketFeeCents(unitPriceMinor, isTable ? 1 : qty)
+  const feeMinor = currency === 'XOF'
+    ? isTable ? computeGroupTicketFeeXOF(unitPriceMinor, place.groupMax!) : computeTicketFeeXOF(unitPriceMinor, qty)
+    : computeTicketFeeCents(unitPriceMinor, isTable ? 1 : qty)
   const totalRequestedStock = isTable ? 1 : qty
   const settlement = await resolveSellerSettlementMode({
     sellerUid: event.organizerId || event.createdBy,
@@ -158,6 +162,9 @@ async function createAgentSaleOrder(
       if (!freshEvent) throw new AgentSaleError(404, 'event_not_found')
       const freshPlace = freshEvent.places?.find((p) => p.id === input.placeId)
       if (!freshPlace) throw new AgentSaleError(404, 'place_not_found')
+      if (freshPlace.price !== place.price || freshPlace.groupType !== place.groupType || freshPlace.groupMax !== place.groupMax) {
+        throw new AgentSaleError(409, 'place_changed')
+      }
       if ((freshPlace.available || 0) < totalRequestedStock) throw new AgentSaleError(409, 'insufficient_stock')
 
       freshPlace.available = (freshPlace.available || 0) - totalRequestedStock

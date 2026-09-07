@@ -1,19 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { resolveSendMessageContent } from '../messaging/messagingSendContentService'
-import ProviderProfile from '@/lib/models/ProviderProfile'
-import Event from '@/lib/models/Event'
+import { getProviderByUserId } from '../provider/providers'
+import { getEventById } from '../events/events'
 
-vi.mock('../../models/ProviderProfile', () => ({
-  default: {
-    findOne: vi.fn(),
-  },
-}))
+vi.mock('../provider/providers', () => ({ getProviderByUserId: vi.fn() }))
 
-vi.mock('../../models/Event', () => ({
-  default: {
-    findById: vi.fn(),
-  },
-}))
+vi.mock('../events/events', () => ({ getEventById: vi.fn() }))
 
 describe('messagingSendContentService', () => {
   const uploadDataUri = vi.fn()
@@ -41,9 +33,9 @@ describe('messagingSendContentService', () => {
 
   it('construit le payload catalogue depuis le vrai profil prestataire', async () => {
     const conversation = { _id: 'conv-1', type: 'direct', participantIds: ['u1', 'u2'] } as never
-    vi.mocked(ProviderProfile.findOne).mockReturnValue({
-      lean: vi.fn().mockResolvedValue({
+    vi.mocked(getProviderByUserId).mockResolvedValue({
         name: 'Studio',
+        catalogCurrency: 'XOF',
         catalog: [
           {
             id: 'item-1',
@@ -56,7 +48,6 @@ describe('messagingSendContentService', () => {
             media: [{ url: 'https://img.test/1.jpg', type: 'image' }],
           },
         ],
-      }),
     } as never)
 
     const result = await resolveSendMessageContent(
@@ -73,19 +64,20 @@ describe('messagingSendContentService', () => {
       providerName: 'Studio',
       itemId: 'item-1',
       name: 'Pack DJ',
+      currency: 'XOF',
     })
   })
 
   it('construit le payload événement depuis le vrai document Event', async () => {
     const conversation = { _id: 'conv-1', type: 'direct', participantIds: ['u1', 'u2'] } as never
-    vi.mocked(Event.findById).mockReturnValue({
-      lean: vi.fn().mockResolvedValue({
-        _id: 'event-1',
+    vi.mocked(getEventById).mockResolvedValue({
+      status: 'ok', event: {
+        id: 'event-1',
         name: 'Soirée',
         dateDisplay: 'SAM 22 AOÛT',
         imageUrl: 'https://img.test/event.jpg',
         places: [{ price: 40 }, { price: 15 }],
-      }),
+      },
     } as never)
 
     const result = await resolveSendMessageContent(
@@ -102,6 +94,7 @@ describe('messagingSendContentService', () => {
       name: 'Soirée',
       date: 'SAM 22 AOÛT',
       price: 15,
+      currency: 'XOF',
       image: 'https://img.test/event.jpg',
     })
   })

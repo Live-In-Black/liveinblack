@@ -83,6 +83,7 @@ describe('scannerUtils', () => {
   it('retourne des messages d’erreur lisibles avec fallback', () => {
     expect(checkinErrorMessage('wrong_event')).toContain('autre événement')
     expect(orderErrorMessage('nothing_to_pay')).toContain('Rien à encaisser')
+    expect(orderErrorMessage('ticket_unavailable')).toContain('Billet non payé ou révoqué')
     expect(checkinErrorMessage(undefined)).toBe('Une erreur est survenue. Réessaie.')
     expect(orderErrorMessage('unknown-code')).toBe('Une erreur est survenue. Réessaie.')
   })

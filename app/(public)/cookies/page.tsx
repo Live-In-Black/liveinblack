@@ -41,7 +41,7 @@ Sur ${LEGAL.domain}, nous utilisons à la fois des "cookies" classiques et des t
     {
       n: '04',
       title: 'Cookies de paiement',
-      body: `Lorsque vous effectuez un paiement, vous êtes redirigé vers le prestataire adapté à la devise : Stripe pour les paiements en euros, ou FedaPay pour les paiements en FCFA. Ces prestataires peuvent déposer leurs propres cookies pour sécuriser la transaction et lutter contre la fraude. Nous ne contrôlons pas ces cookies.
+      body: `Lorsque vous effectuez un paiement au Bénin, vous êtes redirigé vers FedaPay pour un règlement en FCFA. Ce prestataire peut déposer ses propres cookies pour sécuriser la transaction et lutter contre la fraude. Nous ne contrôlons pas ces cookies.
 
 Politique cookies de Stripe : https://stripe.com/cookies-policy/legal
 Politique de confidentialité FedaPay : https://www.fedapay.com/privacy-policies`,

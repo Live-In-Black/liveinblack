@@ -16,7 +16,7 @@ function usage() {
   console.log('  Option decision: --decision-key <decision-key> --decision-status <planned|prepared|active|rejected> --decision-evidence "preuve decision" --decision-next "prochaine action decision"')
   console.log('')
   console.log('Exemple:')
-  console.log('  npm run ops:vercel:evidence:record -- --key live-gates-closed --status complete --confirm-final --evidence "Firewall publie, Spend Management actif, webhook/drain confirmes, workflow resale-expiry migre." --next "Relancer audit:vercel-pro-suite -- --strict --include-live"')
+  console.log('  npm run ops:vercel:evidence:record -- --key live-gates-closed --status complete --confirm-final --evidence "Firewall publie, Spend Management actif, webhook/drain confirmes, resale-expiry hors V1." --next "Relancer audit:vercel-pro-suite -- --strict --include-live"')
 }
 
 function argValue(name) {

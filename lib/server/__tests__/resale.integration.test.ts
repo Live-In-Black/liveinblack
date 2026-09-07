@@ -1,8 +1,7 @@
-// Tests d'INTÉGRATION (vraie base MongoDB) pour la bourse de revente
-// officielle (#A, lib/server/resale.ts) — couvre la mise en vente, le retrait,
-// et surtout la FINALISATION webhook (fulfillResaleOrder), le cœur de
-// l'intégration demandée : rotation QR, réattribution, crédit vendeur,
-// commande d'origine passée en 'superseded'.
+// Tests historiques de la bourse de revente.
+// V1 Benin : la revente est exclue et couverte par resaleDisabledV1.test.ts.
+// Ce fichier reste comme memoire technique, mais ne doit plus servir de preuve
+// de conformite V1 ni etre execute par defaut.
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import mongoose from 'mongoose'
 
@@ -14,7 +13,7 @@ import ResaleListing from '@/lib/models/ResaleListing'
 import SellerBalance from '@/lib/models/SellerBalance'
 
 const RUN_INTEGRATION = Boolean(process.env.MONGODB_URI)
-const describeIntegration = describe.skipIf(!RUN_INTEGRATION)
+const describeIntegration = describe.skip
 const TEST_URI = process.env.MONGODB_URI || ''
 
 beforeAll(async () => {

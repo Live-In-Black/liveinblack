@@ -10,6 +10,10 @@ export function sanitizeFedapaySubAccountReference(input: unknown): string | nul
   return value.replace(/\s+/g, '').slice(0, 120)
 }
 
+export function fedapaySandboxSubAccountReference(): string | null {
+  return sanitizeFedapaySubAccountReference(process.env.FEDAPAY_SANDBOX_SUB_ACCOUNT_REFERENCE)
+}
+
 export async function getFedapaySellerAccount(sellerUid: string | null | undefined): Promise<FedapaySellerAccount> {
   if (!sellerUid) return { reference: null }
   const seller = await User.findById(sellerUid).select('fedapaySubAccountReference').lean().catch(() => null)

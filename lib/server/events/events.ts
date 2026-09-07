@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 import { getDb } from '@/lib/db/mongoose'
 import Event, { type EventDoc } from '@/lib/models/Event'
 import { isClientDiscoverableEvent } from '@/lib/shared/eventDiscovery'
-import { normalizeGeoText } from '@/lib/shared/locations'
+import { normalizeGeoText, normalizeRegionId } from '@/lib/shared/locations'
 
 const DEFAULT_PUBLIC_PAGE_SIZE = 24
 const MAX_PUBLIC_PAGE_SIZE = 96
@@ -11,7 +11,7 @@ const MAX_PAGE_OFFSET = 4_000
 const EVENT_TOTAL_TTL_MS = 30_000
 const MAX_TOTAL_COUNT_CACHE_ENTRIES = 200
 const PUBLIC_EVENT_FIELDS =
-  'name category eventType musicStyles ambiances artists dj tags date dateDisplay time endTime publishAt cancelled isDemo city region location imageUrl videoUrl organizerName organizer organizerId places createdAt color'
+  'name category eventType musicStyles ambiances artists dj tags date dateDisplay time endTime publishAt cancelled isDemo city region location imageUrl videoUrl organizerName organizer organizerId places createdAt color currency'
 
 type CachedCount = {
   value: number
@@ -103,6 +103,8 @@ function buildDiscoverableFilters(now = new Date()) {
   const nowIsoDate = now.toISOString().slice(0, 10)
 
   return {
+    region: 'Bénin',
+    currency: 'XOF',
     cancelled: { $ne: true },
     isDemo: { $ne: true },
     isPrivate: { $ne: true },
@@ -153,8 +155,12 @@ export async function listPublicEventsDirectory({
   const now = new Date()
 
   const baseFilter = buildDiscoverableFilters(now)
+  // The current public launch is Bénin-only. Historical records remain in the
+  // database for back-office compatibility but are never discoverable here.
+  baseFilter.region = safeRegion && normalizeGeoText(safeRegion) !== 'benin'
+    ? '__unsupported_launch_region__'
+    : 'Bénin'
   if (safeCategory) baseFilter.category = safeCategory
-  if (safeRegion) baseFilter.region = safeRegion
 
   const query = safeText ? { ...baseFilter, $text: { $search: safeText } } : baseFilter
 
@@ -197,7 +203,7 @@ export type EventSitemapEntry = { id: string; updatedAt?: Date | string | null }
 
 export async function countPublicEventsForSitemap(): Promise<number> {
   await getDb()
-  return Event.estimatedDocumentCount().maxTimeMS(2_000)
+  return Event.countDocuments(buildDiscoverableFilters()).maxTimeMS(2_000)
 }
 
 export async function listPublicEventsForSitemapPage(params: { offset: number; limit: number }): Promise<EventSitemapEntry[]> {
@@ -240,5 +246,8 @@ export async function getEventById(id: string): Promise<EventAccessResult> {
   await getDb()
   const doc = await Event.findById(id).lean()
   if (!doc) return { status: 'not_found' }
-  return { status: 'ok', event: toPublicEvent(doc) }
+  const event = toPublicEvent(doc)
+  return event.isPrivate !== true && normalizeRegionId(event.region) === 'benin' && String(event.currency || '').toUpperCase() === 'XOF' && isClientDiscoverableEvent(event)
+    ? { status: 'ok', event }
+    : { status: 'not_found' }
 }

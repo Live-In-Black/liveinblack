@@ -3,24 +3,23 @@ import { describe, it, expect } from 'vitest'
 import { fmtMoney, eventCurrency, regionToCurrency } from '../money'
 
 describe('regionToCurrency', () => {
-  it('Togo/Bénin → XOF, France/défaut → EUR', () => {
+  it('Togo/Bénin et défaut → XOF, France explicite reste EUR legacy', () => {
     expect(regionToCurrency('Togo')).toBe('XOF')
     expect(regionToCurrency('Bénin')).toBe('XOF')
     expect(regionToCurrency('benin')).toBe('XOF')
     expect(regionToCurrency('France')).toBe('EUR')
-    expect(regionToCurrency('')).toBe('EUR')
-    expect(regionToCurrency(null)).toBe('EUR')
+    expect(regionToCurrency('')).toBe('XOF')
+    expect(regionToCurrency(null)).toBe('XOF')
   })
 })
 
 describe('eventCurrency', () => {
-  it('champ currency EXPLICITE uniquement — jamais de fallback région', () => {
+  it('utilise XOF par défaut sans convertir un EUR explicite', () => {
     expect(eventCurrency({ currency: 'XOF' })).toBe('XOF')
     expect(eventCurrency({ currency: 'xof' })).toBe('XOF')
-    // CRITIQUE : un event Togo créé avant le multi-devise (prix en €, pas de
-    // champ currency) doit rester EUR — sinon bradé au 1/655e.
-    expect(eventCurrency({})).toBe('EUR')
-    expect(eventCurrency(null)).toBe('EUR')
+    expect(eventCurrency({ currency: 'EUR' })).toBe('EUR')
+    expect(eventCurrency({})).toBe('XOF')
+    expect(eventCurrency(null)).toBe('XOF')
   })
 })
 

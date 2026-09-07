@@ -11,10 +11,13 @@ const boostSlotSchema = new Schema(
     userId: { type: String, required: true },
     position: { type: Number, required: true },
     region: { type: String, required: true },
+    days: { type: Number, default: null },
+    price: { type: Number, default: null },
     status: { type: String, enum: ['pending', 'active'], default: 'pending' },
     holdUntil: { type: Date, required: true }, // 24h — volontairement long, voir commentaire legacy
     activeUntil: { type: Date, default: null },
     stripeSessionId: { type: String, default: null },
+    fedapayTxnId: { type: String, default: null, index: true },
   },
   { timestamps: true }
 )

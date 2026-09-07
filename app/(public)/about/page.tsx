@@ -54,9 +54,9 @@ export default function PublicAboutPage() {
       <Section eyebrow="En 3 temps" title="De l'envie à la piste">
         <div className="lb-card-grid">
           {[
-            ['01', 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1100&q=82', 'Une scène et son public pendant un festival', 'Découvre', 'Parcours les soirées et les prestataires, puis filtre simplement par ville et par style.'],
-            ['02', 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1100&q=82', 'Des personnes réunies pendant un concert', 'Réserve', 'Paiement sécurisé, billet QR immédiat : chaque information reste accessible dans ton compte.'],
-            ['03', 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1100&q=82', 'Une grande scène de concert éclairée', 'Profite', "Présente ton QR à l’entrée, retrouve les services disponibles et vis pleinement l’événement."],
+            ['01', '/images/live-in-black/night-benin/night-benin-lounge.png', 'Une scène et son public pendant un festival', 'Découvre', 'Parcours les soirées et les prestataires, puis filtre simplement par ville et par style.'],
+            ['02', '/images/live-in-black/night-benin/night-benin-hero.png', 'Des personnes réunies pendant un concert', 'Réserve', 'Paiement sécurisé, billet QR immédiat : chaque information reste accessible dans ton compte.'],
+            ['03', '/images/live-in-black/night-benin/night-benin-concert.png', 'Une grande scène de concert éclairée', 'Profite', "Présente ton QR à l’entrée, retrouve les services disponibles et vis pleinement l’événement."],
           ].map(([number, src, alt, title, description]) => (
             <EditorialImageCard key={number} src={src} alt={alt} badge={number} title={title} description={description} />
           ))}

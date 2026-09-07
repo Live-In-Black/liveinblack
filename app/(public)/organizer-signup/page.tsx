@@ -5,7 +5,7 @@ import { getMyApplication } from '@/lib/server/provider/applications'
 import AuthSplitLayout from '../_components/AuthSplitLayout'
 
 // Portrait éditorial créé sur mesure pour le parcours organisateur.
-const HERO_IMG = 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1200&q=80'
+const HERO_IMG = '/images/live-in-black/night-benin/night-benin-rooftop.png'
 import OrganizerOnboardingWizard from '@/app/components/features/organizer/OrganizerOnboardingWizard'
 
 // Route unique "Devenir organisateur" — publique (mode anonyme, pas de
@@ -27,7 +27,7 @@ const LOCKED_STATUSES = ['submitted', 'under_review', 'resubmitted', 'approved',
 export default async function InscriptionOrganisateurPage() {
   const session = await auth()
 
-  if (session?.user) {
+  if (session?.user?.activeRole === 'organisateur' && session.user.roles.includes('organisateur')) {
     const application = await getMyApplication({ id: session.user.id }, 'organisateur')
     if (application && LOCKED_STATUSES.includes(application.status)) redirect('/my-application')
 

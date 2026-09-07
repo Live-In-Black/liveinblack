@@ -85,7 +85,7 @@ export default async function AgentSalesPage({ params }: { params: Promise<{ eve
     <AgentSalesClient
       eventId={eventId}
       eventName={event.name}
-      currency={event.currency === 'XOF' ? 'XOF' : 'EUR'}
+      currency={event.currency === 'EUR' ? 'EUR' : 'XOF'}
       places={places}
       initialDashboard={dashboardResult.view}
     />

@@ -131,18 +131,14 @@ describe('validatePrestataireFormData / getRequiredDocs (unitaire, pur)', () => 
   it('getRequiredDocs prestataire sans catégorie = identity uniquement', () => {
     expect(getRequiredDocs('prestataire', [])).toEqual(['identity'])
   })
-  it('getRequiredDocs prestataire "artiste" ajoute billing_proof', () => {
-    const docs = getRequiredDocs('prestataire', ['artiste'])
-    expect(docs).toEqual(expect.arrayContaining(['identity', 'billing_proof']))
-    expect(docs).not.toContain('business_doc')
+  it('getRequiredDocs prestataire "artiste" = identity uniquement', () => {
+    expect(getRequiredDocs('prestataire', ['artiste'])).toEqual(['identity'])
   })
-  it('getRequiredDocs prestataire "salle" ajoute business_doc + insurance + exploitation_proof', () => {
-    const docs = getRequiredDocs('prestataire', ['salle'])
-    expect(docs.sort()).toEqual(['business_doc', 'exploitation_proof', 'identity', 'insurance'])
+  it('getRequiredDocs prestataire "salle" = identity uniquement', () => {
+    expect(getRequiredDocs('prestataire', ['salle'])).toEqual(['identity'])
   })
-  it('getRequiredDocs cumule pour un prestataire multi-catégories', () => {
-    const docs = getRequiredDocs('prestataire', ['artiste', 'salle'])
-    expect(docs.sort()).toEqual(['billing_proof', 'business_doc', 'exploitation_proof', 'identity', 'insurance'])
+  it('getRequiredDocs ne cumule pas de pièces entreprise pour un prestataire multi-catégories', () => {
+    expect(getRequiredDocs('prestataire', ['artiste', 'salle', 'food'])).toEqual(['identity'])
   })
 })
 
@@ -174,15 +170,13 @@ describeIntegration('applications (intégration, vraie base + Cloudinary) — do
       expect(result.error).toBe('missing_required_documents')
     })
 
-    it('refuse une catégorie "salle" sans business_doc/insurance/exploitation_proof même avec identity fourni', async () => {
+    it('accepte une catégorie "salle" avec la pièce d’identité seule', async () => {
       const alice = await seedUser()
       const result = await submitPrestataireApplication(
         { id: alice.id },
         { formData: baseForm({ prestataireTypes: ['salle'] }), documents: IDENTITY_ONLY_DOCS }
       )
-      expect(result.ok).toBe(false)
-      if (result.ok) return
-      expect(result.error).toBe('missing_required_documents')
+      expect(result.ok).toBe(true)
     })
 
     it('accepte une catégorie sans exigence spécifique (photo_video) avec identity seul', async () => {

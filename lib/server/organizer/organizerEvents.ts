@@ -6,7 +6,7 @@ import Order from '@/lib/models/Order'
 import Ticket from '@/lib/models/Ticket'
 import { loadEventContext } from '../events/eventOrders'
 import { regionToCurrency, eventCurrency } from '@/lib/shared/money'
-import { getRegionByName, regions } from '@/lib/shared/regions'
+import { regions } from '@/lib/shared/regions'
 import { normalizeRegionId } from '@/lib/shared/locations'
 import { notifyNewEvent } from './organizerFollowNotifications'
 import { type ShowOption } from '@/lib/shared/showOptions'
@@ -164,8 +164,9 @@ export async function createOrganizerEvent(caller: OrganizerEventCaller, callerN
   if (!input.city?.trim()) return { ok: false, status: 400, error: 'city_required' }
   if (!input.region?.trim()) return { ok: false, status: 400, error: 'region_required' }
 
-  const region = getRegionByName(input.region)
-  if (region.id !== 'benin') return { ok: false, status: 400, error: 'benin_launch_region_required' }
+  const regionId = normalizeRegionId(input.region)
+  if (regionId !== 'benin') return { ok: false, status: 400, error: 'benin_launch_region_required' }
+  const region = regions.find((candidate) => candidate.id === regionId)!
   const currency = regionToCurrency(region.name)
 
   const placesError = validatePlaces(input.places || [])
@@ -266,6 +267,14 @@ export async function updateOrganizerEvent(caller: OrganizerEventCaller, eventId
   const totalSold = event.places.reduce((sum, p) => sum + placeConsumed(p), 0)
   const locked = totalSold > 0
 
+  if (input.region !== undefined && normalizeRegionId(input.region) !== 'benin') {
+    return { ok: false, status: 400, error: 'benin_launch_region_required' }
+  }
+  if (!locked && normalizeRegionId(event.region) !== 'benin') {
+    event.region = 'Bénin'
+    event.currency = 'XOF'
+  }
+
   // Champs toujours éditables, même verrouillé (description, affiche, vidéo,
   // artistes, date de clôture) — jamais bloqués par `locked`.
   if (input.name?.trim()) event.name = input.name.trim()
@@ -303,7 +312,7 @@ export async function updateOrganizerEvent(caller: OrganizerEventCaller, eventId
     // ventes existent (fige aussi la devise, cf. Gap "devise #2" du research
     // — la devise, elle, n'est JAMAIS recalculée ici, seulement à la
     // création).
-    if (input.region !== undefined) event.region = getRegionByName(input.region).name
+    if (input.region !== undefined) event.region = 'Bénin'
   }
 
   // Menu : verrouillé dès qu'une vente quelconque existe sur l'événement

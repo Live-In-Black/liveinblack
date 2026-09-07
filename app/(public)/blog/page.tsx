@@ -3,7 +3,6 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 import { ArrowUpRight, BookOpen, Clock } from 'lucide-react'
 import { getCachedPublishedPosts as listPublishedPosts } from '@/lib/server/publicCache'
-import { regions } from '@/lib/shared/regions'
 import { BLOG_CATEGORY_IDS, type BlogCategoryId } from '@/lib/models/BlogPost'
 import { Mascot, PageLinks } from '@/app/components/ui'
 import { reliablePhotoUrl } from '@/lib/shared/placeholderImage'
@@ -14,7 +13,7 @@ const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
 
 export const metadata: Metadata = {
   title: 'Blog — LIVEINBLACK',
-  description: "Actualités, guides et conseils pour organiser et vivre les meilleures expériences culturelles d'Afrique de l'Ouest.",
+  description: "Actualités, guides et conseils pour organiser et vivre les meilleures expériences culturelles au Bénin.",
   alternates: {
     canonical: '/blog',
     types: {
@@ -25,7 +24,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   openGraph: {
     title: 'Blog — LIVEINBLACK',
-    description: "Guides, actualités et conseils sur les événements au Bénin et en Afrique de l'Ouest.",
+    description: "Guides, actualités et conseils sur les événements au Bénin.",
     type: 'website',
     url: '/blog',
     locale: 'fr_BJ',
@@ -36,16 +35,19 @@ export const metadata: Metadata = {
 export const revalidate = 300
 
 const CATEGORY_LABELS: Record<BlogCategoryId, string> = {
-  ...(Object.fromEntries(regions.map((region) => [region.id, `${region.flag} ${region.name}`])) as Record<string, string>),
+  benin: '🇧🇯 Bénin',
   guide: 'Guides',
   actualite: 'Actualités',
 } as Record<BlogCategoryId, string>
 
 function categoryLabel(id: string): string { return CATEGORY_LABELS[id as BlogCategoryId] || id }
+function normalizeBlogCategory(value: string | undefined): BlogCategoryId | '' {
+  return BLOG_CATEGORY_IDS.includes(value as BlogCategoryId) ? value as BlogCategoryId : ''
+}
 
 export default async function BlogPage({ searchParams }: { searchParams: Promise<{ categorie?: string; page?: string }> }) {
   const { categorie, page: pageParam } = await searchParams
-  const category = (categorie || '') as BlogCategoryId | ''
+  const category = normalizeBlogCategory(categorie)
   const requestedPage = Math.max(1, Number(pageParam) || 1)
   const { posts, page, pageCount, totalCount } = await listPublishedPosts({ category, page: requestedPage, pageSize: PAGE_SIZE }).catch((error) => {
     console.warn('[blog] Published posts unavailable, rendering empty state.', error)

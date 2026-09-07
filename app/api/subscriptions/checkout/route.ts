@@ -1,35 +1,30 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { createStripeSubscriptionCheckout, confirmStripeSubscriptionCheckout } from '@/lib/server/provider/providerSubscriptions'
 
-function requireProviderRole(roles: string[] | undefined) {
-  return Boolean(roles?.includes('prestataire'))
+function requireProviderRole(activeRole: string | undefined) {
+  return activeRole === 'prestataire'
 }
 
-// Remplace la branche POST (rail EUR) de api/create-subscription.js.
+// Route Stripe historique fermee pour la V1 Benin. Utiliser
+// /api/subscriptions/checkout/fedapay.
 export async function POST() {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'auth_required' }, { status: 401 })
-  if (!requireProviderRole(session.user.roles)) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  if (!requireProviderRole(session.user.activeRole)) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
 
-  const result = await createStripeSubscriptionCheckout({ id: session.user.id, email: session.user.email })
-  if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
-  if ('alreadyActive' in result) return NextResponse.json({ alreadyActive: true, status: result.status })
-  return NextResponse.json({ url: result.url })
+  return NextResponse.json({ error: 'stripe_subscription_disabled_v1' }, { status: 410 })
 }
 
-// Remplace la branche GET (confirmation synchrone au retour Checkout) de
-// api/create-subscription.js.
+// Ancien retour Checkout Stripe : aucune confirmation active ne doit modifier
+// l'abonnement V1.
 export async function GET(req: Request) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'auth_required' }, { status: 401 })
-  if (!requireProviderRole(session.user.roles)) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  if (!requireProviderRole(session.user.activeRole)) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
 
   const url = new URL(req.url)
   const sessionId = url.searchParams.get('session_id')
   if (!sessionId) return NextResponse.json({ error: 'missing_session_id' }, { status: 400 })
-
-  const result = await confirmStripeSubscriptionCheckout({ id: session.user.id }, sessionId)
-  if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
-  return NextResponse.json({ active: true, status: result.status })
+  void sessionId
+  return NextResponse.json({ error: 'stripe_subscription_disabled_v1' }, { status: 410 })
 }

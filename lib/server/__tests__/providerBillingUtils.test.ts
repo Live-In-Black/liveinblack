@@ -6,9 +6,9 @@ import {
 } from '../provider/providerBillingUtils'
 
 describe('providerBillingUtils', () => {
-  it("dérive un défaut 'france' si le pays d'application est absent ou inconnu", () => {
-    expect(deriveDefaultBillingRegionFromApplication(undefined)).toBe('france')
-    expect(deriveDefaultBillingRegionFromApplication('atlantide')).toBe('france')
+  it("dérive un défaut 'benin' si le pays d'application est absent ou inconnu", () => {
+    expect(deriveDefaultBillingRegionFromApplication(undefined)).toBe('benin')
+    expect(deriveDefaultBillingRegionFromApplication('atlantide')).toBe('benin')
   })
 
   it('normalise le pays d’application quand il est reconnu', () => {
@@ -25,21 +25,21 @@ describe('providerBillingUtils', () => {
     expect(canChangeProviderBillingRegion(undefined)).toBe(true)
   })
 
-  it('construit un contexte de facturation stable et normalisé', () => {
+  it('construit un contexte de facturation V1 toujours Benin/XOF', () => {
     expect(buildProviderBillingContext({ billingRegionId: 'Togo', prestataireSubActive: true })).toEqual({
-      billingRegionId: 'togo',
+      billingRegionId: 'benin',
       currency: 'XOF',
       canChange: false,
     })
 
     expect(buildProviderBillingContext({ billingRegionId: '', prestataireSubActive: false })).toEqual({
-      billingRegionId: 'france',
-      currency: 'EUR',
+      billingRegionId: 'benin',
+      currency: 'XOF',
       canChange: true,
     })
 
     expect(buildProviderBillingContext({ billingRegionId: { id: 'sn' }, prestataireSubActive: null })).toEqual({
-      billingRegionId: 'senegal',
+      billingRegionId: 'benin',
       currency: 'XOF',
       canChange: true,
     })

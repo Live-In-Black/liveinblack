@@ -594,17 +594,17 @@ export default function AgentVercelOpsClient() {
         desc: 'Le site public est temporairement fermé aux visiteurs. Les fonctionnalités critiques sont suspendues.',
       }
     }
-    if (!config.checkoutEnabled || !config.ticketResaleEnabled) {
+    if (!config.checkoutEnabled) {
       return {
         tone: 'gold' as const,
         label: 'Fonctionnement partiel',
-        desc: `Le site est en ligne mais certaines options sont coupées (${!config.checkoutEnabled ? 'paiements désactivés' : ''}${!config.checkoutEnabled && !config.ticketResaleEnabled ? ', ' : ''}${!config.ticketResaleEnabled ? 'revente désactivée' : ''}).`,
+        desc: 'Le site est en ligne, mais les paiements et la billetterie sont suspendus.',
       }
     }
     return {
       tone: 'teal' as const,
-      label: 'Site 100% Opérationnel',
-      desc: 'Tous les services fonctionnent normalement. Les visiteurs peuvent naviguer, acheter et revendre leurs billets.',
+      label: 'Site V1 Opérationnel',
+      desc: 'Les services de lancement fonctionnent normalement : navigation, billetterie FCFA et revente exclue de la V1 Bénin.',
     }
   }, [config])
 
@@ -706,14 +706,14 @@ export default function AgentVercelOpsClient() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
               <QuickMode
                 title="🟢 Tout rétablir (Mode normal)"
-                description="Réouvre immédiatement la billetterie, les paiements et le site public."
+                description="Réouvre immédiatement le site public et les paiements V1 autorisés."
                 disabled={!configWritable || savingKey === 'preset-normal'}
                 onClick={() => requestConfigPatch({
                   title: 'Repasser en mode normal ?',
-                  body: 'Le site public reprend son fonctionnement standard : maintenance coupée, achats Stripe/FedaPay autorisés et bourse de revente réactivée.',
+                  body: 'Le site public reprend son fonctionnement standard V1 : maintenance coupée et achats FedaPay autorisés. La revente reste exclue du lancement au Bénin.',
                   confirmLabel: 'Activer le mode normal',
                   confirmVariant: 'primary',
-                  patch: { maintenanceMode: false, checkoutEnabled: true, ticketResaleEnabled: true },
+                  patch: { maintenanceMode: false, checkoutEnabled: true, ticketResaleEnabled: false },
                   savingKey: 'preset-normal',
                 })}
               />
@@ -725,7 +725,7 @@ export default function AgentVercelOpsClient() {
                 danger
                 onClick={() => requestConfigPatch({
                   title: 'Activer le mode urgence ?',
-                  body: 'Cette action met le site en maintenance et suspend immédiatement tous les achats et la revente de billets. À utiliser en cas d’anomalie grave ou de maintenance programmée.',
+                  body: 'Cette action met le site en maintenance et suspend immédiatement les achats de billets. À utiliser en cas d’anomalie grave ou de maintenance programmée.',
                   confirmLabel: 'Activer l’urgence',
                   confirmVariant: 'danger',
                   patch: { maintenanceMode: true, checkoutEnabled: false, ticketResaleEnabled: false },
@@ -791,20 +791,11 @@ export default function AgentVercelOpsClient() {
                 />
 
                 <FlagControl
-                  label="Bourse de revente officielle"
-                  description={config.ticketResaleEnabled ? '✅ Les fans peuvent revendre leurs billets' : '⛔ La revente est suspendue'}
-                  active={config.ticketResaleEnabled}
-                  disabled={!configWritable || savingKey === 'ticketResaleEnabled'}
-                  onToggle={() => requestConfigPatch({
-                    title: config.ticketResaleEnabled ? 'Suspendre la revente de billets ?' : 'Autoriser la revente ?',
-                    body: config.ticketResaleEnabled
-                      ? 'La place de marché de revente entre particuliers sera inaccessible.'
-                      : 'Les utilisateurs pourront à nouveau remettre des billets en vente.',
-                    confirmLabel: config.ticketResaleEnabled ? 'Bloquer la revente' : 'Réactiver la revente',
-                    confirmVariant: config.ticketResaleEnabled ? 'danger' : 'primary',
-                    patch: { ticketResaleEnabled: !config.ticketResaleEnabled },
-                    savingKey: 'ticketResaleEnabled',
-                  })}
+                  label="Revente de billets"
+                  description="⛔ Exclue de la V1 Bénin : ce contrôle reste verrouillé"
+                  active={false}
+                  disabled
+                  onToggle={() => undefined}
                 />
               </div>
             )}
@@ -869,7 +860,7 @@ export default function AgentVercelOpsClient() {
               <div>
                 <h2 style={{ margin: 0, fontSize: 'var(--font-size-title-4)' }}>État de connexion des services</h2>
                 <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 'var(--font-size-body-sm)' }}>
-                  Aperçu de ce qui est branché entre le site et l'hébergeur Vercel.
+                  Aperçu de ce qui est branché entre le site et l&apos;hébergeur Vercel.
                 </p>
               </div>
               <Badge tone={readinessScore >= 80 ? 'teal' : 'gold'}>{readinessScore}% configuré</Badge>
@@ -980,7 +971,7 @@ export default function AgentVercelOpsClient() {
               <h2 style={{ margin: 0, fontSize: 'var(--font-size-title-4)' }}>Réglages techniques & Cache</h2>
             </div>
             <p style={{ margin: '0 0 14px', color: 'var(--text-muted)', fontSize: 'var(--font-size-body-sm)' }}>
-              Ces réglages optimisent les requêtes et les performances du moteur de recherche d'événements.
+              Ces réglages optimisent les requêtes et les performances du moteur de recherche d&apos;événements.
             </p>
 
             {config ? (

@@ -3,7 +3,7 @@
 import NextImage from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { regions } from '@/lib/shared/regions'
-import { regionToCurrency, currencySymbol, payRailLabel } from '@/lib/shared/money'
+import { currencySymbol, payRailLabel } from '@/lib/shared/money'
 import ImageCropperModal from '@/app/components/ui/ImageCropperModal'
 import MenuItemEditor, { emptyMenuItem, type MenuItemRow } from './MenuItemEditor'
 import { uploadPublicMedia } from '@/lib/client/publicMediaUpload'
@@ -153,11 +153,11 @@ const S = {
   btnPrimary: {
     minHeight: 'var(--density-action-min)',
     padding: '10px 20px',
-    background: 'var(--violet-cta)',
-    border: '1px solid var(--border-strong)',
+    background: 'var(--primary)',
+    border: '1px solid var(--primary)',
     borderRadius: 'var(--radius-control)',
     fontSize: 'var(--font-size-body-sm)',
-    fontWeight: 700,
+    fontWeight: 500,
     textTransform: 'none',
     letterSpacing: 'normal',
     color: 'var(--primary-ink)',
@@ -478,7 +478,7 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
     setVenueName((parsedVenueName || '').trim())
     setAddress(parsedAddressParts.join(',').trim())
     setCity(ev.city || '')
-    setRegion(ev.region || '')
+    setRegion(LAUNCH_EVENT_REGIONS.some((item) => item.name === ev.region) ? ev.region : DEFAULT_LAUNCH_REGION)
     setPlaylist(!!ev.playlist)
     setPreorder(!!ev.preorder)
     setMenuItems(ev.menu && ev.menu.length > 0 ? ev.menu.map((item) => ({ ...item, available: item.available !== false })) : [emptyMenuItem()])
@@ -800,10 +800,10 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
     )
   }
 
-  const currency = regionToCurrency(region)
+  const currency: 'XOF' = 'XOF'
 
   return (
-    <main style={{ width: '100%', padding: 'var(--space-6) var(--page-gutter) 100px', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+    <main className="lb-event-wizard" style={{ width: '100%', padding: 'var(--space-6) var(--page-gutter) 80px', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <Button
@@ -870,10 +870,12 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
       {/* ── Step 0 : Bases ── */}
       {step === 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="lb-event-wizard-media-grid">
           {/* Affiche */}
-          <div>
+          <div className="lb-event-wizard-upload-block">
             <label style={S.label}>Affiche / Photo de l&apos;événement</label>
             <Button
+              className="lb-event-wizard-poster-upload"
               variant="ghost"
               fullWidth
               onClick={() => imageInputRef.current?.click()}
@@ -883,7 +885,6 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
                 padding: 0,
                 borderRadius: 12,
                 overflow: 'hidden',
-                aspectRatio: '16/9',
                 border: imagePreview ? '1px solid var(--primary-a35)' : '2px dashed var(--border-strong)',
                 background: 'var(--surface-2)',
               }}
@@ -898,9 +899,9 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
                     <circle cx="8.5" cy="8.5" r="1.5" />
                     <polyline points="21 15 16 10 5 21" />
                   </svg>
-                  <p style={{ fontSize: 'var(--font-size-callout)', fontWeight: 600, color: 'var(--text-muted)' }}>Clique pour ajouter l&apos;affiche</p>
-                  <p style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--text-faint)' }}>Format recommandé : 1200 × 630 px</p>
-                  <p style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--text-faint)' }}>JPG, PNG ou WEBP — 5 Mo maximum</p>
+                  <p style={{ margin: 0, fontSize: 'var(--font-size-callout)', fontWeight: 500, color: 'var(--text-muted)' }}>Ajouter l&apos;affiche</p>
+                  <p style={{ margin: 0, fontSize: 'var(--font-size-footnote)', color: 'var(--text-faint)' }}>1200 × 630 px recommandé</p>
+                  <p style={{ margin: 0, fontSize: 'var(--font-size-footnote)', color: 'var(--text-faint)' }}>JPG, PNG ou WEBP · 5 Mo max.</p>
                 </div>
               )}
               {posterUploading && (
@@ -914,14 +915,14 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
           </div>
 
           {/* Vidéo d'aperçu */}
-          <div>
+          <div className="lb-event-wizard-upload-block">
             <label style={S.label}>
               Vidéo d&apos;aperçu au survol <span style={{ color: 'var(--text-faint)' }}>(optionnel)</span>
             </label>
             <div
+              className="lb-event-wizard-video-upload"
               style={{
                 position: 'relative',
-                minHeight: 118,
                 borderRadius: 12,
                 overflow: 'hidden',
                 border: videoPreview ? '1px solid var(--primary-a32)' : '1px dashed var(--border-strong)',
@@ -950,7 +951,7 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
                   variant="ghost"
                   fullWidth
                   onClick={() => videoInputRef.current?.click()}
-                  style={{ minHeight: 118, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 13, padding: 16, border: 0, background: 'transparent', textAlign: 'left' }}
+                  style={{ width: '100%', height: '100%', minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11, padding: 14, border: 0, background: 'transparent', textAlign: 'left' }}
                 >
                   <span style={{ width: 42, height: 42, borderRadius: 14, display: 'grid', placeItems: 'center', background: 'var(--primary-a10)', border: '1px solid var(--focus-ring-color)', color: 'var(--primary)', flexShrink: 0 }}>
                     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -958,8 +959,8 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
                     </svg>
                   </span>
                   <span style={{ minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 'var(--font-size-callout)', fontWeight: 700, color: 'var(--text)' }}>Ajouter une courte vidéo</span>
-                    <span style={{ display: 'block', fontSize: 'var(--font-size-footnote)', color: 'var(--text-faint)', lineHeight: 1.5, marginTop: 4 }}>MP4, WEBM ou MOV · 30 Mo maximum. Idéal : 6 à 12 secondes en 720p.</span>
+                    <span style={{ display: 'block', fontSize: 'var(--font-size-callout)', fontWeight: 500, color: 'var(--text)' }}>Ajouter une courte vidéo</span>
+                    <span style={{ display: 'block', fontSize: 'var(--font-size-footnote)', color: 'var(--text-faint)', lineHeight: 1.45, marginTop: 3 }}>MP4, WEBM ou MOV · 30 Mo max.</span>
                   </span>
                 </Button>
               )}
@@ -971,6 +972,7 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
             </div>
             <input ref={videoInputRef} type="file" accept="video/mp4,video/webm,video/quicktime" style={{ display: 'none' }} onChange={handleVideo} />
             {errors.video && <p style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--danger)', marginTop: 4 }}>{errors.video}</p>}
+          </div>
           </div>
 
           {/* Champs de base */}
@@ -1443,7 +1445,7 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
                   </p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
                     {place.photos.map((ph, k) => (
-                      <div key={k} style={{ position: 'relative', width: 66, height: 66, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0 }}>
+                      <div key={k} style={{ position: 'relative', width: 58, height: 58, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0 }}>
                         <NextImage src={ph} alt="" fill style={{ objectFit: 'cover' }} sizes="66px" />
                         <Button
                           variant="ghost"
@@ -1456,7 +1458,7 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
                       </div>
                     ))}
                     {place.photos.length < MAX_PLACE_PHOTOS && (
-                      <label style={{ width: 66, height: 66, borderRadius: 8, border: '1px dashed var(--primary-a04)', background: 'var(--primary-a05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, cursor: 'pointer', color: 'var(--gold)', flexShrink: 0 }}>
+                      <label style={{ width: 58, height: 58, borderRadius: 8, border: '1px dashed var(--primary-a35)', background: 'var(--primary-a05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, cursor: 'pointer', color: 'var(--primary)', flexShrink: 0 }}>
                         <input
                           type="file"
                           accept="image/*"
@@ -1599,7 +1601,7 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
             <InputField label="Nom du lieu" placeholder="Ex: Club Le Baroque, Salle des Fêtes..." value={venueName} onChange={(e) => setVenueName(e.target.value)} locked={locked} />
             <InputField label="Adresse" placeholder="Ex: 12 rue de la Paix" value={address} onChange={(e) => setAddress(e.target.value)} locked={locked} />
-            <InputField label="Ville *" placeholder="Ex: Paris, Lomé, Abidjan..." value={city} onChange={(e) => setCity(e.target.value)} error={errors.city} locked={locked} />
+            <InputField label="Ville *" placeholder="Ex: Cotonou, Porto-Novo..." value={city} onChange={(e) => setCity(e.target.value)} error={errors.city} locked={locked} />
 
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={{ ...S.label, marginBottom: 4 }}>Région *</label>

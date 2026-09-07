@@ -43,6 +43,7 @@ export type SetBillingRegionResult =
 export async function setProviderBillingRegion(caller: { id: string }, regionId: unknown): Promise<SetBillingRegionResult> {
   const nextRegionId = normalizeProviderBillingRegion(regionId)
   if (!nextRegionId) return { ok: false, status: 400, error: 'invalid_billing_region' }
+  if (nextRegionId !== 'benin') return { ok: false, status: 400, error: 'benin_launch_region_required' }
 
   await getDb()
   const current = await getProviderBillingContext(caller)

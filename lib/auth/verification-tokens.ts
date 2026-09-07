@@ -78,6 +78,27 @@ export async function consumeVerificationToken(
   return true
 }
 
+// Plusieurs comptes peuvent demander la même adresse : seul le jeton
+// reçu permet de choisir le compte, jamais un findOne sur pendingEmail.
+export async function resolveVerificationTokenSubject(
+  email: string,
+  purpose: VerificationTokenPurpose,
+  token: string,
+): Promise<string | null> {
+  if (!/^[a-f0-9]{64}$/.test(token)) return null
+  const client = await getMongoClient()
+  const found = await client.db().collection('verification_tokens').findOne({
+    token,
+    expires: { $gt: new Date() },
+  })
+  if (typeof found?.identifier !== 'string') return null
+  const prefix = `${purpose}:`
+  const suffix = `:${email.trim().toLowerCase()}`
+  if (!found.identifier.startsWith(prefix) || !found.identifier.endsWith(suffix)) return null
+  const subjectId = found.identifier.slice(prefix.length, -suffix.length)
+  return /^[a-f0-9]{24}$/i.test(subjectId) ? subjectId : null
+}
+
 // Supprime tous les jetons en attente pour cet email avant d'en émettre un
 // nouveau (utilisé par resend-verification) : l'adaptateur MongoDB
 // d'Auth.js n'a pas de notion d'unicité par `identifier`, createVerificationToken

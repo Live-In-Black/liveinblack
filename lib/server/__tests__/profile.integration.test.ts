@@ -9,6 +9,7 @@ import mongoose from 'mongoose'
 import bcrypt from 'bcryptjs'
 import {
   updateName,
+  updatePhone,
   updateDemographics,
   updatePrivacy,
   requestEmailChange,
@@ -51,6 +52,7 @@ const ALL_MODELS: mongoose.Model<unknown>[] = [
 beforeAll(async () => {
   if (!RUN_INTEGRATION) return
   await mongoose.connect(TEST_URI)
+  await User.init()
 }, 20000)
 
 afterAll(async () => {
@@ -78,6 +80,26 @@ async function seedUser(overrides: Record<string, unknown> = {}) {
 }
 
 describeIntegration('profile (intégration, vraie base) — paramètres du compte (#6)', () => {
+  it.each([
+    ['+229', '01 96 12 34 56', '+2290196123456'],
+    ['+39', '02 1234 5678', '+390212345678'],
+    ['+33', '06 12 34 56 78', '+33612345678'],
+  ])('enregistre le telephone sans alterer les chiffres significatifs (%s)', async (dialCode, phone, expected) => {
+    const user = await seedUser()
+    expect(await updatePhone({ id: user.id }, { dialCode, phone })).toEqual({ ok: true, phone: expected })
+    expect((await User.findById(user.id).lean())?.phone).toBe(expected)
+  })
+
+  it('autorise un contact partage sans modifier les autres comptes dedies', async () => {
+    const professional = await seedUser({ roles: ['prestataire'], phone: '+33 06 12 34 56 78', emailVerifiedAt: new Date() })
+    const user = await seedUser({ phone: '+2290196123456' })
+    expect(await updatePhone({ id: user.id }, { dialCode: '+33', phone: '612345678' }))
+      .toEqual({ ok: true, phone: '+33612345678' })
+    expect((await User.findById(user.id).lean())?.phone).toBe('+33612345678')
+    expect((await User.findById(professional.id).lean())?.phone).toBe('+33 06 12 34 56 78')
+    expect((await User.findById(professional.id).lean())?.roles).toEqual(['prestataire'])
+  })
+
   describe('updateName', () => {
     it('change le nom et pose nameChangedAt', async () => {
       const alice = await seedUser()
@@ -172,6 +194,39 @@ describeIntegration('profile (intégration, vraie base) — paramètres du compt
   })
 
   describe('requestEmailChange / confirmEmailChange / cancelEmailChangeRequest', () => {
+    it('choisit le titulaire du jeton lorsque deux comptes demandent la même adresse', async () => {
+      const email = 'partage@test.com'
+      const alice = await seedUser({ pendingEmail: email })
+      const bob = await seedUser({ pendingEmail: email, roles: ['prestataire'], activeRole: 'prestataire' })
+      const token = await issueVerificationToken(bob.id, email, 'change-email')
+      expect(await confirmEmailChange({ email, token })).toMatchObject({ ok: true, email })
+      expect((await User.findById(alice.id).lean())?.email).toBe(alice.email)
+      expect((await User.findById(bob.id).lean())?.email).toBe(email)
+      expect((await confirmEmailChange({ email, token })).ok).toBe(false)
+    })
+
+    it('une seule confirmation concurrente peut obtenir une adresse, tous types confondus', async () => {
+      const email = 'concurrent@test.com'
+      const alice = await seedUser({ pendingEmail: email })
+      const bob = await seedUser({ pendingEmail: email, roles: ['organisateur'], activeRole: 'organisateur' })
+      const tokens = await Promise.all([alice, bob].map((user) => issueVerificationToken(user.id, email, 'change-email')))
+      const results = await Promise.all(tokens.map((token) => confirmEmailChange({ email, token })))
+      expect(results.filter((result) => result.ok)).toHaveLength(1)
+      expect(results.find((result) => !result.ok)).toMatchObject({ ok: false, status: 409, error: 'email_taken' })
+      expect(await User.countDocuments({ email })).toBe(1)
+    })
+
+    it('un ancien jeton ne remplace pas une nouvelle demande et un jeton de récupération ne convient pas', async () => {
+      const email = 'ancienne@test.com'
+      const alice = await seedUser({ pendingEmail: email })
+      const token = await issueVerificationToken(alice.id, email, 'change-email')
+      await User.updateOne({ _id: alice.id }, { $set: { pendingEmail: 'autre@test.com' } })
+      expect((await confirmEmailChange({ email, token })).ok).toBe(false)
+      const wrongPurpose = await issueVerificationToken(alice.id, 'autre@test.com', 'reset-password')
+      expect((await confirmEmailChange({ email: 'autre@test.com', token: wrongPurpose })).ok).toBe(false)
+      expect((await User.findById(alice.id).lean())?.email).toBe(alice.email)
+    })
+
     it('pose pendingEmail sans changer email tout de suite', async () => {
       const alice = await seedUser()
       const result = await requestEmailChange({ id: alice.id }, { newEmail: 'nouvelle@test.com', currentPassword: 'correct-password' })

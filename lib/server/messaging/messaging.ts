@@ -3,7 +3,7 @@ import User from '@/lib/models/User'
 import { AUDIO_MIME_TYPES, IMAGE_MIME_TYPES, uploadDataUri } from '@/lib/server/cloudinary'
 import { upsertMessageNotification } from '@/lib/server/notifications'
 import { notifyUserById, notifyAllAgents } from '@/lib/server/emails/notify'
-import { reportReceivedAgainstAccountEmail, newReportToReviewEmail, newMessageDigestEmail } from '@/lib/server/emails'
+import { reportReceivedAgainstAccountEmail, newReportToReviewEmail } from '@/lib/server/emails'
 import { sendPushToUser } from '@/lib/server/push'
 import {
   toConversationView,
@@ -290,8 +290,6 @@ export async function sendMessage(
         },
         {
           upsertMessageNotification,
-          notifyUserById,
-          newMessageDigestEmail,
           sendPushToUser,
           toMessageView,
         },

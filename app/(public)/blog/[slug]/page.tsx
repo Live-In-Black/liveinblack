@@ -3,13 +3,12 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getCachedPostBySlug as getPostBySlug, getCachedRelatedPosts as listRelatedPosts } from '@/lib/server/publicCache'
-import { regions } from '@/lib/shared/regions'
 import { reliablePhotoUrl } from '@/lib/shared/placeholderImage'
 
 export const revalidate = 300
 
 const CATEGORY_LABELS: Record<string, string> = {
-  ...(Object.fromEntries(regions.map((r) => [r.id, `${r.flag} ${r.name}`])) as Record<string, string>),
+  benin: '🇧🇯 Bénin',
   guide: '📘 Guides',
   actualite: '📰 Actualités',
 }

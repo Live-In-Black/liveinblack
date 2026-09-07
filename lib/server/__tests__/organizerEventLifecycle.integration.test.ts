@@ -7,7 +7,6 @@ import mongoose from 'mongoose'
 
 import { cancelOrganizerEvent, postponeOrganizerEvent, deleteOrganizerEvent } from '../organizer/organizerEventLifecycle'
 import { createOrganizerEvent } from '../organizer/organizerEvents'
-import { listTicketForResale, initiateResaleOrder, fulfillResaleOrder } from '../events/resale'
 import Event from '@/lib/models/Event'
 import Order from '@/lib/models/Order'
 import Ticket from '@/lib/models/Ticket'
@@ -141,40 +140,41 @@ describeIntegration('organizerEventLifecycle (intégration, vraie base) — canc
       expect(refunds.every((refund) => refund.status === 'code_active' && refund.codeHash)).toBe(true)
     })
 
-    it('un billet revendu : rembourse uniquement le dernier acheteur, jamais l\'acheteur d\'origine', async () => {
+    it('un billet historiquement remplace : rembourse uniquement le dernier acheteur, jamais l\'acheteur d\'origine', async () => {
       const eventId = await seedEvent()
       const doc = await Event.findById(eventId).lean()
       const placeId = doc!.places[0].id
 
-      const [originalOrder] = await Order.create([
+      const originalBuyer = new mongoose.Types.ObjectId().toString()
+      const replacementBuyer = new mongoose.Types.ObjectId().toString()
+      const [originalOrder, replacementOrder] = await Order.create([
         {
-          userId: 'original-buyer', eventId, placeId, placeType: 'Standard', qty: 1, unitPriceMinor: 2000, currency: 'EUR',
-          feeMinor: 149, sellerUid: 'org-1', connectMode: 'ledger', rail: 'stripe', status: 'paid', paid: true, settled: true,
+          userId: originalBuyer, eventId, placeId, placeType: 'Standard', qty: 1, unitPriceMinor: 10000, currency: 'XOF',
+          feeMinor: 500, sellerUid: 'org-1', connectMode: 'ledger', rail: 'fedapay', status: 'superseded', paid: true, settled: true,
           stripeSessionId: 'cs_original_2', expiresAt: new Date(Date.now() + 3600_000),
+        },
+        {
+          userId: replacementBuyer, eventId, placeId, placeType: 'Standard', qty: 1, unitPriceMinor: 10000, currency: 'XOF',
+          feeMinor: 500, sellerUid: 'org-1', connectMode: 'ledger', rail: 'fedapay', status: 'paid', paid: true, settled: true,
+          stripeSessionId: 'cs_replacement_2', expiresAt: new Date(Date.now() + 3600_000),
         },
       ])
       await Ticket.create({
-        ticketCode: 'CANCELRESALE', orderId: String(originalOrder._id), eventId, place: 'Standard', placePrice: 20,
-        totalPrice: 20, currency: 'EUR', userId: 'original-buyer', paid: true, source: 'paid',
+        ticketCode: 'CANCELREPLACED', orderId: String(replacementOrder._id), eventId, place: 'Standard', placePrice: 10000,
+        totalPrice: 10000, currency: 'XOF', userId: replacementBuyer, paid: true, source: 'paid',
       })
-
-      const listResult = await listTicketForResale({ id: 'original-buyer' }, 'CANCELRESALE', 15)
-      if (!listResult.ok) throw new Error('setup failed')
-      const initResult = await initiateResaleOrder({ id: 'resale-buyer' }, String(listResult.listing._id), 'stripe')
-      if (!initResult.ok) throw new Error('setup failed')
-      await Order.updateOne({ _id: initResult.order._id }, { $set: { stripeSessionId: 'cs_resale_2' } })
-      const fulfillResult = await fulfillResaleOrder(String(initResult.order._id))
-      expect(fulfillResult.status).toBe('ok')
 
       const result = await cancelOrganizerEvent({ id: 'org-1' }, eventId, 'Annulé après revente')
       expect(result.ok).toBe(true)
       if (!result.ok) return
-      // Seule la commande de revente (le dernier payeur réel) est comptée —
+      // Seule la commande remplaçante (le dernier payeur réel) est comptée ;
       // la commande d'origine est 'superseded', jamais reprise par la boucle.
       expect(result.refundedCount).toBe(1)
 
       const updatedOriginalOrder = await Order.findById(originalOrder._id).lean()
       expect(updatedOriginalOrder?.status).toBe('superseded')
+      expect(await RefundCase.countDocuments({ orderId: String(originalOrder._id), cause: 'event_cancelled' })).toBe(0)
+      expect(await RefundCase.countDocuments({ orderId: String(replacementOrder._id), cause: 'event_cancelled' })).toBe(1)
     })
   })
 

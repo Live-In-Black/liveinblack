@@ -225,6 +225,13 @@
   align-self: start;
 }
 
+/* Le menu personnalisé du champ Genre dépasse sa carte. Le bloc Identité
+   doit rester au-dessus de la carte voisine pendant son ouverture. */
+.root :global(#setting-identite) {
+  position: relative;
+  z-index: 2;
+}
+
 .root :global(.settings-card-grid .lb-card) {
   height: auto;
   padding: 15px !important;
@@ -384,7 +391,7 @@
 }
 
 .root :global(.settings-personal-sections) {
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   background: var(--surface);
@@ -398,6 +405,12 @@
   gap: 20px;
   padding: 16px;
   background: transparent;
+}
+
+.root :global(.settings-personal-section:last-child),
+.root :global(.profile-demo-row > div:last-child) {
+  position: relative;
+  z-index: 3;
 }
 
 .root :global(.settings-personal-section + .settings-personal-section) {

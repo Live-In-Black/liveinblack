@@ -100,6 +100,18 @@ describe('eventOrderRemoveItemService', () => {
     })
   })
 
+  it.each([0, 1, 2, 3].flatMap((rank) => ['preorder', 'included'].map((kind) => ({ rank, kind }))))('preserve une ligne achetee sans paidAt (%j)', async ({ rank, kind }) => {
+    vi.mocked(deps.loadEventContext).mockResolvedValueOnce({ ok: true, ctx: { rank, role: 'test', event: {} as never } })
+    const item = { id: 'item-1', kind, addedBy: 'u1', status: 'sent', paidAt: null, servedAt: null, deleteOne: vi.fn() }
+    const save = vi.fn()
+    vi.mocked(EventOrder.findOne).mockReturnValueOnce({ session: vi.fn().mockResolvedValue({ items: [item], save }) } as never)
+    expect(await removeEventOrderItem(caller, { eventId: 'event-1', itemId: 'item-1' }, deps))
+      .toEqual({ ok: false, status: 409, error: 'purchased_item_locked' })
+    expect(item.deleteOne).not.toHaveBeenCalled()
+    expect(save).not.toHaveBeenCalled()
+    expect(deps.appendLog).not.toHaveBeenCalled()
+  })
+
   it('supprime la ligne et journalise le snapshot', async () => {
     const deleteOne = vi.fn()
     const item = {

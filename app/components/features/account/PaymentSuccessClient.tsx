@@ -7,14 +7,11 @@ import { GROWTH_EVENT_NAMES, trackGrowthEvent } from '@/lib/client/growthAnalyti
 
 // Port de src/pages/PaiementReussiPage.jsx + src/pages/PaiementAnnulePage.jsx.
 // Architecture différente du legacy : ici l'émission des billets est
-// intégralement côté serveur (webhook Stripe/FedaPay -> fulfillOrder(),
+// intégralement côté serveur (webhook FedaPay -> fulfillOrder(),
 // lib/server/fulfillOrder.ts) — cette page ne génère RIEN, elle ne fait que
-// relire le statut de l'Order via /api/checkout (Stripe) ou
-// /api/checkout/fedapay (FedaPay) jusqu'à ce que le webhook ait fini.
-// Stripe redirige les paiements annulés directement vers
-// /evenements/[id]?paiement=annule (voir app/api/checkout/route.ts) — seul
-// FedaPay ramène ici un paiement abandonné/refusé (callback_url unique),
-// d'où l'état "cancelled" qui reprend le texte de PaiementAnnulePage.jsx.
+// relire le statut de l'Order via /api/checkout/fedapay jusqu'à ce que le
+// webhook ait fini. /api/checkout ne sert plus qu'au rail gratuit et aux
+// anciens retours Stripe historiques.
 // Place gratuite (rail 'free', lib/server/freeCheckout.ts) : pas de webhook —
 // le billet est déjà émis au moment où cette page se charge, /api/checkout
 // (avec order_id au lieu de session_id) répond donc "paid" dès le premier
@@ -45,7 +42,7 @@ const btnGhostS: React.CSSProperties = {
   color: 'var(--text)', background: 'var(--fill-secondary)', border: '1px solid var(--border)',
 }
 
-const SUPPORT_EMAIL = 'hagechady@liveinblack.com'
+const SUPPORT_EMAIL = 'contact@liveinblack.com'
 const MAX_AUTO_ATTEMPTS = 5
 const POLL_INTERVAL_MS = 3500
 const TERMINAL_FEDAPAY_STATUSES = ['canceled', 'declined', 'expired']
@@ -77,9 +74,9 @@ export default function PaymentSuccessClient({
   const router = useRouter()
   const isFedapay = !sessionId && !!fedapayTxnId
   const isFree = !sessionId && !fedapayTxnId && !!freeOrderId
-  // Retour direct du cancel_url Stripe (jamais de session_id, jamais de
-  // webhook à attendre — la commande n'a même pas été créée) : état
-  // "cancelled" immédiat, même écran que l'abandon FedaPay.
+  // Retour direct d'un ancien cancel_url Stripe (jamais de session_id, jamais
+  // de webhook actif en V1) : état "cancelled" immédiat, même écran que
+  // l'abandon FedaPay.
   const isStripeCancelled = !sessionId && !fedapayTxnId && !freeOrderId && !!stripeCancelledEventId
 
   const missingParams = !sessionId && !fedapayTxnId && !freeOrderId && !isStripeCancelled
@@ -128,7 +125,7 @@ export default function PaymentSuccessClient({
         return { result: 'pending', data }
       }
 
-      async function checkStripe(): Promise<{ result: State; data?: Record<string, unknown> }> {
+      async function checkLegacyStripe(): Promise<{ result: State; data?: Record<string, unknown> }> {
         const res = await fetch(`/api/checkout?session_id=${encodeURIComponent(sessionId as string)}`)
         if (!res.ok) return { result: 'error' }
         const data = await res.json()
@@ -150,7 +147,7 @@ export default function PaymentSuccessClient({
         return { result: 'pending', data }
       }
 
-      const { result, data } = isFedapay ? await checkFedapay() : isFree ? await checkFree() : await checkStripe()
+      const { result, data } = isFedapay ? await checkFedapay() : isFree ? await checkFree() : await checkLegacyStripe()
       if (cancelled) return
 
       if (data) {
@@ -189,7 +186,7 @@ export default function PaymentSuccessClient({
     trackGrowthEvent(GROWTH_EVENT_NAMES.purchaseConfirmed, {
       event_id: eventId || null,
       ticket_count: ticketCount,
-      rail: isFedapay ? 'fedapay' : isFree ? 'free' : 'stripe',
+      rail: isFedapay ? 'fedapay' : isFree ? 'free' : 'legacy_stripe',
       free: isFree,
     })
   }, [conversionKey, eventId, isFedapay, isFree, state, ticketCount])

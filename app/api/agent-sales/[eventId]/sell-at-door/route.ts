@@ -9,7 +9,7 @@ const bodySchema = z.object({
   contactEmail: z.string().trim().email().optional(),
   contactPhone: z.string().trim().max(30).optional(),
   method: z.enum(['cash', 'momo']),
-  momoMode: z.enum(['mtn', 'moov', 'mtn_ci', 'moov_tg']).optional(),
+  momoMode: z.enum(['mtn', 'moov']).optional(),
   momoPhone: z.object({ number: z.string().min(4), country: z.string().min(2) }).optional(),
   settlementMode: z.enum(['instant_debit', 'agent_settles']).optional(),
 })

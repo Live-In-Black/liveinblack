@@ -3,8 +3,9 @@
 // phase agent/admin, tâche #102). Couvre la garde anti double-versement de
 // markPayoutPaid (pendant de api/admin-accounts.js:mark_payout_paid) et le
 // plafonnement de markSellerBalancePaid au solde réel du ledger.
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import mongoose from 'mongoose'
+import { testRefundSignature } from './fixtures/refundSignature'
 import {
   listPendingPayoutsForAgent,
   markPayoutPaid,
@@ -32,9 +33,12 @@ const describeIntegration = describe.skipIf(!RUN_INTEGRATION)
 const TEST_URI = process.env.MONGODB_URI || ''
 
 const AGENT: AgentCaller = { id: 'agent-1', name: 'Agent Test' }
+let signatureDataUrl = ''
+vi.mock('../emails/notify', () => ({ notifyUserById: vi.fn(async () => {}) }))
 
 beforeAll(async () => {
   if (!RUN_INTEGRATION) return
+  signatureDataUrl = await testRefundSignature()
   await mongoose.connect(TEST_URI)
 }, 20000)
 
@@ -263,7 +267,7 @@ describeIntegration('agentPayments (intégration, vraie base) — #9 phase agent
       expect(refunds[0].eventName).toBe('Soirée Neon')
       expect(refunds[0].refundPointName).toBe('Point Cotonou')
 
-      const complete = await completeManualRefund(AGENT, refunds[0].id, { code: 'CODE-123456', signatureUrl: 'https://example.com/signature.png' })
+      const complete = await completeManualRefund(AGENT, refunds[0].id, { code: 'CODE-123456', signatureDataUrl })
       expect(complete.ok).toBe(true)
 
       const fresh = await RefundCase.findById(refunds[0].id).lean()
@@ -294,7 +298,7 @@ describeIntegration('agentPayments (intégration, vraie base) — #9 phase agent
         codeHash: hashRefundPickupCode('USED-CODE'),
       })
 
-      const result = await completeManualRefund(AGENT, String(refund._id), { code: 'USED-CODE', signatureUrl: 'https://example.com/signature.png' })
+      const result = await completeManualRefund(AGENT, String(refund._id), { code: 'USED-CODE', signatureDataUrl })
       expect(result.ok).toBe(false)
       if (result.ok) return
       expect(result.error).toBe('invalid_or_already_redeemed_code')
@@ -321,11 +325,11 @@ describeIntegration('agentPayments (intégration, vraie base) — #9 phase agent
       })
 
       for (let i = 0; i < 4; i += 1) {
-        const attempt = await completeManualRefund(AGENT, String(refund._id), { code: `BAD-${i}`, signatureUrl: 'https://example.com/signature.png' })
+        const attempt = await completeManualRefund(AGENT, String(refund._id), { code: `BAD-${i}`, signatureDataUrl })
         expect(attempt.ok).toBe(false)
         if (!attempt.ok) expect(attempt.error).toBe('invalid_or_already_redeemed_code')
       }
-      const locked = await completeManualRefund(AGENT, String(refund._id), { code: 'BAD-4', signatureUrl: 'https://example.com/signature.png' })
+      const locked = await completeManualRefund(AGENT, String(refund._id), { code: 'BAD-4', signatureDataUrl })
       expect(locked.ok).toBe(false)
       if (locked.ok) return
       expect(locked.error).toBe('refund_code_locked')

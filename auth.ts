@@ -68,7 +68,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // casseraient. Régression trouvée à l'audit : authorize() ne
         // vérifiait jamais emailVerifiedAt, un client non vérifié obtenait
         // une session complète.
-        const isPureClient = !user.roles.includes('organisateur') && !user.roles.includes('prestataire') && !user.roles.includes('agent')
+        const isPureClient = user.activeRole === 'client'
         if (isPureClient && !user.emailVerifiedAt) return null
 
         // E16 : hash IP+UA (jamais l'un des deux en clair en base), comparé
@@ -110,20 +110,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      // Déclenché par `update({ activeRole })` côté client (next-auth/react)
-      // après POST /api/account/active-role — sans cette branche, la session
-      // JWT resterait figée sur l'activeRole de la connexion initiale jusqu'à
-      // la prochaine reconnexion (30 jours), le switch de dashboard resterait
-      // sans effet dans le token malgré la mise à jour en base. `update()` est
-      // appelable directement côté client sans repasser par la route API : on
-      // NE FAIT JAMAIS confiance à la valeur envoyée sans la revérifier contre
-      // `user.roles` en base (même garde que la route), sans quoi n'importe
-      // quel compte pourrait s'auto-attribuer activeRole:'agent'.
+      // Les comptes métier sont mono-type. `update()` est appelable
+      // directement côté client sans repasser par la route API : on ne
+      // recopie donc la valeur demandée dans le JWT que si elle correspond au
+      // rôle fixe enregistré en base.
       if (trigger === 'update' && session && typeof (session as { activeRole?: unknown }).activeRole === 'string') {
         const requestedRole = (session as { activeRole: string }).activeRole
         await getDb()
-        const dbUser = await User.findById(token.sub).select('roles').lean()
-        if (dbUser?.roles.includes(requestedRole as Role)) {
+        const dbUser = await User.findById(token.sub).select('activeRole').lean()
+        if (dbUser?.activeRole === requestedRole) {
           token.activeRole = requestedRole
         }
         return token

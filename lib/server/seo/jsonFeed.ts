@@ -23,7 +23,7 @@ export function blogJsonFeed({ site, posts }: { site: string; posts: JsonFeedPos
     title: 'Le journal LIVEINBLACK',
     home_page_url: `${base}/blog`,
     feed_url: `${base}/blog/feed.json`,
-    description: 'Guides, actualités et conseils sur les événements au Bénin et en Afrique de l’Ouest.',
+    description: 'Guides, actualités et conseils sur les événements au Bénin.',
     language: 'fr-BJ',
     authors: [{ name: 'LIVEINBLACK', url: base }],
     items: posts.map((post) => {

@@ -8,7 +8,6 @@ import { applicationDocumentsSchema } from '@/lib/shared/applicationDocuments'
 const bodySchema = z.object({
   formData: z.object({
     nomCommercial: z.string().trim().min(1),
-    siret: z.string().trim().min(1),
     emailPro: z.string().trim().toLowerCase().email(),
     telephoneProCode: z.string().trim().min(1),
     telephonePro: z.string().trim().min(1),
@@ -19,7 +18,7 @@ const bodySchema = z.object({
     typeEtablissementCustom: z.string().trim().default(''),
     itinerant: z.boolean().default(false),
     ville: z.string().trim().default(''),
-    pays: z.string().trim().default('France'),
+    pays: z.literal('Bénin').default('Bénin'),
     zonesActivite: z.array(z.string()).default([]),
     capacite: z.number().nullable().default(null),
     horaires: z.string().trim().default(''),

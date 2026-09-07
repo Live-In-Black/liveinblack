@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import { after } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { auth } from '@/auth'
 import { getOrCreateMyOrganizerProfile } from '@/lib/server/organizer/organizerProfile'
 import { getPayoutStatus } from '@/lib/server/organizer/organizerPayouts'
@@ -8,8 +10,8 @@ import { listOrganizerRefundCases } from '@/lib/server/refunds/refundCases'
 import StudioClient from './StudioClient'
 
 // Port de OrganizerPublicStudio.jsx (#7 phase organisateur, tâche #81) — page
-// publique de l'organisateur ("Ma page publique") + panneaux d'encaissement
-// (Stripe Connect, numéros Mobile Money — legacy: PayoutPanel.jsx +
+// publique de l'organisateur ("Ma page publique") + panneau d'encaissement
+// FedaPay Marketplace Bénin (legacy : PayoutPanel.jsx +
 // MomoPayoutManager.jsx, ici regroupés sur CETTE page plutôt que sur
 // /profil, qui n'a délibérément aucune section "Encaissement", cf.
 // lib/server/profile.ts).
@@ -25,7 +27,9 @@ export default async function MaPageOrganisateurPage() {
 
   const caller = { id: session.user.id }
   const [profileResult, payoutStatusResult, momosResult, refunds] = await Promise.all([
-    getOrCreateMyOrganizerProfile(caller),
+    getOrCreateMyOrganizerProfile(caller, {
+      onCreated: () => after(() => revalidateTag('public-organizers', 'default')),
+    }),
     getPayoutStatus(caller),
     listPayoutMomos(caller),
     listOrganizerRefundCases(caller.id),

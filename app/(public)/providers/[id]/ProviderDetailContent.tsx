@@ -53,7 +53,7 @@ export default async function ProviderDetailContent({ id }: { id: string }) {
   ])
 
   const categories = getProviderCategories(provider)
-  const visibleCatalog = (provider.catalog || []).filter((item) => item.available !== false)
+  const visibleCatalog = (provider.catalog || []).filter((item) => item.available !== false && item.currency !== 'EUR')
   const socialEntries = Object.entries(provider.socialLinks || {})
     .filter(([key]) => key !== 'website')
     .map(([key, value]) => [key, socialUrl(key, value)] as const)

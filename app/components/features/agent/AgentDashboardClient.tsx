@@ -26,6 +26,7 @@ import styles from './AgentDashboardClient.module.css'
 interface DashboardStats {
   revenue: {
     platformRevenueEUR: number
+    platformRevenueXOF: number
     ticketFeeRevenueEUR: number
     ticketFeeRevenueXOF: number
     gmvBoosts: number
@@ -144,7 +145,7 @@ export default function AgentDashboardClient() {
                 </Link>
                 <Link href="/agent/paiements" className={styles.action}>
                   <span className={styles.actionIcon}><WalletCards size={22} aria-hidden="true" /></span>
-                  <span className={styles.actionBody}><strong>{fmtMoney(stats.revenue.platformRevenueEUR, 'EUR')}</strong><span>Contrôle financier</span><small>Suivre les flux et les commissions</small></span>
+                  <span className={styles.actionBody}><strong>{fmtMoney(stats.revenue.platformRevenueXOF, 'XOF')}</strong><span>Contrôle financier</span><small>Suivre les flux et les commissions</small></span>
                   <ArrowUpRight size={19} aria-hidden="true" />
                 </Link>
                 <Link href="/agent/evenements" className={styles.action}>
@@ -176,18 +177,16 @@ export default function AgentDashboardClient() {
               <div className={styles.bentoGrid}>
                 <Card className={styles.revenueCard}>
                   <div className={styles.cardTop}><span>Revenu plateforme</span><TrendingUp size={20} /></div>
-                  <strong className={styles.heroValue}>{fmtMoney(stats.revenue.platformRevenueEUR, 'EUR')}</strong>
-                  {stats.revenue.ticketFeeRevenueXOF > 0 ? <span className={styles.secondaryValue}>+ {fmtMoney(stats.revenue.ticketFeeRevenueXOF, 'XOF')}</span> : null}
+                  <strong className={styles.heroValue}>{fmtMoney(stats.revenue.platformRevenueXOF, 'XOF')}</strong>
                   <div className={styles.revenueBreakdown}>
-                    <div><span>Frais de billetterie</span><strong>{fmtMoney(stats.revenue.ticketFeeRevenueEUR, 'EUR')}</strong></div>
-                    <div><span>Boosts</span><strong>{fmtMoney(stats.revenue.gmvBoosts, 'EUR')}</strong></div>
+                    <div><span>Frais de billetterie</span><strong>{fmtMoney(stats.revenue.ticketFeeRevenueXOF, 'XOF')}</strong></div>
+                    <div><span>Boosts</span><strong>{fmtMoney(stats.revenue.gmvBoosts, 'XOF')}</strong></div>
                   </div>
                 </Card>
 
                 <Card className={styles.volumeCard}>
                   <div className={styles.cardTop}><span>Volume commercial</span><WalletCards size={20} /></div>
-                  <strong className={styles.largeValue}>{fmtMoney(stats.revenue.gmvTicketsEUR + stats.revenue.gmvBoosts, 'EUR')}</strong>
-                  {stats.revenue.gmvTicketsXOF > 0 ? <span className={styles.secondaryValue}>+ {fmtMoney(stats.revenue.gmvTicketsXOF, 'XOF')}</span> : null}
+                  <strong className={styles.largeValue}>{fmtMoney(stats.revenue.gmvTicketsXOF + stats.revenue.gmvBoosts, 'XOF')}</strong>
                   <div className={styles.compactStat}><span>Billets payés</span><strong>{stats.tickets.totalSold}</strong></div>
                 </Card>
 

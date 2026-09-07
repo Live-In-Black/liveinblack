@@ -27,7 +27,7 @@ flowchart LR
     end
 
     subgraph Backend[Backend unique dans LIB_Web]
-      API[218 routes API Next.js]
+      API[Routes API Next.js]
       AUTH[Auth.js v5\nJWT + cookies]
       DOMAIN[Services métier\nlib/server]
       CRON[8 tâches planifiées]
@@ -36,7 +36,6 @@ flowchart LR
     DB[(MongoDB\n40 modèles Mongoose)]
 
     subgraph External[Services externes]
-      STRIPE[Stripe\nEUR · Connect]
       FEDA[FedaPay\nXOF · Mobile Money]
       CLOUD[Cloudinary\nmédias et documents]
       RESEND[Resend\nemails transactionnels]
@@ -97,7 +96,7 @@ flowchart TB
     SERVICES[Services métier lib/server\nrègles · propriété · transactions]
     MODELS[40 modèles Mongoose\nindex · contraintes · statuts]
     MONGO[(MongoDB)]
-    EXT[Stripe · FedaPay · Cloudinary\nResend · Push · Apple · Vercel]
+    EXT[FedaPay · Cloudinary\nResend · Push · Apple · Vercel]
 
     UI --> CLIENT
     CLIENT --> ROUTES
@@ -198,8 +197,8 @@ sequenceDiagram
 
 ### 6.3 Client
 
-- Acheter un billet payant en EUR/Stripe ou XOF/FedaPay.
-- Obtenir un billet gratuit sans passerelle.
+- Acheter un billet payant en XOF via FedaPay.
+- Distinguer invitations/guestlists des événements entièrement gratuits, exclus de la V1.
 - Réserver une place par acompte : 5 % pour 24 h ou 10 % pour 72 h, puis payer le solde.
 - Acheter en groupe et gérer les invitations/assignations de places.
 - Ajouter une protection annulation lors de l'achat.
@@ -220,7 +219,7 @@ sequenceDiagram
 
 - Créer/soumettre un dossier avec justificatifs privés et suivre la décision.
 - Construire sa page publique : identité, description, avatar, couverture, médias, réseaux et zones.
-- Configurer Stripe Connect et/ou les numéros Mobile Money de versement.
+- Configurer les numéros Mobile Money et références FedaPay utiles au versement.
 - Créer et modifier un événement complet : lieu, dates, places, tarifs, menu, artistes, médias, vidéo, confidentialité et codes d'accès.
 - Annuler ou reporter l'événement.
 - Consulter réservations et statistiques.
@@ -273,10 +272,10 @@ Un utilisateur retrouve ses affectations via `/api/my-staffed-events`. L'autoris
 |---|---|---|---|---|---|
 | Auth et compte | login, vérification, reset, profil, paramètres | login, reset, verify, settings | `/api/auth/*`, `/api/profil/*`, `/api/account/*` | User, RateLimit, DeletionRequest | Resend |
 | Découverte | home, events, search, profils publics | accueil, explorer, event, directories | `/api/events`, `/api/search`, `/api/organizers`, `/api/providers` | Event, HomepageConfig, OrganizerProfile, ProviderProfile, Boost | Cloudinary, Apple/iTunes, GA |
-| Billetterie | checkout, portefeuille, billet | checkout, tickets, order | `/api/checkout/*`, `/api/tickets/*`, `/api/seat-holds/*` | Order, Ticket, SeatHold, SeatInvitation, GroupMembership | Stripe, FedaPay, Resend |
-| Revente/remboursement | portefeuille, achat revente | resale checkout, tickets | `/api/resale-listings/*`, `/api/orders/*`, `/api/refund-link/*` | ResaleListing, EventRefund, SellerBalance | Stripe, FedaPay, Resend |
-| Organisateur | studio, my-events, stats, scanner | espace organizer et sous-écrans | `/api/organizer-events/*`, `/api/organizers/me/*` | Event, OrganizerProfile, EventStaff, PromoCode, EventPayout | Cloudinary, Stripe Connect, FedaPay |
-| Prestataire | offer-services, profils | espace provider, reviews, subscription | `/api/providers/*`, `/api/subscriptions/*`, `/api/reviews/*` | ProviderProfile, Review, ReviewReport, SubscriptionPayment | Cloudinary, Stripe, FedaPay |
+| Billetterie | checkout, portefeuille, billet | checkout, tickets, order | `/api/checkout/*`, `/api/tickets/*`, `/api/seat-holds/*` | Order, Ticket, SeatHold, SeatInvitation, GroupMembership | FedaPay, Resend |
+| Remboursement | portefeuille, suivi remboursements | tickets, refund link | `/api/orders/*`, `/api/refund-link/*`, `/api/refunds/*`, `/api/organizer-refunds/*` | RefundCase, RefundPoint, RefundProof, Ticket | FedaPay, Resend |
+| Organisateur | studio, my-events, stats, scanner | espace organizer et sous-écrans | `/api/organizer-events/*`, `/api/organizers/me/*` | Event, OrganizerProfile, EventStaff, PromoCode, EventPayout | Cloudinary, FedaPay |
+| Prestataire | offer-services, profils | espace provider, reviews, subscription | `/api/providers/*`, `/api/subscriptions/*`, `/api/reviews/*` | ProviderProfile, Review, ReviewReport, SubscriptionPayment | Cloudinary, FedaPay |
 | Social | messages, notifications | messages, conversation, friends | `/api/conversations/*`, `/api/messages/*`, `/api/friends/*`, `/api/users/*` | Conversation, Message, Friendship, FriendRequest, Report | Cloudinary, Push, Resend |
 | Playlist | playlist événement | playlist événement | `/api/events/[eventId]/playlist/*` | EventPlaylist | iTunes/Apple Music |
 | Vente sur place | on-site-sales | agent-sales | `/api/agent-sales/*` | Order, Ticket, CashSaleSettlement, SellerBalance | FedaPay |
@@ -293,7 +292,7 @@ sequenceDiagram
     participant App as Web/Mobile
     participant API as API Checkout
     participant DB as MongoDB
-    participant PSP as Stripe ou FedaPay
+    participant PSP as FedaPay
     participant WH as Webhook
 
     App->>API: Événement + places + options + promo
@@ -311,23 +310,20 @@ sequenceDiagram
 
 | Rail | Devise | Usages |
 |---|---|---|
-| Stripe Checkout | EUR | Billetterie, boosts, abonnements prestataire |
-| Stripe Connect | EUR | Connexion du compte de versement organisateur |
-| FedaPay transaction | XOF | Billetterie, acomptes/solde, revente, boosts, abonnements |
+| FedaPay transaction | XOF | Billetterie, acomptes/solde, boosts, abonnements |
 | FedaPay Mobile Money push | XOF | Vente sur place avec validation directe sur le téléphone du client |
 | FedaPay payout | XOF | Reversements organisateur |
-| Gratuit | — | Création directe d'une commande/billet sans PSP |
 | Espèces | XOF/métier | Vente sur place avec suivi de règlement et commission |
 
 ### 8.3 Garde-fous financiers
 
 - Les montants sont recalculés côté serveur ; le prix envoyé par le client n'est pas une source de vérité.
-- Les webhooks Stripe/FedaPay sont signés et les montants attendus sont comparés.
+- Les webhooks FedaPay sont signés et les montants attendus sont comparés.
 - Les remboursements d'événement ont une unicité `{eventId, paymentRef}`.
 - Les références de session/transaction sont indexées pour éviter les doublons.
 - Les règlements cash bloquent de nouvelles ventes après 5 ventes non réglées.
 - Les seat-holds figent le prix et expirent automatiquement.
-- Une revente invalide l'ancien QR et met à jour le nonce/version d'accès.
+- La revente est exclue de la V1 ; les transferts/invitations autorises ne doivent pas creer de paiement secondaire.
 
 ## 9. Messagerie, social et notifications
 
@@ -391,7 +387,7 @@ Les relations sont majoritairement stockées par identifiants `String` et appliq
 | Identité | `User`, `Application`, `DeletionRequest`, `RateLimit` | comptes, rôles, candidatures, suppression, anti-abus |
 | Profils publics | `OrganizerProfile`, `ProviderProfile` | pages pro, catalogues, médias, encaissement |
 | Événements | `Event`, `EventInterest`, `EventStaff`, `EventPlaylist`, `PromoCode`, `HomepageConfig` | publication, intérêt, équipe, musique, codes, accueil |
-| Billetterie | `Order`, `Ticket`, `SeatHold`, `SeatInvitation`, `GroupMembership`, `ResaleListing` | achat, accès, réservation, groupe, revente |
+| Billetterie | `Order`, `Ticket`, `SeatHold`, `SeatInvitation`, `GroupMembership` | achat, accès, réservation et groupe |
 | Finance | `Boost`, `BoostSlot`, `EventPayout`, `EventRefund`, `PayoutRequest`, `PaymentAlert`, `SellerBalance`, `SubscriptionPayment`, `CashSaleSettlement` | monétisation, remboursements, versements et règlements |
 | Commandes sur événement | `EventOrder`, `EventOrderLog` | panier/commande de consommation et journal d'audit |
 | Social | `Conversation`, `Message`, `FriendRequest`, `Friendship`, `Notification`, `OrganizerFollow`, `Report` | messages, amis, alertes, abonnements, signalements |
@@ -415,8 +411,7 @@ Les relations sont majoritairement stockées par identifiants `String` et appliq
 | Service | Utilisation | Sens des échanges | Variables principales |
 |---|---|---|---|
 | MongoDB | Toutes les données métier et l'adaptateur Auth.js | API ↔ MongoDB | `MONGODB_URI`, pools min/max |
-| Stripe | Checkout EUR, remboursements, boosts, abonnement, Connect | API → Stripe ; Stripe → webhook | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
-| FedaPay | XOF, Mobile Money, payouts et remboursements | API → FedaPay ; FedaPay → webhook | `FEDAPAY_SECRET_KEY`, `FEDAPAY_WEBHOOK_SECRET`, `FEDAPAY_API_BASE` |
+| FedaPay | XOF, Mobile Money, marketplace, boosts, abonnements et payouts | API → FedaPay ; FedaPay → webhook | `FEDAPAY_SECRET_KEY`, `FEDAPAY_WEBHOOK_SECRET`, `FEDAPAY_API_BASE` |
 | Cloudinary | Images, vidéos, audios, avatars, documents privés | API/client signé → Cloudinary | cloud name, API key/secret, presets public/privé |
 | Resend | Emails transactionnels | API → Resend | `RESEND_API_KEY`, `EMAIL_FROM` |
 | Web Push | Push navigateur | API → service push du navigateur | clés VAPID et sujet |
@@ -442,7 +437,6 @@ Les relations sont majoritairement stockées par identifiants `String` et appliq
 | 09:00 quotidien | `/api/cron/seat-holds` | expiration/traitement des réservations |
 | Toutes les 30 min | `/api/cron/seat-hold-reminders` | rappels de solde/expiration |
 | Toutes les heures | `/api/cron/event-recap` | récapitulatifs liés aux événements |
-| Toutes les 15 min | `/api/cron/resale-expiry` | expiration des annonces de revente |
 | 10:00 quotidien | `/api/cron/cash-sale-reminders` | relance des règlements de ventes cash |
 | 11:00 quotidien | `/api/cron/interested-event-reminders` | rappels aux utilisateurs intéressés |
 
@@ -450,21 +444,21 @@ Les routes cron sont protégées par `CRON_SECRET` et `CronLock` évite les exé
 
 ## 13. Surface API par domaine
 
-La plateforme contient actuellement **218 fichiers de routes API**. Plusieurs exposent plusieurs méthodes HTTP, pour environ **262 handlers déclarés**, auxquels s'ajoutent les handlers délégués d'Auth.js et l'alias historique Stripe.
+La plateforme contient de nombreux fichiers de routes API Next.js. Les nombres evoluent avec les suppressions V1 ; relancer le comptage technique avant toute annexe chiffree.
 
 | Préfixe API | Routes | Rôle du domaine |
 |---|---:|---|
 | `/api/agent/*` | 32 | administration, modération, finance, contenu |
 | `/api/conversations/*` | 20 | conversations, groupes, membres, préférences, messages |
-| `/api/events/*` | 15 | découverte, détail, intérêt, promo, revente, playlist |
+| `/api/events/*` | 15 | découverte, détail, intérêt, promo, playlist |
 | `/api/profil/*` | 13 | profil personnel, sécurité, RGPD et préférences |
 | `/api/organizers/*` | 12 | annuaire, profil pro, médias, follows, payouts |
 | `/api/organizer-events/*` | 11 | CRUD événement, stats, staff, guestlist, codes |
-| `/api/tickets/*` | 11 | portefeuille, assignation, invitation, revente, check-in |
+| `/api/tickets/*` | 11 | portefeuille, assignation, invitation, check-in |
 | `/api/applications/*` | 10 | dossiers organisateur/prestataire et documents |
 | `/api/event-orders/*` | 9 | commandes de consommation événement |
 | `/api/providers/*` | 9 | profil/catalogue prestataire, médias et avis |
-| `/api/checkout/*` | 8 | paiements standard, gratuit, revente, boost, seat-hold |
+| `/api/checkout/*` | 8 | paiements standard FedaPay, boost, seat-hold |
 | `/api/cron/*` | 8 | traitements planifiés |
 | `/api/users/*` | 7 | recherche, présence, blocage et signalement |
 | `/api/messages/*` | 7 | actions sur messages et favoris |
@@ -511,7 +505,7 @@ Le dashboard authentifié a son propre shell ; la navigation publique n'y est pa
 
 - Découverte : événements, recherche, profils et annuaires.
 - Auth : connexion, vérification, reset et changement email.
-- Achat : standard, revente, acompte/solde, billet et QR.
+- Achat : standard FedaPay, acompte/solde, billet et QR.
 - Social : conversations, groupes, amis, blocages, favoris et préférences.
 - Pro : candidatures, organisateur, prestataire, staff et playlist.
 - Agent : dossiers, utilisateurs, modération, événements, paiements, payouts, boosts, suppressions et page d'accueil.
@@ -562,7 +556,7 @@ Le dashboard authentifié a son propre shell ; la navigation publique n'y est pa
 
 ### 16.4 Webhooks et tâches
 
-- Signatures Stripe et FedaPay vérifiées.
+- Signatures FedaPay vérifiées.
 - Tolérance anti-rejeu FedaPay de 5 minutes.
 - Secrets distincts pour webhooks et crons.
 - Traitements financiers idempotents lorsque nécessaire.
@@ -589,7 +583,7 @@ Le dashboard authentifié a son propre shell ; la navigation publique n'y est pa
 
 ### 17.3 État de validation connu
 
-Le rapport `mobile-api-qa-status-2026-08-18.md` indique que le contrat technique Mobile/API, les exports et les principaux parcours authentifiés étaient validés lors de l'audit. Il signale aussi que certains parcours réels nécessitaient encore des données/comptes/moyens sandbox : billetterie complète, Stripe, FedaPay, organisateur, prestataire, staff/scanner, uploads et push natif. Le correctif CORS Expo Web était validé localement mais pas encore confirmé déployé à cette date.
+Le rapport `mobile-api-qa-status-2026-08-18.md` indique que le contrat technique Mobile/API, les exports et les principaux parcours authentifiés étaient validés lors de l'audit. Il signale aussi que certains parcours réels nécessitaient encore des données/comptes/moyens sandbox : billetterie complète, FedaPay, organisateur, prestataire, staff/scanner, uploads et push natif. Le correctif CORS Expo Web était validé localement mais pas encore confirmé déployé à cette date.
 
 Ce statut est un instantané d'audit, pas une garantie automatique sur le déploiement courant.
 
@@ -598,8 +592,8 @@ Ce statut est un instantané d'audit, pas une garantie automatique sur le déplo
 1. **Backend monolithique modulaire** : le backend est dans Next.js. C'est simple à déployer, mais toutes les charges API, webhooks, crons et SSR partagent le même projet Vercel.
 2. **Polling** : facile à opérer, mais la messagerie et la présence peuvent devenir coûteuses à grande échelle. Surveiller taux de requêtes, latence et lectures MongoDB.
 3. **Relations par identifiants String** : souples et proches du legacy, mais l'intégrité inter-collections dépend fortement des transactions et services métier.
-4. **Deux rails de paiement** : tous les parcours doivent garder la parité Stripe/FedaPay, surtout remboursements, revente, seat-hold et abonnements.
-5. **Compte multi-rôles** : toute nouvelle fonctionnalité doit raisonner sur `activeRole` et sur le statut spécifique du rôle.
+4. **Rail de paiement V1** : les parcours actifs doivent rester alignes FedaPay/XOF, surtout billetterie, seat-hold, boosts et abonnements.
+5. **Comptes separes** : client, organisateur et prestataire ne doivent plus etre fusionnes dans un meme compte ; seules les permissions agent restent missionnelles.
 6. **Mobile et cookies Auth.js** : le handshake CSRF/cookie natif est critique ; ne pas remplacer `apiFetch` par des `fetch` dispersés.
 7. **Push natif** : le Web Push existant ne couvre pas à lui seul Android/iOS natifs.
 8. **Uploads privés** : les justificatifs ne doivent jamais utiliser le repli local/public.

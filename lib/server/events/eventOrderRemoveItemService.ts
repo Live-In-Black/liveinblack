@@ -78,6 +78,10 @@ export async function removeEventOrderItem(
         return { kind: 'noop' }
       }
 
+      if (item.kind === 'preorder' || item.kind === 'included') {
+        return { kind: 'error', status: 409, error: 'purchased_item_locked' }
+      }
+
       const snapshot = { ticketId: item.ticketId, name: item.name, quantity: item.quantity }
       item.deleteOne()
       await order.save({ session })

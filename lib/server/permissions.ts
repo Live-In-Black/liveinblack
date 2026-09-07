@@ -1,21 +1,11 @@
-// Port TypeScript de src/utils/permissions.js — même logique, adaptée au
-// compte unique multi-rôle (roles[] + activeRole) décidé en réunion. Chaque
-// fonction vérifie `activeRole`, jamais `roles` : avoir le rôle organisateur
-// dans `roles` ne donne pas accès aux pages organisateur tant que ce n'est
-// pas l'interface active (cohérent avec la « séparation stricte des
-// interfaces » actée en réunion, §6 du rapport).
+// Port TypeScript de src/utils/permissions.js — chaque compte métier possède
+// un seul type. Chaque fonction vérifie `activeRole`, jamais `roles`, afin de
+// ne pas réactiver par inadvertance les anciens comptes multi-profils.
 
 export type Role = 'client' | 'organisateur' | 'prestataire' | 'agent'
 export type AccountStatus = 'active' | 'pending' | 'rejected'
-// Statut d'approbation PAR RÔLE (#7 phase organisateur — dossiers
-// candidature) — distinct du statut de compte global ci-dessus. Sans ce
-// champ par rôle, un organisateur déjà actif qui candidate en plus comme
-// prestataire se retrouverait bloqué de SES DEUX interfaces le temps de la
-// review du second dossier (bug corrigé côté legacy, cf. audit #7 de
-// applications.js) — jamais reproduit ici : canCreateEvent/canProposeServices
-// lisent `orgStatus`/`prestStatus` quand disponible, et ne retombent sur le
-// statut de compte global que pour les appelants qui ne le fournissent pas
-// encore (rétro-compatibilité des tests/appels existants).
+// Statuts d'approbation conservés par champ pour les dossiers historiques;
+// chaque nouveau compte n'utilise que le champ correspondant à son type.
 export type RoleApprovalStatus = 'none' | 'pending' | 'active' | 'rejected'
 
 export interface PermissionUser {

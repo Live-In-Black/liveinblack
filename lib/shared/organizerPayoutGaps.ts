@@ -1,11 +1,11 @@
 import { regions } from './regions'
+import { normalizeRegionId } from './locations'
 
 // Port du calcul "payoutGaps"/"payoutGapLabel" de MesEvenementsPage.jsx (#7
 // phase organisateur) — bannière du tableau de bord signalant qu'un
 // organisateur a des événements ACTIFS (non annulés) dont la recette
-// resterait en attente faute d'un moyen d'encaissement configuré : compte
-// Stripe Connect (événements EUR) et/ou numéro Mobile Money du pays
-// concerné (événements XOF, un numéro par pays UEMOA).
+// resterait en attente faute d'un moyen d'encaissement configuré. V1 Bénin :
+// seules les recettes XOF/FedaPay sont actionnables ici, jamais Stripe Connect.
 
 export interface PayoutGapEvent {
   currency: 'EUR' | 'XOF'
@@ -18,24 +18,36 @@ export interface PayoutGapInputs {
   momos: Record<string, string>
 }
 
+const LEGACY_MOMO_BY_REGION: Record<string, { country: string; name: string }> = {
+  togo: { country: 'tg', name: 'Togo' },
+  'cote-ivoire': { country: 'ci', name: "Côte d'Ivoire" },
+  senegal: { country: 'sn', name: 'Sénégal' },
+  'burkina-faso': { country: 'bf', name: 'Burkina Faso' },
+  mali: { country: 'ml', name: 'Mali' },
+  niger: { country: 'ne', name: 'Niger' },
+  'guinee-bissau': { country: 'gw', name: 'Guinée-Bissau' },
+}
+
 export function computePayoutGapLabel(events: PayoutGapEvent[], inputs: PayoutGapInputs): string {
   const active = events.filter((e) => !e.cancelled)
 
-  const needsStripe = active.some((e) => e.currency === 'EUR') && !inputs.stripeChargesEnabled
+  void inputs.stripeChargesEnabled
 
   const missingMomoCountries = new Set<string>()
   for (const e of active) {
     if (e.currency !== 'XOF') continue
-    const region = regions.find((r) => r.name === e.region || r.id === e.region)
-    const momoCountry = region?.momoCountry
+    const regionId = normalizeRegionId(e.region)
+    const region = regions.find((r) => r.id === regionId)
+    const legacy = LEGACY_MOMO_BY_REGION[regionId]
+    const momoCountry = region?.momoCountry || legacy?.country
     if (momoCountry && !inputs.momos[momoCountry]) missingMomoCountries.add(momoCountry)
   }
 
   const parts: string[] = []
-  if (needsStripe) parts.push('ton compte bancaire (événements en euros)')
   for (const country of missingMomoCountries) {
     const region = regions.find((r) => r.momoCountry === country)
-    parts.push(`un numéro Mobile Money pour ${region?.name || country}`)
+    const legacy = Object.values(LEGACY_MOMO_BY_REGION).find((entry) => entry.country === country)
+    parts.push(`un numéro Mobile Money pour ${region?.name || legacy?.name || country}`)
   }
   if (parts.length <= 1) return parts.join('')
   return `${parts.slice(0, -1).join(', ')} et ${parts[parts.length - 1]}`

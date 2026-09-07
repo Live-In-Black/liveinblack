@@ -4,7 +4,9 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import mongoose from 'mongoose'
 import { getEventBoostAvailability, reserveBoostSlot, releaseBoostSlotIfPending } from '../events/boostSlots'
+import { finalizeFedapayBoost } from '../payments/finalizeBoost'
 import Event from '@/lib/models/Event'
+import Boost from '@/lib/models/Boost'
 import BoostSlot from '@/lib/models/BoostSlot'
 import { boostSlotId, normalizeBoostRegion } from '@/lib/shared/boosts'
 
@@ -26,19 +28,20 @@ afterAll(async () => {
 beforeEach(async () => {
   if (!RUN_INTEGRATION) return
   await Event.deleteMany({})
+  await Boost.deleteMany({})
   await BoostSlot.deleteMany({})
 })
 
 describeIntegration('getEventBoostAvailability (intégration, vraie base) — occupation des créneaux (#7)', () => {
   it('refuse un appelant qui ne possède pas l’événement', async () => {
-    const event = await Event.create({ name: 'Soirée', date: '2030-01-01', city: 'Lomé', region: 'Togo', organizerId: 'org-1', createdBy: 'org-1', places: [] })
+    const event = await Event.create({ name: 'Soirée Cotonou', date: '2030-01-01', city: 'Cotonou', region: 'Bénin', organizerId: 'org-1', createdBy: 'org-1', places: [] })
     const result = await getEventBoostAvailability('intrus', String(event._id))
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('forbidden')
   })
 
   it('renvoie les 3 positions "available" quand rien n’est réservé', async () => {
-    const event = await Event.create({ name: 'Soirée', date: '2030-01-01', city: 'Lomé', region: 'Togo', organizerId: 'org-1', createdBy: 'org-1', places: [] })
+    const event = await Event.create({ name: 'Soirée Cotonou', date: '2030-01-01', city: 'Cotonou', region: 'Bénin', organizerId: 'org-1', createdBy: 'org-1', places: [] })
     const result = await getEventBoostAvailability('org-1', String(event._id))
     expect(result.ok).toBe(true)
     if (!result.ok) return
@@ -50,9 +53,9 @@ describeIntegration('getEventBoostAvailability (intégration, vraie base) — oc
   })
 
   it('signale "held" une position réservée temporairement pour la même région', async () => {
-    const event = await Event.create({ name: 'Soirée', date: '2030-01-01', city: 'Lomé', region: 'Togo', organizerId: 'org-1', createdBy: 'org-1', places: [] })
-    const other = await Event.create({ name: 'Autre soirée', date: '2030-02-01', city: 'Lomé', region: 'Togo', organizerId: 'org-2', createdBy: 'org-2', places: [] })
-    await reserveBoostSlot({ eventId: String(other._id), userId: 'org-2', position: 2, region: 'Togo', boostId: 'BOOST123' })
+    const event = await Event.create({ name: 'Soirée Cotonou', date: '2030-01-01', city: 'Cotonou', region: 'Bénin', organizerId: 'org-1', createdBy: 'org-1', places: [] })
+    const other = await Event.create({ name: 'Autre soirée Cotonou', date: '2030-02-01', city: 'Cotonou', region: 'Bénin', organizerId: 'org-2', createdBy: 'org-2', places: [] })
+    await reserveBoostSlot({ eventId: String(other._id), userId: 'org-2', position: 2, region: 'Bénin', boostId: 'BOOST123' })
 
     const result = await getEventBoostAvailability('org-1', String(event._id))
     expect(result.ok).toBe(true)
@@ -64,9 +67,9 @@ describeIntegration('getEventBoostAvailability (intégration, vraie base) — oc
 
 describeIntegration('releaseBoostSlotIfPending (intégration, vraie base) — libération après échec de paiement', () => {
   it("supprime un créneau 'pending' correspondant exactement au boostId fourni", async () => {
-    const event = await Event.create({ name: 'Soirée', date: '2030-01-01', city: 'Lomé', region: 'Togo', organizerId: 'org-1', createdBy: 'org-1', places: [] })
-    await reserveBoostSlot({ eventId: String(event._id), userId: 'org-1', position: 1, region: 'Togo', boostId: 'BOOST-A' })
-    const slotId = boostSlotId(normalizeBoostRegion('Togo'), 1)
+    const event = await Event.create({ name: 'Soirée Cotonou', date: '2030-01-01', city: 'Cotonou', region: 'Bénin', organizerId: 'org-1', createdBy: 'org-1', places: [] })
+    await reserveBoostSlot({ eventId: String(event._id), userId: 'org-1', position: 1, region: 'Bénin', boostId: 'BOOST-A' })
+    const slotId = boostSlotId(normalizeBoostRegion('Bénin'), 1)
     expect(await BoostSlot.findOne({ slotId }).lean()).toBeTruthy()
 
     await releaseBoostSlotIfPending(slotId, 'BOOST-A')
@@ -75,9 +78,9 @@ describeIntegration('releaseBoostSlotIfPending (intégration, vraie base) — li
   })
 
   it("ne touche PAS un créneau déjà passé 'active' entre-temps, même avec le bon boostId", async () => {
-    const event = await Event.create({ name: 'Soirée', date: '2030-01-01', city: 'Lomé', region: 'Togo', organizerId: 'org-1', createdBy: 'org-1', places: [] })
-    await reserveBoostSlot({ eventId: String(event._id), userId: 'org-1', position: 1, region: 'Togo', boostId: 'BOOST-B' })
-    const slotId = boostSlotId(normalizeBoostRegion('Togo'), 1)
+    const event = await Event.create({ name: 'Soirée Cotonou', date: '2030-01-01', city: 'Cotonou', region: 'Bénin', organizerId: 'org-1', createdBy: 'org-1', places: [] })
+    await reserveBoostSlot({ eventId: String(event._id), userId: 'org-1', position: 1, region: 'Bénin', boostId: 'BOOST-B' })
+    const slotId = boostSlotId(normalizeBoostRegion('Bénin'), 1)
     // Simule la confirmation webhook qui fait passer le créneau en 'active'
     // pendant qu'un appel de libération tardif (ex. retry réseau) arrive.
     await BoostSlot.updateOne({ slotId }, { $set: { status: 'active', activeUntil: new Date(Date.now() + 7 * 24 * 3600_000) } })
@@ -90,9 +93,9 @@ describeIntegration('releaseBoostSlotIfPending (intégration, vraie base) — li
   })
 
   it("ne touche pas un créneau 'pending' d'un AUTRE boostId (ex. réservé entre-temps par quelqu'un d'autre)", async () => {
-    const event = await Event.create({ name: 'Soirée', date: '2030-01-01', city: 'Lomé', region: 'Togo', organizerId: 'org-1', createdBy: 'org-1', places: [] })
-    await reserveBoostSlot({ eventId: String(event._id), userId: 'org-1', position: 1, region: 'Togo', boostId: 'BOOST-REAL' })
-    const slotId = boostSlotId(normalizeBoostRegion('Togo'), 1)
+    const event = await Event.create({ name: 'Soirée Cotonou', date: '2030-01-01', city: 'Cotonou', region: 'Bénin', organizerId: 'org-1', createdBy: 'org-1', places: [] })
+    await reserveBoostSlot({ eventId: String(event._id), userId: 'org-1', position: 1, region: 'Bénin', boostId: 'BOOST-REAL' })
+    const slotId = boostSlotId(normalizeBoostRegion('Bénin'), 1)
 
     // Un appel de libération portant un boostId périmé/différent ne doit
     // jamais supprimer la réservation réelle en cours.
@@ -104,6 +107,27 @@ describeIntegration('releaseBoostSlotIfPending (intégration, vraie base) — li
   })
 
   it("ne plante pas si le créneau n'existe pas du tout (no-op silencieux)", async () => {
-    await expect(releaseBoostSlotIfPending('togo__top_3', 'BOOST-INCONNU')).resolves.toBeUndefined()
+    await expect(releaseBoostSlotIfPending('benin__top_3', 'BOOST-INCONNU')).resolves.toBeUndefined()
+  })
+})
+
+describeIntegration('finalizeFedapayBoost (intégration, vraie base) — activation boost FCFA', () => {
+  it('active un boost payé par FedaPay et reste idempotent au retry webhook', async () => {
+    const event = await Event.create({ name: 'Soirée Cotonou', date: '2030-01-01', city: 'Cotonou', region: 'Bénin', organizerId: 'org-1', createdBy: 'org-1', places: [] })
+    await reserveBoostSlot({ eventId: String(event._id), userId: 'org-1', position: 2, region: 'Bénin', boostId: 'BOOST-FEDAPAY' })
+    const slotId = boostSlotId(normalizeBoostRegion('Bénin'), 2)
+    await BoostSlot.updateOne({ slotId }, { $set: { days: 7, price: 20000, fedapayTxnId: 'txn_boost_1' } })
+
+    const first = await finalizeFedapayBoost({ id: 'txn_boost_1', status: 'approved', amount: 20000 })
+    expect(first).toEqual({ status: 'active', boostId: 'BOOST-FEDAPAY' })
+
+    const boost = await Boost.findOne({ boostId: 'BOOST-FEDAPAY' }).lean()
+    expect(boost).toMatchObject({ eventId: String(event._id), position: 2, region: 'benin', price: 20000, days: 7, fedapayTxnId: 'txn_boost_1', status: 'active' })
+    const activeSlot = await BoostSlot.findOne({ slotId }).lean()
+    expect(activeSlot?.status).toBe('active')
+
+    const retry = await finalizeFedapayBoost({ id: 'txn_boost_1', status: 'approved', amount: 20000 })
+    expect(retry).toEqual({ status: 'active', boostId: 'BOOST-FEDAPAY' })
+    expect(await Boost.countDocuments({ boostId: 'BOOST-FEDAPAY' })).toBe(1)
   })
 })

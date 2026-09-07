@@ -38,6 +38,8 @@ export interface MenuItemView {
 const FALLBACK_ERROR_MESSAGE = 'Une erreur est survenue. Réessaie.'
 
 const ERROR_MESSAGES: Record<string, string> = {
+  standalone_orders_disabled_v1: 'Les consommations doivent être précommandées lors de l’achat du billet.',
+  purchased_quantity_locked: 'La quantité achetée avec le billet ne peut pas être modifiée ici.',
   auth_required: 'Ta session a expiré — reconnecte-toi pour commander.',
   not_your_ticket: "Ce billet ne t'appartient pas.",
   not_your_item: "Cette ligne de commande ne t'appartient pas.",

@@ -44,10 +44,10 @@
 
 .searchPanel {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(150px, 190px) minmax(140px, 180px) minmax(140px, 170px) 114px;
+  grid-template-columns: minmax(240px, 1fr) 160px 150px 104px;
   align-items: center;
   gap: 8px;
-  width: min(100%, 1220px);
+  width: min(100%, 980px);
   margin: 16px auto 0;
   padding: 6px;
   border: 1px solid var(--border);
@@ -80,8 +80,6 @@
 }
 
 .searchField input::placeholder { color: var(--text-faint); }
-
-.upcomingFilter { display: flex; align-items: center; padding: 0 6px; font-size: var(--font-size-body-sm); }
 
 .submitButton {
   min-height: 44px;
@@ -288,9 +286,7 @@
 .empty a { min-height: 48px; display: inline-flex; align-items: center; padding: 0 20px; border-radius: 8px; background: var(--primary); color: var(--primary-ink); font-size: var(--font-size-headline); font-weight: 700; text-decoration: none; }
 
 @media (max-width: 1180px) {
-  .searchPanel { grid-template-columns: minmax(220px, 1fr) minmax(150px, 200px) minmax(140px, 180px); }
-  .upcomingFilter { grid-column: 1/3; }
-  .submitButton { grid-column: 3; }
+  .searchPanel { grid-template-columns: minmax(220px, 1fr) 150px 140px 104px; }
 }
 
 @media (max-width: 680px) {

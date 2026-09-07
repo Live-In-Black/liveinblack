@@ -46,7 +46,7 @@ export function blogRssXml({ site, posts }: { site: string; posts: RssPost[] }):
     '<channel>',
     '<title>Le journal LIVEINBLACK</title>',
     `<link>${escapeXml(`${base}/blog`)}</link>`,
-    '<description>Guides, actualités et conseils sur les événements au Bénin et en Afrique de l’Ouest.</description>',
+    '<description>Guides, actualités et conseils sur les événements au Bénin.</description>',
     '<language>fr-BJ</language>',
     `<atom:link href="${escapeXml(`${base}/blog/feed.xml`)}" rel="self" type="application/rss+xml"/>`,
     latest ? `<lastBuildDate>${latest}</lastBuildDate>` : '',

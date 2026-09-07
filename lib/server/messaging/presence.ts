@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import { getDb } from '@/lib/db/mongoose'
 import User from '@/lib/models/User'
 import Conversation from '@/lib/models/Conversation'
+import { MESSAGE_PRESENCE_WINDOW_MS } from './messagingNotificationUtils'
 
 // Présence en ligne/hors ligne — dérivée de `users.lastSeenAt` (déjà présent
 // sur lib/models/User.ts, jusque-là jamais mis à jour ni exposé). Pas de
@@ -21,7 +22,6 @@ export async function heartbeat(caller: PresenceCaller): Promise<{ ok: true }> {
   return { ok: true }
 }
 
-const ONLINE_WINDOW_MS = 45_000
 const MAX_PRESENCE_IDS = 100
 
 export type PresenceResult =
@@ -63,7 +63,7 @@ export async function getPresence(caller: PresenceCaller, input: { userIds: stri
     }
     const lastSeenAt = u.lastSeenAt ? new Date(u.lastSeenAt) : null
     presence[String(u._id)] = {
-      online: lastSeenAt !== null && now - lastSeenAt.getTime() < ONLINE_WINDOW_MS,
+      online: lastSeenAt !== null && now - lastSeenAt.getTime() < MESSAGE_PRESENCE_WINDOW_MS,
       lastSeenAt: lastSeenAt ? lastSeenAt.toISOString() : null,
     }
   }

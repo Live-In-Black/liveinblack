@@ -28,7 +28,7 @@ describe('profileSettingsUtils', () => {
   it('découpe correctement le téléphone stocké côté serveur', () => {
     expect(splitPhone('+228 90 11 22 33')).toEqual({ dialCode: '+228', number: '90 11 22 33' })
     expect(splitPhone('+33612345678')).toEqual({ dialCode: '+33', number: '612345678' })
-    expect(splitPhone('009999')).toEqual({ dialCode: '+33', number: '009999' })
-    expect(splitPhone('')).toEqual({ dialCode: '+33', number: '' })
+    expect(splitPhone('009999')).toEqual({ dialCode: '+229', number: '009999' })
+    expect(splitPhone('')).toEqual({ dialCode: '+229', number: '' })
   })
 })

@@ -1,4 +1,3 @@
-import { isStripeConnectCountry } from '@/lib/shared/fees'
 import { safeInternalPath } from '@/lib/shared/safeNavigation'
 
 export interface PayoutStatusView {
@@ -24,16 +23,15 @@ export interface OrganizerBalanceLike {
 const CONNECT_RETURN_PATHS = new Set(['/my-events', '/organizer-studio'])
 
 export function derivePayoutMode(user: OrganizerPayoutUserLike): PayoutStatusView['mode'] {
-  if (user.stripeAccountId) return 'connect'
-  if (user.stripeCountry && !isStripeConnectCountry(user.stripeCountry)) return 'manual'
+  void user
   return 'none'
 }
 
 export function buildPayoutStatusView(user: OrganizerPayoutUserLike, balance: OrganizerBalanceLike | null | undefined): PayoutStatusView {
   return {
     mode: derivePayoutMode(user),
-    connected: Boolean(user.stripeAccountId),
-    chargesEnabled: Boolean(user.stripeChargesEnabled),
+    connected: false,
+    chargesEnabled: false,
     country: user.stripeCountry ?? null,
     amountDueCents: balance?.amountDueCents ?? 0,
     amountDueXOF: balance?.amountDueXOF ?? 0,

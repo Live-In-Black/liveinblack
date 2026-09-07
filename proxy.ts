@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextFetchEvent, NextRequest } from 'next/server'
 import { auth } from '@/auth'
+import { preserveCsrfCookieOnRead } from '@/lib/auth/read-only-response'
 
 // Remplace les 5 guards de src/App.jsx (RequireAuth, RequireRole,
 // RequireOrganisateur, RequireServiceAccess) pour tout ce qui est vérifiable
@@ -101,7 +102,7 @@ export function proxy(req: NextRequest, event: NextFetchEvent) {
     return applyApiCors(req, NextResponse.next())
   }
 
-  return guardedPageProxy(req, event)
+  return Promise.resolve(guardedPageProxy(req, event)).then(preserveCsrfCookieOnRead)
 }
 
 export const config = {
