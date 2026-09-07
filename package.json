@@ -53,6 +53,7 @@
     "test:e2e:seeded:local": "LIB_RUN_SEEDED_E2E=1 LIB_E2E_DISABLE_RATE_LIMIT=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 playwright test e2e/seeded-*.spec.ts",
     "seed:blog": "node --env-file=.env.local --import tsx scripts/seed-blog-benin.ts",
     "seed:blog:benin": "node --env-file=.env.local --import tsx scripts/seed-blog-benin.ts",
+    "publish:test-content": "node --env-file=.env.local --import tsx scripts/publish-test-content.ts",
     "audit:growth": "npm run audit:seo && npm run audit:blog:benin && npm run audit:ui-density && npm run audit:theme && npm run audit:growth-analytics && npm run audit:custom-images",
     "audit:vercel-pro": "node scripts/audit-vercel-pro.mjs",
     "audit:vercel-live": "node scripts/audit-vercel-live.mjs",

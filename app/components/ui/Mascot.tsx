@@ -17,6 +17,7 @@ export default function Mascot({ mood = 'happy', size = 140 }: { mood?: MascotMo
   return (
     <div
       className="lb-mascot-image"
+      data-mascot-mood={mood}
       aria-hidden="true"
       style={{ width: size, height: size, margin: '0 auto' }}
     >

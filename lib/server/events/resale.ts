@@ -1,4 +1,3 @@
-// @ts-nocheck
 import crypto from 'node:crypto'
 import mongoose from 'mongoose'
 import { getDb } from '@/lib/db/mongoose'

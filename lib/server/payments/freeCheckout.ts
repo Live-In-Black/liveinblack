@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { getDb } from '@/lib/db/mongoose'
 import Ticket from '@/lib/models/Ticket'
 import { createOrder, releaseOrder } from '../events/orders'

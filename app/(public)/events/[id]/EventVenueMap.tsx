@@ -15,13 +15,15 @@ export default function EventVenueMap({ address }: { address: string }) {
   const osmMapsHref = `https://www.openstreetmap.org/search?query=${encoded}`
 
   useEffect(() => {
-    setMapFailed(false)
-
-    fallbackTimerRef.current = window.setTimeout(() => {
-      setMapFailed(true)
-    }, 8_000)
+    const resetTimer = window.setTimeout(() => {
+      setMapFailed(false)
+      fallbackTimerRef.current = window.setTimeout(() => {
+        setMapFailed(true)
+      }, 8_000)
+    }, 0)
 
     return () => {
+      window.clearTimeout(resetTimer)
       if (fallbackTimerRef.current) window.clearTimeout(fallbackTimerRef.current)
       fallbackTimerRef.current = null
     }

@@ -172,10 +172,10 @@ function MainView({ user, setUser }: { user: ProfilUser; setUser: (u: ProfilUser
               <p>Les raccourcis utiles pour gérer ton compte.</p>
             </div>
             <div className={overviewStyles.quickGrid}>
-              <QuickAccessCard href="/profile/parametres" icon={<Settings size={19} />} label="Paramètres du compte" imagePosition="0% 17%" />
-              <QuickAccessCard href="/profile/billets" icon={<Ticket size={19} />} label="Mes billets" imagePosition="100% 17%" />
-              <QuickAccessCard href="/profile/interested-events" icon={<Heart size={19} />} label="Mes favoris" imagePosition="0% 83%" />
-              <QuickAccessCard href="/help" icon={<LifeBuoy size={19} />} label="Aide & FAQ" imagePosition="100% 83%" />
+              <QuickAccessCard href="/profile/parametres" icon={<Settings size={19} />} label="Paramètres du compte" imageSrc="/images/live-in-black/night-benin/night-benin-hero.png" />
+              <QuickAccessCard href="/profile/billets" icon={<Ticket size={19} />} label="Mes billets" imageSrc="/images/live-in-black/night-benin/night-benin-concert.png" />
+              <QuickAccessCard href="/profile/interested-events" icon={<Heart size={19} />} label="Mes favoris" imageSrc="/images/live-in-black/night-benin/night-benin-dancefloor.png" />
+              <QuickAccessCard href="/help" icon={<LifeBuoy size={19} />} label="Aide & FAQ" imageSrc="/images/live-in-black/night-benin/night-benin-lounge.png" />
             </div>
           </section>
         </div>
@@ -199,7 +199,7 @@ function MainView({ user, setUser }: { user: ProfilUser; setUser: (u: ProfilUser
 // Cartes de raccourci vers les 4 sous-destinations du sous-menu "Mon profil"
 // (voir dashboardNav.ts) — rend /profile utile en lui-même plutôt qu'un
 // écran quasi vide qui force à repérer le sous-menu de la sidebar.
-function QuickAccessCard({ href, icon, label, imagePosition }: { href: string; icon: React.ReactNode; label: string; imagePosition: string }) {
+function QuickAccessCard({ href, icon, label, imageSrc }: { href: string; icon: React.ReactNode; label: string; imageSrc: string }) {
   return (
     <Link
       href={href}
@@ -208,7 +208,7 @@ function QuickAccessCard({ href, icon, label, imagePosition }: { href: string; i
       <span
         className={overviewStyles.quickImage}
         aria-hidden="true"
-        style={{ backgroundPosition: imagePosition }}
+        style={{ backgroundImage: `url('${imageSrc}')`, backgroundPosition: 'center' }}
       />
       <span className={overviewStyles.quickContent}>
         <span className={overviewStyles.quickIcon}>{icon}</span>
