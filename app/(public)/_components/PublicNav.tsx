@@ -336,11 +336,8 @@ export default function PublicNav({ dashboardLinks }: { dashboardLinks?: Dashboa
       </Link>
       <nav aria-label="Navigation principale" className="lb-public-nav__links">
         {/* Nav publique (Accueil/Événements/Prestataires/Organisateurs) —
-            visible que l'utilisateur soit connecté ou non (revenu sur la
-            décision du 11/08/2026 après retour client du 13/08/2026 : le
-            header doit toujours afficher ces liens sur les pages publiques,
-            même connecté). Le lien "Voir le site public" reste dans le menu
-            profil (AccountMenu.tsx) pour la navigation depuis le dashboard. */}
+            visible que l'utilisateur soit connecté ou non sur les pages
+            publiques, même connecté. */}
         {NAV_LINKS.map((link) => {
             const active = isCurrentPath(pathname, link.href)
             return (

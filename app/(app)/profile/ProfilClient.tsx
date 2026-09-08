@@ -109,7 +109,7 @@ export default function ProfilClient({ initialUser }: { initialUser: ProfilUser 
 function MainView({ user, setUser }: { user: ProfilUser; setUser: (u: ProfilUser) => void }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
-  const roleInfo = ROLE_LABELS[user.role]
+  const roleInfo = ROLE_LABELS.client
   const isOrganizer = user.role === 'organisateur'
 
   async function confirmLogout() {

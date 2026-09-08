@@ -1,12 +1,10 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { signOut } from 'next-auth/react'
-import { Ticket, User, LayoutDashboard, LogOut, Check, ChevronDown, Globe, Bell } from 'lucide-react'
-import { Avatar, Button, ConfirmDialog } from '@/app/components/ui'
-import { DASHBOARD_BY_ROLE } from '@/lib/shared/dashboardRoutes'
+import { Bell, ChevronDown, Home, MessageCircle, Settings, Ticket } from 'lucide-react'
+import { Avatar, Button } from '@/app/components/ui'
 
 // Remplace les boutons Connexion/Créer un compte de PublicNav dès qu'une
 // session existe — avant ce composant, un utilisateur connecté voyait
@@ -25,9 +23,7 @@ export default function AccountMenu({
   menuDirection?: 'auto' | 'up' | 'down'
   dashboardMode?: boolean
 }) {
-  const router = useRouter()
   const [accountOpen, setAccountOpen] = useState(false)
-  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [notifUnread, setNotifUnread] = useState(0)
   const [resolvedDirection, setResolvedDirection] = useState<'up' | 'down'>(menuDirection === 'up' ? 'up' : 'down')
   const rootRef = useRef<HTMLDivElement>(null)
@@ -68,13 +64,6 @@ export default function AccountMenu({
     }
   }, [])
 
-  // Chaque compte métier possède un seul espace. Le menu ne propose donc
-  // qu'une navigation vers le tableau de bord du rôle déjà actif.
-  function handleDashboardClick(href: string) {
-    setAccountOpen(false)
-    router.push(href)
-  }
-
   useEffect(() => {
     if (!accountOpen) return
     function handleClick(event: MouseEvent) {
@@ -94,15 +83,6 @@ export default function AccountMenu({
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [accountOpen])
-
-  const dashboards = user.activeRole && DASHBOARD_BY_ROLE[user.activeRole]
-    ? [{ role: user.activeRole, ...DASHBOARD_BY_ROLE[user.activeRole] }]
-    : []
-
-  async function handleLogoutConfirm() {
-    setLogoutConfirmOpen(false)
-    await signOut({ callbackUrl: '/home' })
-  }
 
   return (
     <div ref={rootRef} style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative', width: dashboardMode ? '100%' : undefined }}>
@@ -169,86 +149,19 @@ export default function AccountMenu({
                 {user.name}
               </p>
             )}
-            {!dashboardMode ? (
-              <>
-                <MenuLink href="/notifications" onClick={() => setAccountOpen(false)} icon={<Bell size={15} />} label="Notifications" badge={notifUnread} />
-                <MenuLink href="/profile" onClick={() => setAccountOpen(false)} icon={<User size={15} />} label="Mon profil" />
-                <MenuLink href="/profile/billets" onClick={() => setAccountOpen(false)} icon={<Ticket size={15} />} label="Mes billets" />
-              </>
-            ) : null}
-            {dashboards.length > 0 && <div style={{ height: 1, background: 'var(--border)', margin: '6px 4px' }} />}
-            {dashboards.map((d) => (
-              <Button
-                key={d.role}
-                variant="ghost"
-                onClick={() => handleDashboardClick(d.href)}
-                aria-label={d.role === user.activeRole ? `${d.label} (actif)` : d.label}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  width: '100%',
-                  padding: '8px 10px',
-                  borderRadius: 8,
-                  color: 'var(--text)',
-                  fontSize: 'var(--font-size-footnote-lg)',
-                  fontWeight: 600,
-                  justifyContent: 'flex-start',
-                  textAlign: 'left',
-                }}
-              >
-                <LayoutDashboard size={14} />
-                <span style={{ flex: 1 }}>{d.label}</span>
-                {d.role === user.activeRole && <Check size={13} color="var(--primary)" />}
-              </Button>
-            ))}
-            {/* Point de sortie explicite vers le site public — la nav
-                publique (Accueil/Événements/Prestataires/Organisateurs) est
-                masquée dans le header une fois connecté (PublicNav.tsx),
-                confirmé en réunion live le 11/08/2026. */}
-            <div style={{ height: 1, background: 'var(--border)', margin: '6px 4px' }} />
-            <MenuLink href="/events" onClick={() => setAccountOpen(false)} icon={<Globe size={15} />} label="Voir le site public" />
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setAccountOpen(false)
-                setLogoutConfirmOpen(true)
-              }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                width: '100%',
-                padding: '8px 10px',
-                borderRadius: 8,
-                color: 'var(--danger)',
-                fontSize: 'var(--font-size-footnote-lg)',
-                fontWeight: 700,
-                justifyContent: 'flex-start',
-                textAlign: 'left',
-              }}
-            >
-              <LogOut size={14} /> Déconnexion
-            </Button>
+            <MenuLink href="/notifications" onClick={() => setAccountOpen(false)} icon={<Bell size={15} />} label="Notifications" badge={notifUnread} />
+            <MenuLink href="/profile/parametres" onClick={() => setAccountOpen(false)} icon={<Settings size={15} />} label="Paramètres" />
+            <MenuLink href="/profile/billets" onClick={() => setAccountOpen(false)} icon={<Ticket size={15} />} label="Mes billets" />
+            <MenuLink href="/home" onClick={() => setAccountOpen(false)} icon={<Home size={15} />} label="Accueil" />
+            <MenuLink href="/messages" onClick={() => setAccountOpen(false)} icon={<MessageCircle size={15} />} label="Messages" />
           </div>
         )}
       </div>
-
-      <ConfirmDialog
-        open={logoutConfirmOpen}
-        title="Se déconnecter ?"
-        body="Tu vas quitter ton espace actuel et revenir à l’accueil."
-        confirmLabel="Déconnexion"
-        confirmVariant="primary"
-        zIndex={120}
-        onCancel={() => setLogoutConfirmOpen(false)}
-        onConfirm={() => { void handleLogoutConfirm() }}
-      />
     </div>
   )
 }
 
-function MenuLink({ href, onClick, icon, label, badge }: { href: string; onClick: () => void; icon: React.ReactNode; label: string; badge?: number }) {
+function MenuLink({ href, onClick, icon, label, badge }: { href: string; onClick: () => void; icon: ReactNode; label: string; badge?: number }) {
   return (
     <Link
       href={href}

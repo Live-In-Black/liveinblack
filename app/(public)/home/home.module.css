@@ -813,13 +813,15 @@
   .hero {
     min-height: min(66svh, 560px);
     height: min(66svh, 560px);
-    padding: 34px 16px 34px;
+    padding: 34px 16px 82px;
     align-items: end;
   }
 
   .heroCarouselControls {
-    right: 16px;
-    bottom: 16px;
+    left: 50%;
+    right: auto;
+    bottom: 24px;
+    transform: translateX(-50%);
   }
 
   .heroImage {
