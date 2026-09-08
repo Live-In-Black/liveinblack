@@ -26,10 +26,26 @@ export default function AccountMenu({
   menuDirection?: 'auto' | 'up' | 'down'
   dashboardMode?: boolean
 }) {
+  const router = useRouter()
   const [accountOpen, setAccountOpen] = useState(false)
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [notifUnread, setNotifUnread] = useState(0)
   const [resolvedDirection, setResolvedDirection] = useState<'up' | 'down'>(menuDirection === 'up' ? 'up' : 'down')
   const rootRef = useRef<HTMLDivElement>(null)
+
+  function handleDashboardClick(href: string) {
+    setAccountOpen(false)
+    router.push(href)
+  }
+
+  const dashboards = user.activeRole && DASHBOARD_BY_ROLE[user.activeRole]
+    ? [{ role: user.activeRole, ...DASHBOARD_BY_ROLE[user.activeRole] }]
+    : []
+
+  async function handleLogoutConfirm() {
+    setLogoutConfirmOpen(false)
+    await signOut({ callbackUrl: '/home' })
+  }
 
   function resolveMenuDirection() {
     if (menuDirection !== 'auto') return menuDirection
@@ -216,6 +232,17 @@ export default function AccountMenu({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={logoutConfirmOpen}
+        title="Se déconnecter ?"
+        body="Tu vas quitter ton espace actuel et revenir à l’accueil."
+        confirmLabel="Déconnexion"
+        confirmVariant="primary"
+        zIndex={120}
+        onCancel={() => setLogoutConfirmOpen(false)}
+        onConfirm={() => { void handleLogoutConfirm() }}
+      />
     </div>
   )
 }
