@@ -177,6 +177,7 @@ export default function AuthForm() {
   const [regPwd, setRegPwd] = useState('')
   const [regPwdConfirm, setRegPwdConfirm] = useState('')
   const [showRegPwd, setShowRegPwd] = useState(false)
+  const [showRegPwdConfirm, setShowRegPwdConfirm] = useState(false)
   const [regLoading, setRegLoading] = useState(false)
   const [regError, setRegError] = useState('')
   const [registeredEmail, setRegisteredEmail] = useState('')
@@ -451,6 +452,18 @@ export default function AuthForm() {
         .lb-tab:hover:not(.lb-tab-active) { background: var(--fill-secondary) !important }
         .lb-toggle-btn { transition: color .15s ease }
         .lb-toggle-btn:hover { color: var(--text) !important }
+        .lb-register-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 10px; }
+        .lb-register-field { min-width: 0; display: grid; grid-template-rows: 26px minmax(38px, auto); align-items: start; }
+        .lb-register-label { min-height: 26px; display: flex; align-items: center; gap: 4px; margin: 0 !important; }
+        .lb-register-label button { width: 22px !important; height: 22px !important; min-height: 22px !important; padding: 2px !important; }
+        .lb-register-field .lb-toggle-btn button { width: 30px !important; height: 30px !important; min-height: 30px !important; padding: 4px !important; }
+        .lb-register-phone { min-width: 0; display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 6px; }
+        .lb-register-phone > * { min-width: 0; }
+        .lb-register-phone > div:first-child ul { width: 220px; max-width: calc(100vw - 32px); }
+        @media (max-width: 560px) {
+          .lb-register-grid { grid-template-columns: 1fr; gap: 9px; }
+          .lb-register-phone { grid-template-columns: 112px minmax(0, 1fr); }
+        }
         @keyframes lb-fade-in { from { opacity: 0; transform: translateY(-4px) } to { opacity: 1; transform: none } }
         .lb-banner-fade { animation: lb-fade-in 0.22s ease }
       `}</style>
@@ -627,31 +640,32 @@ export default function AuthForm() {
               </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 10px' }}>
-              <div>
-                <Label htmlFor="reg-firstname" style={{ marginBottom: 2, fontSize: 'var(--font-size-footnote)' }}>Prénom</Label>
+            <div className="lb-register-grid">
+              <div className="lb-register-field">
+                <Label className="lb-register-label" htmlFor="reg-firstname" style={{ fontSize: 'var(--font-size-footnote)' }}>Prénom</Label>
                 <Input id="reg-firstname" name="given-name" type="text" autoComplete="given-name" placeholder="Jean" disabled={regLoading} value={firstName} onChange={(e) => setFirstName(e.target.value)} invalid={regError === 'Le prénom est requis.'} style={{ minHeight: 38, padding: '6px 10px' }} />
               </div>
-              <div>
-                <Label htmlFor="reg-lastname" style={{ marginBottom: 2, fontSize: 'var(--font-size-footnote)' }}>Nom</Label>
+              <div className="lb-register-field">
+                <Label className="lb-register-label" htmlFor="reg-lastname" style={{ fontSize: 'var(--font-size-footnote)' }}>Nom</Label>
                 <Input id="reg-lastname" name="family-name" type="text" autoComplete="family-name" placeholder="Dupont" disabled={regLoading} value={lastName} onChange={(e) => setLastName(e.target.value)} invalid={regError === 'Le nom est requis.'} style={{ minHeight: 38, padding: '6px 10px' }} />
               </div>
 
-              <div>
-                <Label htmlFor="reg-email" style={{ marginBottom: 2, fontSize: 'var(--font-size-footnote)' }}>Email</Label>
+              <div className="lb-register-field">
+                <Label className="lb-register-label" htmlFor="reg-email" style={{ fontSize: 'var(--font-size-footnote)' }}>Email</Label>
                 <Input id="reg-email" name="email" type="text" inputMode="email" autoComplete="email" placeholder="ton@email.com" disabled={regLoading} value={regEmail} onChange={(e) => setRegEmail(e.target.value)} invalid={regError === 'Adresse email invalide.'} style={{ minHeight: 38, padding: '6px 10px' }} />
               </div>
 
-              <div>
-                <Label htmlFor="reg-phone" style={{ marginBottom: 2, fontSize: 'var(--font-size-footnote)' }}>Téléphone (optionnel)</Label>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <div style={{ minWidth: 105, flexShrink: 0 }}>
+              <div className="lb-register-field">
+                <Label className="lb-register-label" htmlFor="reg-phone" style={{ fontSize: 'var(--font-size-footnote)' }}>Téléphone (optionnel)</Label>
+                <div className="lb-register-phone">
+                  <div>
                     <Select
                       aria-label="Indicatif pays"
                       value={dialCode}
                       onChange={(value) => setDialCode(value)}
                       disabled={regLoading}
                       options={phoneCallingCodeOptions}
+                      searchable
                       style={{ minHeight: 38, padding: '0 8px' }}
                     />
                   </div>
@@ -670,9 +684,9 @@ export default function AuthForm() {
                 </div>
               </div>
 
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <Label htmlFor="reg-password" style={{ marginBottom: 2, fontSize: 'var(--font-size-footnote)' }}>Mot de passe</Label>
+              <div className="lb-register-field">
+                <div className="lb-register-label">
+                  <Label htmlFor="reg-password" style={{ margin: 0, fontSize: 'var(--font-size-footnote)' }}>Mot de passe</Label>
                   <PasswordPolicyHint />
                 </div>
                 <div style={{ position: 'relative' }}>
@@ -700,24 +714,36 @@ export default function AuthForm() {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="reg-password-confirm" style={{ marginBottom: 2, fontSize: 'var(--font-size-footnote)' }}>Confirmer le mot de passe</Label>
-                <Input
-                  id="reg-password-confirm"
-                  name="new-password"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Répète ton mot de passe"
-                  disabled={regLoading}
-                  value={regPwdConfirm}
-                  onChange={(e) => setRegPwdConfirm(e.target.value)}
-                  invalid={regPwdConfirm.length >= regPwd.length && regPwd !== regPwdConfirm}
-                  style={{ minHeight: 38, padding: '6px 10px' }}
-                />
+              <div className="lb-register-field">
+                <Label className="lb-register-label" htmlFor="reg-password-confirm" style={{ fontSize: 'var(--font-size-footnote)' }}>Confirmer le mot de passe</Label>
+                <div style={{ position: 'relative' }}>
+                  <Input
+                    id="reg-password-confirm"
+                    name="new-password"
+                    type={showRegPwdConfirm ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    placeholder="Répète ton mot de passe"
+                    disabled={regLoading}
+                    value={regPwdConfirm}
+                    onChange={(e) => setRegPwdConfirm(e.target.value)}
+                    invalid={regPwdConfirm.length >= regPwd.length && regPwd !== regPwdConfirm}
+                    style={{ minHeight: 38, padding: '6px 40px 6px 10px' }}
+                  />
+                  <span className="lb-toggle-btn" style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowRegPwdConfirm((value) => !value)}
+                      aria-label={showRegPwdConfirm ? 'Masquer la confirmation du mot de passe' : 'Afficher la confirmation du mot de passe'}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, color: 'inherit' }}
+                    >
+                      <IconEye open={showRegPwdConfirm} size={15} />
+                    </Button>
+                  </span>
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="reg-birth-year" style={{ marginBottom: 2, fontSize: 'var(--font-size-footnote)' }}>Année de naissance (opt.)</Label>
+              <div className="lb-register-field">
+                <Label className="lb-register-label" htmlFor="reg-birth-year" style={{ fontSize: 'var(--font-size-footnote)' }}>Année de naissance (opt.)</Label>
                 <Select
                   id="reg-birth-year"
                   value={birthYear}
@@ -729,8 +755,8 @@ export default function AuthForm() {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="reg-gender" style={{ marginBottom: 2, fontSize: 'var(--font-size-footnote)' }}>Genre (optionnel)</Label>
+              <div className="lb-register-field">
+                <Label className="lb-register-label" htmlFor="reg-gender" style={{ fontSize: 'var(--font-size-footnote)' }}>Genre (optionnel)</Label>
                 <Select
                   id="reg-gender"
                   value={gender}

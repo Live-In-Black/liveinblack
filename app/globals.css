@@ -1135,6 +1135,34 @@ a {
   }
 }
 
+/* Socle mobile partagé : les écrans restent contenus sans masquer des
+   débordements derrière overflow-x:hidden. */
+@media (max-width: 640px) {
+  :root {
+    --page-gutter: 12px;
+    --public-page-gutter: 14px;
+    --public-grid-gap: 10px;
+    --density-panel-padding: 14px;
+  }
+
+  :where(main, section, article, aside, form, fieldset, nav, header, footer) {
+    min-width: 0;
+  }
+
+  :where(img, video, canvas, svg) {
+    max-width: 100%;
+  }
+
+  :where(input, textarea, select) {
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  :where(button, a, input, textarea, select) {
+    touch-action: manipulation;
+  }
+}
+
 /* Specificite volontairement elevee : certaines feuilles de page sont
    injectees apres globals.css et contiennent encore des ombres !important. */
 html body *:not(#lb-shadow-opt-in),

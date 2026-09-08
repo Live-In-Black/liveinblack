@@ -91,7 +91,7 @@ export const ROLE_NAV: Record<Role, DashboardNavItem[]> = {
   // qu'elle contient aussi la config des encaissements (Stripe/Mobile Money).
   organisateur: [
     { label: 'Mes événements', href: '/my-events', icon: CalendarDays },
-    { label: 'Ma page & paiements', href: '/organizer-studio', icon: LayoutDashboard },
+    { label: 'Tableau de bord', href: '/organizer-studio', icon: LayoutDashboard },
     { label: 'Mon inscription', href: '/my-application', icon: FileText },
   ],
   prestataire: [

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import OrganizerFollowButtonClient from '@/app/components/features/organizer/OrganizerFollowButtonClient'
-import { ArrowLeft, UsersRound } from 'lucide-react'
+import { UsersRound } from 'lucide-react'
 import { ActionLink, Avatar, Button, Card, Checkbox, Pagination, pagedSlice } from '@/app/components/ui'
 import { useQueryParamState } from '@/lib/client/useQueryParamState'
 import { placeholderPhotoUrl } from '@/lib/shared/placeholderImage'
@@ -107,14 +107,10 @@ export default function FollowedOrganizersClient({ initialFollows, suggestions }
     <main className={`lb-dashboard-page ${styles.page}`}>
       <div className={styles.stack}>
         <div className={styles.topbar}>
-          <Link href="/profile" className={styles.backLink}>
-            <ArrowLeft size={17} aria-hidden="true" />
-            Profil
-          </Link>
           {follows.length > 0 && <ActionLink href="/organizers">Découvrir</ActionLink>}
         </div>
 
-        <header className={styles.intro}>
+        <header className={`lb-dashboard-page-header ${styles.intro}`}>
           <div>
             <h1>Organisateurs suivis</h1>
             <p>Gère tes abonnements et les alertes que tu souhaites recevoir.</p>

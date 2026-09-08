@@ -18,19 +18,8 @@
 }
 
 .topbar {
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
-}
-
-.backLink {
-  min-height: 36px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-muted);
-  font-size: var(--font-size-footnote);
-  font-weight: 500;
-  text-decoration: none;
 }
 
 .intro {

@@ -21,6 +21,7 @@ export interface SelectProps {
   name?: string
   id?: string
   style?: CSSProperties
+  searchable?: boolean
   'aria-label'?: string
 }
 
@@ -29,15 +30,20 @@ export interface SelectProps {
 // déclencheur + liste personnalisée, navigation clavier (flèches/Entrée/
 // Échap), fermeture au clic extérieur. `name` optionnel pose un <input
 // type="hidden"> pour rester compatible avec un <form> natif existant.
-export default function Select({ value, onChange, options, placeholder = 'Sélectionner…', disabled, invalid, size = 'md', name, id, style, ...aria }: SelectProps) {
+export default function Select({ value, onChange, options, placeholder = 'Sélectionner…', disabled, invalid, size = 'md', name, id, style, searchable = false, ...aria }: SelectProps) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
+  const [query, setQuery] = useState('')
   const rootRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
   const reactId = useId()
   const listboxId = `lb-select-listbox-${reactId}`
 
   const selected = options.find((o) => o.value === value) || null
+  const normalizedQuery = query.trim().toLocaleLowerCase('fr')
+  const visibleOptions = searchable && normalizedQuery
+    ? options.filter((option) => option.label.toLocaleLowerCase('fr').includes(normalizedQuery))
+    : options
 
   useEffect(() => {
     if (!open) return
@@ -56,23 +62,37 @@ export default function Select({ value, onChange, options, placeholder = 'Sélec
   }, [open, activeIndex])
 
   function commit(index: number) {
-    const opt = options[index]
+    const opt = visibleOptions[index]
     if (!opt || opt.disabled) return
     onChange(opt.value)
     setOpen(false)
+    setQuery('')
   }
 
   function onTriggerKeyDown(e: React.KeyboardEvent) {
     if (disabled) return
+    if (searchable && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault()
+      setOpen(true)
+      setQuery((current) => `${current}${e.key}`)
+      setActiveIndex(0)
+      return
+    }
     if (!open && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault()
       setOpen(true)
       return
     }
     if (!open) return
+    if (searchable && e.key === 'Backspace') {
+      e.preventDefault()
+      setQuery((current) => current.slice(0, -1))
+      setActiveIndex(0)
+      return
+    }
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setActiveIndex((i) => Math.min(options.length - 1, i + 1))
+      setActiveIndex((i) => Math.min(visibleOptions.length - 1, i + 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setActiveIndex((i) => Math.max(0, i - 1))
@@ -82,6 +102,7 @@ export default function Select({ value, onChange, options, placeholder = 'Sélec
     } else if (e.key === 'Escape') {
       e.preventDefault()
       setOpen(false)
+      setQuery('')
     }
   }
 
@@ -95,6 +116,7 @@ export default function Select({ value, onChange, options, placeholder = 'Sélec
         id={id}
         disabled={disabled}
         onClick={() => {
+          setQuery('')
           setActiveIndex(Math.max(0, options.findIndex((o) => o.value === value)))
           setOpen((v) => !v)
         }}
@@ -152,8 +174,13 @@ export default function Select({ value, onChange, options, placeholder = 'Sélec
             boxShadow: 'none',
           }}
         >
-          {options.length === 0 && <li style={{ padding: '9px 10px', fontSize: 'var(--font-size-callout)', color: 'var(--text-faint)' }}>Aucune option</li>}
-          {options.map((opt, i) => {
+          {searchable && query && (
+            <li aria-hidden="true" style={{ padding: '7px 9px', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote)' }}>
+              Recherche : {query}
+            </li>
+          )}
+          {visibleOptions.length === 0 && <li style={{ padding: '9px 10px', fontSize: 'var(--font-size-callout)', color: 'var(--text-faint)' }}>Aucun résultat</li>}
+          {visibleOptions.map((opt, i) => {
             const isSelected = opt.value === value
             const isActive = i === activeIndex
             return (

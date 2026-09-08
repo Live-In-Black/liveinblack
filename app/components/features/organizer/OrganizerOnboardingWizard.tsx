@@ -309,13 +309,14 @@ export default function OrganizerOnboardingWizard({
                 </div>
                 <div>
                   <Label style={labelStyle}>Téléphone professionnel {requiredMark}</Label>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <div style={{ minWidth: 105, flexShrink: 0 }}>
+                  <div className="lb-phone-field">
+                    <div>
                       <Select
                         aria-label="Indicatif"
                         value={form.telephoneProCode}
                         onChange={(value) => set('telephoneProCode', value)}
                         options={phoneCallingCodeOptions}
+                        searchable
                         style={{ minHeight: 38, padding: '0 8px' }}
                       />
                     </div>
@@ -347,7 +348,7 @@ export default function OrganizerOnboardingWizard({
                       <Input aria-label="Adresse e-mail de connexion" style={inputStyle} type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} placeholder="ton@email.com" />
                     </div>
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <div className="lb-password-label">
                         <Label htmlFor="organizer-password" style={labelStyle}>Mot de passe {requiredMark}</Label>
                         <PasswordPolicyHint />
                       </div>
@@ -375,8 +376,20 @@ export default function OrganizerOnboardingWizard({
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="organizer-password-confirm" style={{ ...labelStyle, minHeight: 28, display: 'flex', alignItems: 'center' }}>Confirmer le mot de passe {requiredMark}</Label>
-                      <Input id="organizer-password-confirm" aria-label="Confirmer le mot de passe" autoComplete="new-password" style={inputStyle} type="password" value={regPasswordConfirm} onChange={(e) => setRegPasswordConfirm(e.target.value)} placeholder="Répète ton mot de passe" />
+                      <Label htmlFor="organizer-password-confirm" style={{ ...labelStyle, minHeight: 26, display: 'flex', alignItems: 'center', marginBottom: 0 }}>Confirmer le mot de passe {requiredMark}</Label>
+                      <div style={{ position: 'relative', minWidth: 0 }}>
+                        <Input id="organizer-password-confirm" aria-label="Confirmer le mot de passe" autoComplete="new-password" style={{ ...inputStyle, paddingRight: 44 }} type={showRegPasswordConfirm ? 'text' : 'password'} value={regPasswordConfirm} onChange={(e) => setRegPasswordConfirm(e.target.value)} placeholder="Répète ton mot de passe" />
+                        <Button
+                          variant="ghost"
+                          type="button"
+                          aria-label={showRegPasswordConfirm ? 'Masquer la confirmation du mot de passe' : 'Afficher la confirmation du mot de passe'}
+                          aria-pressed={showRegPasswordConfirm}
+                          onClick={() => setShowRegPasswordConfirm((value) => !value)}
+                          style={{ position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)', width: 36, minHeight: 36, height: 36, padding: 4, color: 'var(--text-muted)' }}
+                        >
+                          <IconEye open={showRegPasswordConfirm} size={13} />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </>

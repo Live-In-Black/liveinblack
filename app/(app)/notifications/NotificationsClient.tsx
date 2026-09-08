@@ -108,7 +108,7 @@ export default function NotificationsClient({ initialNotifications }: { initialN
   return (
     <main className={`lb-dashboard-page lb-notifications-page ${styles.page}`}>
       <div className={styles.content}>
-        <header className={styles.header}>
+        <header className={`lb-dashboard-page-header ${styles.header}`}>
           <div className={styles.heading}>
             <div>
               <h1>Notifications</h1>

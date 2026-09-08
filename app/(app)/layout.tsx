@@ -27,7 +27,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <DashboardShell activeRole={activeRole}>{children}</DashboardShell>
+      <DashboardShell
+        activeRole={activeRole}
+        user={{
+          name: session.user.name || 'Mon compte',
+          image: session.user.image || null,
+        }}
+      >
+        {children}
+      </DashboardShell>
     </>
   )
 }

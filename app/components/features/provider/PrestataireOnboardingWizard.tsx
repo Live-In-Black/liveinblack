@@ -134,6 +134,7 @@ export default function PrestataireOnboardingWizard({
   const [regPassword, setRegPassword] = useState('')
   const [regPasswordConfirm, setRegPasswordConfirm] = useState('')
   const [showRegPwd, setShowRegPwd] = useState(false)
+  const [showRegPwdConfirm, setShowRegPwdConfirm] = useState(false)
   const [documents, setDocuments] = useState<Record<string, DocState[]>>({})
   const [candidateNote, setCandidateNote] = useState(initialCandidateNote ?? '')
   const [error, setError] = useState<string | null>(null)
@@ -374,17 +375,21 @@ export default function PrestataireOnboardingWizard({
                   <Input aria-label="Nom" style={inputStyle} value={form.nom} onChange={(e) => set('nom', e.target.value)} />
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{ minWidth: 105, flexShrink: 0 }}>
+              <div>
+                <Label style={labelStyle}>Téléphone</Label>
+                <div className="lb-phone-field">
+                <div>
                   <Select
                     aria-label="Indicatif téléphonique"
                     value={form.telephoneCode}
                     onChange={(value) => set('telephoneCode', value)}
                     options={phoneCallingCodeOptions}
+                    searchable
                     style={{ minHeight: 38, padding: '0 8px' }}
                   />
                 </div>
                 <Input aria-label="Téléphone" style={{ ...inputStyle, flex: 1 }} value={form.telephone} onChange={(e) => set('telephone', e.target.value)} placeholder="Téléphone" />
+                </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: mode === 'anonymous' ? '6px 10px' : 14 }}>
                 <div>
@@ -411,7 +416,7 @@ export default function PrestataireOnboardingWizard({
                       <Input aria-label="Adresse e-mail de connexion" style={inputStyle} type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} />
                     </div>
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <div className="lb-password-label">
                         <Label htmlFor="provider-password" style={labelStyle}>Mot de passe</Label>
                         <PasswordPolicyHint />
                       </div>
@@ -438,8 +443,20 @@ export default function PrestataireOnboardingWizard({
                       </div>
                     </div>
                     <div>
-                      <Label style={labelStyle}>Confirmer le mot de passe</Label>
-                      <Input aria-label="Confirmation du mot de passe" style={inputStyle} type="password" value={regPasswordConfirm} onChange={(e) => setRegPasswordConfirm(e.target.value)} />
+                      <Label style={{ ...labelStyle, minHeight: 26, display: 'flex', alignItems: 'center', marginBottom: 0 }}>Confirmer le mot de passe</Label>
+                      <div style={{ position: 'relative', minWidth: 0 }}>
+                        <Input aria-label="Confirmation du mot de passe" style={{ ...inputStyle, paddingRight: 44 }} type={showRegPwdConfirm ? 'text' : 'password'} value={regPasswordConfirm} onChange={(e) => setRegPasswordConfirm(e.target.value)} />
+                        <Button
+                          variant="ghost"
+                          type="button"
+                          aria-label={showRegPwdConfirm ? 'Masquer la confirmation du mot de passe' : 'Afficher la confirmation du mot de passe'}
+                          aria-pressed={showRegPwdConfirm}
+                          onClick={() => setShowRegPwdConfirm((value) => !value)}
+                          style={{ position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)', width: 36, minHeight: 36, height: 36, padding: 4, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                          <IconEye open={showRegPwdConfirm} size={15} />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </>

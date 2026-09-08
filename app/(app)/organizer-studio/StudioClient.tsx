@@ -1,39 +1,36 @@
 'use client'
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
-import NextImage from 'next/image'
-import Link from 'next/link'
-import { useQueryParamState } from '@/lib/client/useQueryParamState'
-import {
-  Check,
-  Smartphone,
-  ChevronLeft,
-  ChevronRight,
-  Copy,
-  ExternalLink,
-  Sparkles,
-  Camera,
-  Trash2,
-  Eye,
-  EyeOff,
-  Wallet,
-  Users,
-  Calendar,
-  Layers,
-  ShieldCheck,
-  Plus,
-  AlertCircle,
-  HandCoins,
-} from 'lucide-react'
-import { SOCIAL_NETWORKS, type SocialNetworkKey } from '@/lib/shared/social'
-import { regions } from '@/lib/shared/regions'
-import { normalizeRegionIds } from '@/lib/shared/locations'
-import { MOMO_REGIONS } from '@/lib/shared/payoutMomoValidation'
-import { fmtMoney } from '@/lib/shared/money'
+import { Button, Card, Input, Label, Modal, Radio, Select, Textarea } from '@/app/components/ui'
 import ImageCropperModal from '@/app/components/ui/ImageCropperModal'
 import { uploadPublicMedia } from '@/lib/client/publicMediaUpload'
+import { useQueryParamState } from '@/lib/client/useQueryParamState'
+import { normalizeRegionIds } from '@/lib/shared/locations'
+import { fmtMoney } from '@/lib/shared/money'
+import { MOMO_REGIONS } from '@/lib/shared/payoutMomoValidation'
 import type { PublicMediaUploadReference } from '@/lib/shared/publicMediaUploads'
-import { Button, Card, Input, Textarea, Radio, Select, Label, Modal } from '@/app/components/ui'
+import { regions } from '@/lib/shared/regions'
+import { SOCIAL_NETWORKS, type SocialNetworkKey } from '@/lib/shared/social'
+import {
+  AlertCircle,
+  Calendar,
+  Camera,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  HandCoins,
+  Layers,
+  Plus,
+  ShieldCheck,
+  Smartphone,
+  Sparkles,
+  Trash2,
+  Users,
+  Wallet,
+} from 'lucide-react'
+import NextImage from 'next/image'
+import { useEffect, useMemo, useState } from 'react'
 
 export interface OrganizerProfileView {
   publicName: string
@@ -91,8 +88,6 @@ export interface OrganizerRefundCaseView {
 }
 
 const ZONE_OPTIONS = regions
-const subscribeToNothing = () => () => {}
-
 function resizeImageToDataUri(file: File, maxDim = 1280, quality = 0.85): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -143,9 +138,7 @@ export default function StudioClient({
   const [uploading, setUploading] = useState<'avatar' | 'banner' | 'gallery' | ''>('')
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [events, setEvents] = useState<{ id: string; name: string }[]>([])
-  const [linkCopied, setLinkCopied] = useState(false)
   const [pendingConfirm, setPendingConfirm] = useState<{ title: string; message: string; confirmLabel: string; onConfirm: () => void } | null>(null)
-  const publicOrigin = useSyncExternalStore(subscribeToNothing, () => window.location.origin, () => '')
   const [crop, setCrop] = useState<{ kind: 'avatar' | 'banner'; src: string } | null>(null)
   
   const [tab, setTab] = useQueryParamState<'page' | 'media' | 'paiements' | 'remboursements'>('tab', 'page')
@@ -165,9 +158,6 @@ export default function StudioClient({
       .catch(() => {})
   }, [])
 
-  const slug = profile.slug
-  const publicPath = `/organizers/${slug}`
-  const publicUrl = publicOrigin ? `${publicOrigin}${publicPath}` : publicPath
   const zones = normalizeRegionIds(profile.zonesIntervention.length ? profile.zonesIntervention : [profile.regionId]).filter(Boolean)
 
   function update(patch: Partial<OrganizerProfileView>) {
@@ -296,11 +286,11 @@ export default function StudioClient({
       <style>{`
         .studio-root {
           width: 100%;
-          max-width: none;
+          max-width: 1440px;
           margin: 0 auto;
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          gap: 22px;
         }
         .studio-header {
           display: flex;
@@ -395,6 +385,7 @@ export default function StudioClient({
           letter-spacing: -.015em !important;
         }
         @media (max-width: 900px) {
+          .studio-root { width: 100%; gap: 18px; }
           .studio-stats-grid { grid-template-columns: 1fr; }
           .studio-grid-2col { grid-template-columns: 1fr; }
           .studio-banner-hero { height: 150px; }
@@ -418,90 +409,6 @@ export default function StudioClient({
       `}</style>
 
       <div className="studio-root">
-        {/* En-tête principal & actions rapides */}
-        <header className="studio-header">
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(24px,2.8vw,32px)', fontWeight: 500, letterSpacing: '-.03em' }}>
-                Studio Organisateur
-              </h1>
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '4px 10px',
-                  borderRadius: 999,
-                  fontSize: 'var(--font-size-caption)',
-                  fontWeight: 700,
-                  background: profile.status === 'public' ? 'rgba(var(--primary-rgb), 0.14)' : 'var(--surface-2)',
-                  color: profile.status === 'public' ? 'var(--primary)' : 'var(--text-faint)',
-                  border: `1px solid ${profile.status === 'public' ? 'rgba(var(--primary-rgb), 0.3)' : 'var(--border)'}`,
-                }}
-              >
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: profile.status === 'public' ? 'var(--primary)' : 'var(--text-faint)' }} />
-                {profile.status === 'public' ? 'En ligne · Public' : 'Brouillon · Privé'}
-              </span>
-            </div>
-            <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote-lg)' }}>
-              Édite l’identité de ta marque, présente tes événements et configure tes versements.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={() => {
-                navigator.clipboard?.writeText(publicUrl)
-                setLinkCopied(true)
-                setTimeout(() => setLinkCopied(false), 2000)
-              }}
-              style={{
-                minHeight: 38,
-                padding: '0 14px',
-                borderRadius: 999,
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                color: 'var(--text)',
-                fontSize: 'var(--font-size-footnote)',
-                fontWeight: 600,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                cursor: 'pointer',
-              }}
-            >
-              {linkCopied ? <Check size={14} color="var(--primary)" /> : <Copy size={14} />}
-              {linkCopied ? 'Lien copié !' : 'Copier le lien public'}
-            </button>
-
-            {profile.status === 'public' && (
-              <Link
-                href={`/organizers/${slug}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  minHeight: 38,
-                  padding: '0 16px',
-                  borderRadius: 999,
-                  background: 'var(--primary)',
-                  color: 'var(--primary-ink)',
-                  fontSize: 'var(--font-size-footnote)',
-                  fontWeight: 750,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  textDecoration: 'none',
-                  boxShadow: '0 4px 14px rgba(var(--primary-rgb), 0.3)',
-                }}
-              >
-                <ExternalLink size={14} />
-                Voir ma page publique
-              </Link>
-            )}
-          </div>
-        </header>
-
         {/* Message de confirmation / alerte */}
         {message && (
           <div

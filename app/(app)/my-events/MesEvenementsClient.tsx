@@ -276,7 +276,7 @@ export default function MesEvenementsClient({ initialEvents, initialStripeCharge
           style={{ textDecoration: 'none', alignItems: 'center' }}
         >
           <span className="lb-organizer-action-icon"><Store size={19} aria-hidden="true" /></span>
-          <span className="lb-organizer-action-content"><strong>Ma page publique</strong><small>Présente ton univers et développe ton audience.</small></span>
+          <span className="lb-organizer-action-content"><strong>Accueil</strong><small>Présente ton univers et développe ton audience.</small></span>
           <ArrowUpRight className="lb-organizer-action-arrow" size={17} aria-hidden="true" />
         </Link>
         <Link

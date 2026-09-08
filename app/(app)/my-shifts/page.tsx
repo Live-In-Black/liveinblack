@@ -76,7 +76,7 @@ export default async function MesSoireesPage() {
   return (
     <main className="lb-dashboard-page lb-dashboard-page--medium">
       <div>
-        <header style={{ marginBottom: 18 }}>
+        <header className="lb-dashboard-page-header">
           <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(26px,3.2vw,34px)', fontWeight: 720, letterSpacing: '-.045em' }}>Mes soirées</h1>
           <p style={{ maxWidth: 650, margin: '7px 0 0', color: 'var(--text-faint)', fontSize: 'var(--font-size-callout)', lineHeight: 1.42 }}>Accède aux événements pour lesquels tu fais partie de l’équipe.</p>
         </header>

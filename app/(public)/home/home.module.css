@@ -838,6 +838,10 @@
     letter-spacing: -.045em;
   }
 
+  .heroTitleLine {
+    white-space: normal;
+  }
+
   .heroDescription {
     margin-top: 0;
     font-size: var(--font-size-footnote-lg);
