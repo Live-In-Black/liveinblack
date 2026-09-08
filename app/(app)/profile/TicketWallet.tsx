@@ -6,7 +6,6 @@ import { CalendarPlus, Download, ExternalLink, HandCoins, ListChecks, QrCode, Sh
 import { QRCodeCanvas } from 'qrcode.react'
 import { fmtMoney } from '@/lib/shared/money'
 import { downloadTicketPNG, shareOrCopy, shareStory, downloadICS, countdownLabel } from '@/lib/shared/ticketExtras'
-import { ArrowLeft } from 'lucide-react'
 import { ActionLink, Button, Card, ConfirmDialog, Input, Mascot, Modal, Pagination, Skeleton, pagedSlice } from '@/app/components/ui'
 import { useQueryParamState } from '@/lib/client/useQueryParamState'
 import {
@@ -142,15 +141,68 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
         .ticket-wallet-toolbar {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          gap: 24px;
-          min-height: 48px;
-          margin-top: 24px;
-          padding-bottom: 12px;
-          border-bottom: 1px solid var(--border);
+          justify-content: flex-end;
+          min-height: 0;
+          margin: 0;
         }
-        .ticket-wallet-profile-link { gap: 10px !important; padding-right: 12px; }
-        .ticket-wallet-toolbar > a:last-child { margin-left: auto; }
+        .ticket-wallet-summary {
+          width: 100% !important;
+          min-height: 58px;
+          display: flex !important;
+          align-items: center;
+          padding: 0 0 14px !important;
+          border: 0 !important;
+          border-bottom: 1px solid var(--border) !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+        }
+        .ticket-wallet-summary-content { min-width: 0; display: flex; align-items: center; gap: 10px; }
+        .ticket-wallet-summary-title { margin: 0; color: var(--text); font-size: var(--font-size-body-sm); font-weight: 500; }
+        .ticket-wallet-summary-meta { margin: 3px 0 0; color: var(--text-muted); font-size: var(--font-size-caption); line-height: 1.35; }
+        .ticket-wallet-overview {
+          width: min(100%, 820px);
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+          padding: 16px;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-card);
+          background: var(--surface);
+        }
+        .ticket-wallet-section { gap: 10px !important; }
+        .ticket-wallet-section-label {
+          margin: 0 !important;
+          color: var(--text) !important;
+          font-family: inherit !important;
+          font-size: var(--font-size-body-sm) !important;
+          font-weight: 500 !important;
+          letter-spacing: 0 !important;
+          text-transform: none !important;
+        }
+        .ticket-wallet-section-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 360px)) !important; }
+        .ticket-wallet-event-card { border-color: var(--border-strong) !important; background: var(--surface-2) !important; }
+        .ticket-wallet-toggle { width: auto !important; min-height: 34px !important; padding: 6px 10px !important; text-decoration: none !important; }
+        .ticket-wallet-empty {
+          min-height: clamp(360px, 54vh, 560px);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0;
+          padding: clamp(28px, 5vw, 56px) 18px;
+          text-align: center;
+        }
+        .ticket-wallet-empty .lb-mascot-image {
+          width: clamp(150px, 18vw, 190px) !important;
+          height: clamp(150px, 18vw, 190px) !important;
+          margin: 0 auto 20px !important;
+          overflow: hidden;
+        }
+        .ticket-wallet-empty-copy { position: relative; z-index: 1; display: grid; justify-items: center; }
+        .ticket-wallet-empty-title { margin: 0; color: var(--text); font-size: clamp(22px, 3vw, 30px); font-weight: 500; line-height: 1.18; }
+        .ticket-wallet-empty-description { max-width: 520px; margin: 10px 0 20px; color: var(--text-muted); font-size: var(--font-size-headline); line-height: 1.55; }
+        .ticket-wallet-empty-action { min-height: 44px; display: inline-flex; align-items: center; padding: 0 18px; border-radius: var(--radius-control); background: var(--primary); color: var(--primary-ink); font-size: var(--font-size-body-sm); font-weight: 500; text-decoration: none; }
         @media (max-width: 480px) {
           .ticket-wallet-face { grid-template-columns: 1fr !important; }
           .ticket-wallet-qr { width: 100% !important; border-left: 0 !important; border-top: 1px dashed var(--border-strong) !important; }
@@ -159,19 +211,17 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
           .ticket-wallet-summary { grid-template-columns: 1fr !important; }
           .ticket-wallet-summary-action { justify-content: flex-start !important; }
           .ticket-wallet-summary-action a { min-height: 32px !important; padding: 6px 10px !important; font-size: var(--font-size-caption) !important; }
-          .ticket-wallet-toolbar { gap: 16px; }
+          .ticket-wallet-empty { min-height: 330px; padding: 24px 12px; }
+          .ticket-wallet-empty .lb-mascot-image { width: 132px !important; height: 132px !important; margin-bottom: 16px !important; }
+          .ticket-wallet-empty-description { font-size: var(--font-size-body-sm); }
         }
       `}</style>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div className="ticket-wallet-toolbar">
-          <Link className="ticket-wallet-profile-link" href="/profile" style={{ minHeight: 36, display: 'inline-flex', alignItems: 'center', fontSize: 'var(--font-size-footnote-lg)', color: 'var(--text-muted)', textDecoration: 'none' }}>
-            <ArrowLeft size={16} aria-hidden="true" />
-            Profil
-          </Link>
           <ActionLink href="/events">Trouver une soirée</ActionLink>
         </div>
 
-        <header style={{ marginBottom: 6 }}>
+        <header className="lb-dashboard-page-header">
           <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(26px,3.2vw,34px)', fontWeight: 500, letterSpacing: '-.035em' }}>Mes billets</h1>
           <p style={{ maxWidth: 720, margin: '5px 0 0', color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote)', lineHeight: 1.38 }}>Tous tes accès, QR codes et places à venir dans un seul portefeuille.</p>
         </header>
@@ -181,27 +231,27 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
         {groups.length === 0 ? (
           <EmptyWallet />
         ) : (
-          <>
-            <Card className="ticket-wallet-summary" style={{ width: '100%', display: 'block', padding: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <div className="ticket-wallet-overview">
+            <Card className="ticket-wallet-summary">
+              <div className="ticket-wallet-summary-content">
                 <TicketGlyph />
                 <div>
-                  <p style={{ fontWeight: 500, fontSize: 'var(--font-size-headline)', color: 'var(--text)', margin: 0 }}>
+                  <p className="ticket-wallet-summary-title">
                     {upcomingSeatCount > 0 ? `${upcomingSeatCount} place${upcomingSeatCount > 1 ? 's' : ''} à venir` : 'Aucune place à venir'}
                   </p>
-                  <p style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--text-muted)', margin: '2px 0 0' }}>
+                  <p className="ticket-wallet-summary-meta">
                     {buckets.upcoming.length > 0
-                      ? `Sur ${buckets.upcoming.length} événement${buckets.upcoming.length > 1 ? 's' : ''} — QR codes prêts à scanner`
+                      ? `${buckets.upcoming.length} événement${buckets.upcoming.length > 1 ? 's' : ''} · QR code${upcomingSeatCount > 1 ? 's' : ''} prêt${upcomingSeatCount > 1 ? 's' : ''} à scanner`
                       : 'Trouve ta prochaine soirée dans les événements'}
                   </p>
                 </div>
-                </div>
+              </div>
             </Card>
 
             {buckets.upcoming.length > 0 && <Section label={`À venir (${buckets.upcoming.length})`} groups={buckets.upcoming} currentUserId={currentUserId} paramName="page" />}
             {buckets.past.length > 0 && <Section label={`Événements passés (${buckets.past.length})`} groups={buckets.past} currentUserId={currentUserId} paramName="pastPage" />}
             {buckets.cancelled.length > 0 && <Section label={`Annulés (${buckets.cancelled.length})`} groups={buckets.cancelled} currentUserId={currentUserId} paramName="cancelledPage" />}
-          </>
+          </div>
         )}
       </div>
     </section>
@@ -307,8 +357,8 @@ function Section({
   const setPage = (n: number) => setPageParam(String(n))
   const { pageItems, pageCount } = pagedSlice(groups, page, GROUP_PAGE_SIZE)
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
-      <p style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: '6px 0 0' }}>{label}</p>
+    <div className="ticket-wallet-section" style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
+      <p className="ticket-wallet-section-label">{label}</p>
       <div className="ticket-wallet-section-grid">
         {pageItems.map((g) => (
           <EventTicketGroupCard key={g.eventId} group={g} currentUserId={currentUserId} bucket={classifyTicketGroup(g)} />
@@ -340,16 +390,13 @@ function TicketGlyph() {
 
 function EmptyWallet() {
   return (
-    <div style={{ minHeight: 'clamp(460px, 64vh, 700px)', display: 'grid', alignContent: 'center', justifyItems: 'center', gap: 14, padding: 'clamp(36px, 7vw, 84px) 18px', textAlign: 'center' }}>
+    <div className="ticket-wallet-empty">
       <Mascot mood="sleeping" size={280} />
-      <h2 style={{ fontWeight: 780, fontSize: 'clamp(24px, 3vw, 34px)', color: 'var(--text)', margin: '4px 0 8px', textTransform: 'none', letterSpacing: 0 }}>Aucun billet pour l&apos;instant</h2>
-      <p style={{ maxWidth: 520, fontSize: 'var(--font-size-headline-xl)', color: 'var(--text-muted)', margin: '0 0 24px', lineHeight: 1.55 }}>Tes billets achetés apparaîtront ici, avec leur QR code et toutes les informations utiles pour entrer à l’événement.</p>
-      <Link
-        href="/events"
-        style={{ minHeight: 48, display: 'inline-flex', alignItems: 'center', padding: '0 22px', borderRadius: 'var(--radius-control)', background: 'var(--primary)', color: 'var(--primary-ink)', fontWeight: 750, fontSize: 'var(--font-size-headline)', textDecoration: 'none' }}
-      >
-        Découvrir les événements
-      </Link>
+      <div className="ticket-wallet-empty-copy">
+        <h2 className="ticket-wallet-empty-title">Aucun billet pour l&apos;instant</h2>
+        <p className="ticket-wallet-empty-description">Tes billets achetés apparaîtront ici, avec leur QR code et toutes les informations utiles pour entrer à l’événement.</p>
+        <Link href="/events" className="ticket-wallet-empty-action">Découvrir les événements</Link>
+      </div>
     </div>
   )
 }
@@ -390,7 +437,7 @@ function EventTicketGroupCard({ group, currentUserId, bucket }: { group: TicketW
   }
 
   return (
-    <Card style={{ padding: 0, overflow: 'hidden', width: '100%' }}>
+    <Card className="ticket-wallet-event-card" style={{ padding: 0, overflow: 'hidden', width: '100%' }}>
       <Link
         href={event ? `/events/${event.id}` : '#'}
         className="ticket-wallet-event-link"
@@ -475,7 +522,7 @@ function EventTicketGroupCard({ group, currentUserId, bucket }: { group: TicketW
       {group.myTickets.length > 0 && (
         <div className="ticket-wallet-ticket-list" style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Button variant="link" onClick={() => setExpanded((v) => !v)} style={{ fontSize: 'var(--font-size-footnote-lg)' }}>
+            <Button className="ticket-wallet-toggle" variant="secondary" size="sm" onClick={() => setExpanded((v) => !v)} style={{ fontSize: 'var(--font-size-footnote-lg)' }}>
               {expanded ? 'Masquer mes places' : 'Voir mes places'}
             </Button>
             {event?.hasPlaylist && !cancelled && !past && (

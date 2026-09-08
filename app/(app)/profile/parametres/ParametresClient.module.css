@@ -18,23 +18,8 @@
 }
 
 .root :global(.settings-toolbar) {
-  display: grid;
-  grid-template-columns: auto minmax(260px, 430px);
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.root :global(.settings-back) {
-  min-height: 36px !important;
-  width: fit-content;
-  padding: 7px 10px !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-control) !important;
-  background: var(--surface-2) !important;
-  color: var(--text-muted) !important;
-  font-size: var(--font-size-body-sm) !important;
-  font-weight: 500 !important;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .root :global(.settings-search) {
@@ -517,7 +502,6 @@
 .root :global(.settings-empty p) { max-width: 470px; margin: 6px 0 12px; color: var(--text-faint); font-size: var(--font-size-body-sm); line-height: 1.5; }
 
 @media (max-width: 780px) {
-  .root :global(.settings-toolbar) { grid-template-columns: 1fr; }
   .root :global(.settings-search) { width: 100%; }
   .root :global(.settings-tabs) { display: flex; overflow-x: auto; scrollbar-width: none; }
   .root :global(.settings-nav-item) { min-width: 152px; }

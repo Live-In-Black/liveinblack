@@ -12,11 +12,11 @@ for (const country of getCountries()) {
 const names = new Intl.DisplayNames(['fr'], { type: 'region' })
 export const phoneCallingCodeOptions = [...countriesByDial].map(([value, countries]) => ({
   value,
-  label: `${value} · ${countries.length === 1 ? names.of(countries[0]) : 'Plusieurs pays'}`,
+  label: `${value} · ${countries.map((country) => names.of(country) ?? country).join(', ')}`,
 })).sort((a, b) => {
-  if (a.value === DEFAULT_PHONE_CALLING_CODE) return -1
-  if (b.value === DEFAULT_PHONE_CALLING_CODE) return 1
-  return Number(a.value) - Number(b.value)
+  const countryA = a.label.split(' · ')[1] ?? a.label
+  const countryB = b.label.split(' · ')[1] ?? b.label
+  return countryA.localeCompare(countryB, 'fr', { sensitivity: 'base' })
 })
 
 export function splitContactPhone(phone: string): { dialCode: string; number: string } {

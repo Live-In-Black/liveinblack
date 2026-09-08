@@ -67,7 +67,7 @@ export default function InterestedEventsClient({ initialItems }: { initialItems:
   return (
     <main className="lb-dashboard-page">
       <div className={styles.pageContent}>
-        <div className={styles.headerRow}>
+        <div className={`lb-dashboard-page-header ${styles.headerRow}`}>
           <header className={styles.header}>
             <p>Ta sélection</p>
             <h1>Mes favoris</h1>

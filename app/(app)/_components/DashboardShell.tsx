@@ -5,8 +5,9 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { ChevronDown, Globe, Menu, X } from 'lucide-react'
-import { Button, IconButton } from '@/app/components/ui'
+import { signOut } from 'next-auth/react'
+import { ChevronDown, House, LogOut, Menu, Settings, X } from 'lucide-react'
+import { Avatar, Button, ConfirmDialog, IconButton } from '@/app/components/ui'
 import AgentWorkspaceShell from './AgentWorkspaceShell'
 import { COMMON_NAV, ROLE_NAV, CLIENT_UPSELL, HIDE_SIDEBAR_PREFIXES, FULL_BLEED_PREFIXES, type DashboardNavItem } from './dashboardNav'
 import { getRoleLabel, type Role } from '@/lib/server/permissions'
@@ -178,7 +179,9 @@ function useHasStaffedEvents(): boolean {
 // app/(app)/layout.tsx sur les routes immersives (voir HIDE_SIDEBAR_PREFIXES
 // dans dashboardNav.ts) : cette valeur n'a pas besoin d'être revérifiée ici,
 // le layout ne monte simplement pas ce composant sur ces routes-là.
-export default function DashboardShell({ activeRole, children }: { activeRole: Role; children: React.ReactNode }) {
+type DashboardUser = { name: string; image: string | null }
+
+export default function DashboardShell({ activeRole, user, children }: { activeRole: Role; user: DashboardUser; children: React.ReactNode }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const agentBadges = useAgentBadges(activeRole)
@@ -186,8 +189,12 @@ export default function DashboardShell({ activeRole, children }: { activeRole: R
   const badges = { ...agentBadges, '/notifications': notificationUnread || undefined }
   const hasStaffedEvents = useHasStaffedEvents()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [logoutOpen, setLogoutOpen] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null)
   const mobileDrawerRef = useRef<HTMLElement>(null)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!mobileOpen) return
@@ -215,6 +222,22 @@ export default function DashboardShell({ activeRole, children }: { activeRole: R
       window.removeEventListener('keydown', onKeyDown)
     }
   }, [mobileOpen])
+
+  useEffect(() => {
+    if (!profileOpen) return
+    function closeProfileMenu(event: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) setProfileOpen(false)
+    }
+    function closeProfileMenuWithKeyboard(event: KeyboardEvent) {
+      if (event.key === 'Escape') setProfileOpen(false)
+    }
+    document.addEventListener('mousedown', closeProfileMenu)
+    window.addEventListener('keydown', closeProfileMenuWithKeyboard)
+    return () => {
+      document.removeEventListener('mousedown', closeProfileMenu)
+      window.removeEventListener('keydown', closeProfileMenuWithKeyboard)
+    }
+  }, [profileOpen])
 
   // La sidebar desktop se masque entièrement sous 1100px (.lb-dashboard-sidebar,
   // voir plus bas) — avant, PublicNav.tsx fournissait un tiroir mobile de
@@ -261,6 +284,11 @@ export default function DashboardShell({ activeRole, children }: { activeRole: R
   ]
   const navGroups = memberGroups.filter((group) => group.items.length > 0)
 
+  async function logout() {
+    setLoggingOut(true)
+    await signOut({ redirectTo: '/home' })
+  }
+
   // Comparaison de path simple : "/profile" et "/agent" sont des racines
   // partagées par plusieurs sous-routes réelles (/profile/billets,
   // /agent/comptes, etc.) — les exclure du match par préfixe pour qu'elles
@@ -296,7 +324,7 @@ export default function DashboardShell({ activeRole, children }: { activeRole: R
           <Button variant="ghost" className={styles.drawerBackdrop} onClick={closeMobile} aria-label="Fermer le menu" />
           <nav ref={mobileDrawerRef} id="dashboard-mobile-navigation" className={styles.mobileDrawer} aria-label="Navigation de l’espace privé" onClick={closeMobile}>
             <SidebarNavigation groups={navGroups} upsell={upsell} isActive={isActive} hasActiveDescendant={hasActiveDescendant} badges={badges} mobile onNavigate={closeMobile} />
-            <Link href="/home" className={styles.publicLink}><Globe size={18} aria-hidden="true" /><span>Voir le site public</span></Link>
+            <Link href="/home" className={styles.publicLink}><House size={18} aria-hidden="true" /><span>Accueil</span></Link>
           </nav>
         </>
       )}
@@ -307,20 +335,74 @@ export default function DashboardShell({ activeRole, children }: { activeRole: R
             <Link href="/profile" className={styles.brand} aria-label="LIVEINBLACK — vue d’ensemble">
               <Image src="/branding/liveinblack-logo-header.png" alt="LIVEINBLACK" width={1876} height={285} className={styles.brandLogo} priority />
             </Link>
-            <p className={styles.workspace}>{`Espace ${getRoleLabel(activeRole)}`}</p>
           </div>
           <nav className={styles.nav} aria-label="Navigation de l’espace privé">
             <SidebarNavigation groups={navGroups} upsell={upsell} isActive={isActive} hasActiveDescendant={hasActiveDescendant} badges={badges} />
           </nav>
           <div className={styles.footer}>
-            <Link href="/home" className={styles.publicLink}><Globe size={18} aria-hidden="true" /><span>Voir le site public</span></Link>
+            <Link href="/home" className={styles.publicLink}><House size={18} aria-hidden="true" /><span>Accueil</span></Link>
           </div>
         </aside>
 
         <div className={styles.workspaceColumn}>
+          {!fullBleed ? (
+            <header className={styles.dashboardHeader}>
+              <div className={styles.dashboardContext}>
+                <h1>{`Espace ${getRoleLabel(activeRole)}`}</h1>
+              </div>
+              <div ref={profileMenuRef} className={styles.profileMenuRoot}>
+              <button
+                type="button"
+                className={styles.profileCard}
+                onClick={() => setProfileOpen((open) => !open)}
+                aria-expanded={profileOpen}
+                aria-haspopup="menu"
+              >
+                <Avatar src={user.image} name={user.name} size="md" />
+                <span className={styles.profileCopy}>
+                  <strong>{user.name}</strong>
+                </span>
+                <ChevronDown size={16} aria-hidden="true" className={profileOpen ? styles.chevronOpen : undefined} />
+              </button>
+
+              {profileOpen ? (
+                <div className={styles.profileMenu} role="menu">
+                  <Link href="/profile/parametres?section=profil" role="menuitem" onClick={() => setProfileOpen(false)}>
+                    <Settings size={16} aria-hidden="true" />
+                    Modifier mes informations
+                  </Link>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={styles.logoutAction}
+                    onClick={() => {
+                      setProfileOpen(false)
+                      setLogoutOpen(true)
+                    }}
+                  >
+                    <LogOut size={16} aria-hidden="true" />
+                    Se déconnecter
+                  </button>
+                </div>
+              ) : null}
+              </div>
+            </header>
+          ) : null}
           <div className={`lb-dashboard-main ${styles.main}${fullBleed ? ` ${styles.mainFull}` : ''}`}>{children}</div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={logoutOpen}
+        title="Se déconnecter ?"
+        body="Tu vas quitter ton espace LIVEINBLACK et revenir à l’accueil."
+        confirmLabel="Se déconnecter"
+        confirmVariant="primary"
+        confirmLoading={loggingOut}
+        confirmLoadingText="Déconnexion…"
+        onCancel={() => setLogoutOpen(false)}
+        onConfirm={() => { void logout() }}
+      />
     </div>
   )
 }

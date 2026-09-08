@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { Ticket, User, LayoutDashboard, LogOut, Check, ChevronDown, Globe, Bell } from 'lucide-react'
+import { Ticket, User, LayoutDashboard, LogOut, Check, ChevronDown, House, Bell } from 'lucide-react'
 import { Avatar, Button, ConfirmDialog } from '@/app/components/ui'
 import { DASHBOARD_BY_ROLE } from '@/lib/shared/dashboardRoutes'
 
@@ -207,7 +207,7 @@ export default function AccountMenu({
                 masquée dans le header une fois connecté (PublicNav.tsx),
                 confirmé en réunion live le 11/08/2026. */}
             <div style={{ height: 1, background: 'var(--border)', margin: '6px 4px' }} />
-            <MenuLink href="/events" onClick={() => setAccountOpen(false)} icon={<Globe size={15} />} label="Voir le site public" />
+            <MenuLink href="/home" onClick={() => setAccountOpen(false)} icon={<House size={15} />} label="Accueil" />
             <Button
               variant="ghost"
               onClick={() => {

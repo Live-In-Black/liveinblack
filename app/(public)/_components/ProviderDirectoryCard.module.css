@@ -168,6 +168,19 @@
   .meta, .footer { display: none; }
 }
 
+@media (max-width: 430px) {
+  .card {
+    min-height: 126px;
+    aspect-ratio: auto;
+    display: grid;
+    grid-template-columns: 40% minmax(0, 1fr);
+  }
+
+  .visual { min-height: 126px; }
+  .categoryBadge { right: 7px; max-width: none; }
+  .content { padding: 10px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card, .cover { transition: none; }
   .card:hover { transform: none; }

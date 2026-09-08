@@ -325,6 +325,14 @@
   .cta > a { grid-column: auto; justify-self: stretch; }
 }
 
+@media (max-width: 430px) {
+  .hero { padding-inline: 14px; }
+  .categories { margin-right: -14px; padding-right: 14px; }
+  .grid { grid-template-columns: 1fr; gap: 10px; }
+  .cta { gap: 12px; padding: 16px; border-radius: var(--radius-card); }
+  .ctaIcon { width: 38px; height: 38px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .searchField, .categoryChip { transition: none; }
 }

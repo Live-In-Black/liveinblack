@@ -31,6 +31,93 @@
   overflow: hidden;
 }
 
+.dashboardHeader {
+  position: relative;
+  z-index: 30;
+  min-height: 76px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+  margin: 14px clamp(16px, 2vw, 28px) 0;
+  padding: 12px 16px 12px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.dashboardContext { min-width: 0; flex: 1; }
+.dashboardContext h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(18px, 1.7vw, 22px);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -.02em;
+  white-space: nowrap;
+}
+
+.profileMenuRoot { position: relative; flex: 0 0 auto; }
+.profileCard {
+  min-width: 180px;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.profileCard:hover,
+.profileCard[aria-expanded='true'] { border-color: var(--primary-a35); background: var(--surface-2); }
+.profileCard:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.profileCopy { min-width: 0; flex: 1; }
+.profileCopy strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profileCopy strong { color: var(--text); font-size: var(--font-size-body-sm); font-weight: 500; }
+.profileCard > svg { flex: 0 0 auto; color: var(--text-faint); transition: transform .16s ease; }
+.chevronOpen { transform: rotate(180deg); }
+
+.profileMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 246px;
+  padding: 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--modal-surface);
+  box-shadow: 0 16px 38px rgba(var(--black-rgb), .2);
+}
+.profileMenu a,
+.profileMenu button {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: calc(var(--radius-control) - 3px);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--font-size-body-sm);
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.profileMenu a:hover,
+.profileMenu button:hover { background: var(--fill-secondary); color: var(--text); }
+.profileMenu .logoutAction { margin-top: 4px; border-top: 1px solid var(--border); border-radius: 0 0 calc(var(--radius-control) - 3px) calc(var(--radius-control) - 3px); color: var(--danger); }
+
 .sidebar {
   width: var(--dashboard-sidebar);
   height: calc(100dvh - 20px);
@@ -49,7 +136,6 @@
 .sidebarHeader { padding: 14px 12px 10px; border-bottom: 1px solid var(--border); }
 .brand { min-height: 34px; display: flex; align-items: center; gap: 9px; }
 .brandLogo { width: min(100%, 198px); height: auto; max-height: 32px; object-fit: contain; object-position: left center; }
-.workspace { margin-top: 4px; color: var(--text-faint); font-size: var(--font-size-caption-2-lg); font-weight: 600; }
 .nav { flex: 1; min-height: 0; overflow-y: auto; padding: 7px 8px 10px; scrollbar-width: thin; }
 .section + .section { margin-top: 8px; }
 .sectionLabel { margin: 0 8px 4px; color: var(--text-muted); font-size: var(--font-size-mini-lg); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
@@ -69,7 +155,7 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 18px var(--page-gutter) 24px 0;
+  padding: 30px clamp(22px, 4vw, 64px) 36px;
   scrollbar-width: thin;
 }
 .mainFull { height: auto; min-height: 0; padding: 0; overflow: hidden; }
@@ -95,7 +181,17 @@
 
 .root :global(.lb-dashboard-page) { padding-inline: var(--page-gutter) !important; }
 .root :global(.lb-page-shell) { padding-inline: var(--page-gutter) !important; }
-.root :global(.lb-dashboard-page-header) { margin-bottom: 0; }
+.root :global(.lb-dashboard-page-header:not(:has(a, button, input))) { display: none; }
+.root :global(.lb-dashboard-page-header:has(a, button, input)) {
+  min-height: 0;
+  justify-content: flex-end;
+  margin: 0 0 16px;
+  padding: 0 0 12px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+}
+.root :global(.lb-dashboard-page-header:has(a, button, input) > :first-child) { display: none; }
 .root :global(.lb-dashboard-title) {
   position: absolute !important;
   width: 1px !important;
@@ -123,17 +219,37 @@
   .layout { height: auto; max-height: none; overflow: visible; display: block; }
   .sidebar { display: none; }
   .workspaceColumn { height: auto; min-height: 100dvh; overflow: visible; }
+  .dashboardHeader { min-height: 66px; margin: 10px var(--page-gutter) 0; padding: 9px 12px 9px 56px; }
   .mobileBar { display: flex; }
   .mobileDrawer, .drawerBackdrop { display: block !important; }
-  .main { height: auto; max-height: none; overflow: visible; min-height: 100dvh; width: 100%; padding: 56px var(--page-gutter) 25px; }
-  .mainFull { height: 100dvh; min-height: 0; padding: 0; }
+  .main { height: auto; max-height: none; overflow: visible; min-height: 0; width: 100%; padding: 22px clamp(16px, 4vw, 32px) 30px; }
+  .mainFull { height: auto; min-height: 0; flex: 1; padding: 0; }
 }
 
 @media (max-width: 620px) {
-  .main { padding: 56px var(--page-gutter) 24px; }
-  .mainFull { height: 100dvh; min-height: 0; padding: 0; }
+  .main { padding: 18px var(--page-gutter) 24px; }
+  .mainFull { height: auto; min-height: 0; flex: 1; padding: 0; }
+  .dashboardHeader { gap: 10px; }
+  .dashboardContext h1 { font-size: 17px; }
+  .profileCard { min-width: 0; width: 48px; min-height: 44px; padding: 5px; justify-content: center; }
+  .profileCopy,
+  .profileCard > svg { display: none; }
+  .profileMenu { position: fixed; top: 66px; right: var(--page-gutter); width: min(260px, calc(100vw - (var(--page-gutter) * 2))); }
   .root :global(.lb-dashboard-page),
   .root :global(.lb-page-shell) { padding-inline: var(--page-gutter) !important; }
+  .root :global(.lb-dashboard-page-header:has(a, button, input)) {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+  .root :global(.lb-dashboard-page-header:has(a, button, input) > :last-child) {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .root :global(.lb-dashboard-page-header:has(a, button, input) > :last-child > *) {
+    max-width: 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -198,10 +198,7 @@ export default async function MonDossierPage() {
   return (
     <main className="lb-dashboard-page lb-dashboard-page--medium">
       <div className={styles.pageContent}>
-        <Link href="/profile" className={styles.backLink}>
-          ← Mon profil
-        </Link>
-        <header className={styles.header}>
+        <header className={`lb-dashboard-page-header ${styles.header}`}>
           <p>Suivi des candidatures</p>
           <h1>Mes dossiers</h1>
           <span>Suis l’avancement de tes candidatures organisateur et prestataire.</span>

@@ -4,10 +4,6 @@
   gap: 30px;
 }
 
-.page :global(.ticket-wallet-toolbar) {
-  margin-top: 24px !important;
-}
-
 .refunds {
   padding-top: 24px;
   border-top: 1px solid var(--border);

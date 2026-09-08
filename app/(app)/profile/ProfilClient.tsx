@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { ArrowLeft, CircleHelp, Heart, KeyRound, LifeBuoy, Mail, Search, Settings, ShieldCheck, Ticket, UserRound } from 'lucide-react'
+import { CircleHelp, Heart, KeyRound, LifeBuoy, Mail, Search, Settings, ShieldCheck, Ticket, UserRound } from 'lucide-react'
 import PreferencesModal, { summarizePreferences, type Preferences } from './PreferencesWizard'
 import { getPasswordStrength } from '@/lib/shared/ticketExtras'
 import { phoneCallingCodeOptions } from '@/lib/shared/phoneCallingCodes'
@@ -107,23 +107,11 @@ export default function ProfilClient({ initialUser }: { initialUser: ProfilUser 
 }
 
 function MainView({ user, setUser }: { user: ProfilUser; setUser: (u: ProfilUser) => void }) {
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [loggingOut, setLoggingOut] = useState(false)
   const roleInfo = ROLE_LABELS[user.role]
   const isOrganizer = user.role === 'organisateur'
 
-  async function confirmLogout() {
-    setLoggingOut(true)
-    await signOut({ redirectTo: '/home' })
-  }
-
   return (
     <main className={`profile-main lb-dashboard-page ${overviewStyles.root}`}>
-      <header className={overviewStyles.pageHeader}>
-        <p className={overviewStyles.eyebrow}>Espace client</p>
-        <h1>Mon profil</h1>
-        <p>Gère ton identité et retrouve rapidement les éléments importants de ton compte.</p>
-      </header>
       <div className={overviewStyles.grid}>
         <Card className={overviewStyles.identity}>
           <div className={overviewStyles.avatarArea}>
@@ -145,13 +133,6 @@ function MainView({ user, setUser }: { user: ProfilUser; setUser: (u: ProfilUser
             <Link href="/profile/parametres" className={overviewStyles.editLink}>
               Modifier mes informations
             </Link>
-            <Button
-              onClick={() => setShowLogoutConfirm(true)}
-              variant="secondary"
-              className={overviewStyles.logout}
-            >
-              Se déconnecter
-            </Button>
           </div>
         </Card>
 
@@ -180,18 +161,6 @@ function MainView({ user, setUser }: { user: ProfilUser; setUser: (u: ProfilUser
           </section>
         </div>
       </div>
-
-      <ConfirmDialog
-        open={showLogoutConfirm}
-        title="Se déconnecter ?"
-        body="Tu devras te reconnecter pour accéder à ton compte."
-        confirmLabel={loggingOut ? 'Déconnexion…' : 'Déconnecter'}
-        confirmDisabled={loggingOut}
-        confirmLoading={loggingOut}
-        confirmLoadingText="Déconnexion…"
-        onCancel={() => setShowLogoutConfirm(false)}
-        onConfirm={() => { void confirmLogout() }}
-      />
     </main>
   )
 }
@@ -406,7 +375,7 @@ interface SettingEntry {
   render: (ctx: { user: ProfilUser; setUser: (u: ProfilUser) => void }) => React.ReactNode
 }
 
-export function SettingsPanel({ user, setUser, onBack }: { user: ProfilUser; setUser: (u: ProfilUser) => void; onBack: () => void }) {
+export function SettingsPanel({ user, setUser }: { user: ProfilUser; setUser: (u: ProfilUser) => void }) {
   const searchParams = useSearchParams()
   const [query, setQuery] = useState('')
   const requestedGroup = searchParams.get('section')
@@ -430,7 +399,7 @@ export function SettingsPanel({ user, setUser, onBack }: { user: ProfilUser; set
   const tokens = q.split(/\s+/).filter(Boolean)
   const filtered = filterSettingEntries(entries, query)
   const settingGroups = [
-    { id: 'profil', title: 'Profil et préférences', shortTitle: 'Profil', description: 'Identité, téléphone et goûts', ids: ['identite', 'goûts'], icon: UserRound, color: 'var(--sky)' },
+    { id: 'profil', title: 'Informations du profil', shortTitle: 'Profil', description: 'Gère ton identité, ton téléphone et tes préférences.', ids: ['identite', 'goûts'], icon: UserRound, color: 'var(--sky)' },
     { id: 'privacy', title: 'Confidentialité et données', shortTitle: 'Confidentialité', description: 'Visibilité, recommandations et export', ids: ['visibilite', 'confidentialite', 'mes donnees'], icon: ShieldCheck, color: 'var(--accent-text)' },
     { id: 'security', title: 'Connexion et sécurité', shortTitle: 'Sécurité', description: 'E-mail, mot de passe et compte', ids: ['email', 'mot de passe', 'danger'], icon: KeyRound, color: 'var(--violet-text)' },
   ]
@@ -446,9 +415,6 @@ export function SettingsPanel({ user, setUser, onBack }: { user: ProfilUser; set
       `}</style>
       <div className="settings-page-stack">
         <div className="settings-toolbar">
-          <Button onClick={onBack} variant="ghost" className="settings-back" icon={<ArrowLeft size={17} aria-hidden="true" />}>
-            Profil
-          </Button>
           <div className="settings-search">
             <Search size={18} aria-hidden="true" />
             <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher dans les paramètres" aria-label="Rechercher dans les paramètres" />
@@ -456,7 +422,7 @@ export function SettingsPanel({ user, setUser, onBack }: { user: ProfilUser; set
           </div>
         </div>
 
-        <header className="settings-header">
+        <header className="settings-header lb-dashboard-page-header">
           <div>
             <h1>Paramètres</h1>
             <p>Gère ton profil, tes préférences de confidentialité et la sécurité de ton compte.</p>
@@ -676,11 +642,6 @@ function IdentityCard({ user, setUser }: { user: ProfilUser; setUser: (u: Profil
 
   return (
     <Card className="settings-identity-card" style={{ overflow: 'visible' }}>
-      <header className="settings-personal-heading">
-        <h3>Informations personnelles</h3>
-        <p>Modifie uniquement la partie dont tu as besoin.</p>
-      </header>
-
       <div className="settings-personal-sections">
         <section className="settings-personal-section">
           <div className="settings-personal-section-heading">
@@ -1211,12 +1172,7 @@ export function SupportPanel() {
   return (
     <main className={`lb-dashboard-page ${helpStyles.page}`}>
       <div className={helpStyles.shell}>
-        <Link href="/profile" className={helpStyles.backLink}>
-          <ArrowLeft size={17} aria-hidden="true" />
-          Profil
-        </Link>
-
-        <header className={helpStyles.header}>
+        <header className={`lb-dashboard-page-header ${helpStyles.header}`}>
           <div className={helpStyles.heading}>
             <span className={helpStyles.headingIcon} aria-hidden="true"><CircleHelp size={21} /></span>
             <div>

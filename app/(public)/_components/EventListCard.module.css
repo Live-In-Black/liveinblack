@@ -147,6 +147,22 @@
   .discover svg { width: 12px; height: 12px; }
 }
 
+@media (max-width: 430px) {
+  .card {
+    min-height: 126px;
+    aspect-ratio: auto;
+    display: grid;
+    grid-template-columns: 40% minmax(0, 1fr);
+  }
+
+  .visual { min-height: 126px; }
+  .topBadges { flex-direction: column; align-items: flex-start; right: 7px; }
+  .price { margin-left: 0; }
+  .content { padding: 10px; }
+  .content h3 { font-size: var(--font-size-headline); }
+  .footer { margin-top: auto; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card, .image { transition: none; }
   .card:hover { transform: none; }

@@ -416,6 +416,7 @@ export default function PublicNav({ dashboardLinks }: { dashboardLinks?: Dashboa
             top: '100%',
             left: 12,
             right: 12,
+            pointerEvents: 'auto',
             display: 'flex',
             flexDirection: 'column',
             maxHeight: 'calc(100dvh - 76px)',
