@@ -106,7 +106,7 @@ interface SearchResult {
   previewUrl: string | null
 }
 
-export default function AmbientMusicPlayer({ publicMode = false }: { publicMode?: boolean }) {
+export default function AmbientMusicPlayer() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   // Fermeture complète (distincte de la réduction) : coupe la lecture et
@@ -294,6 +294,9 @@ export default function AmbientMusicPlayer({ publicMode = false }: { publicMode?
           .amp-root {
             right: 10px !important;
             bottom: calc(env(safe-area-inset-bottom, 0px) + 18px) !important;
+          }
+          .lb-cookie-consent-visible .amp-root {
+            display: none !important;
           }
           .amp-trigger { width: 52px !important; height: 52px !important; }
           .amp-panel { width: min(92vw, 320px) !important; }

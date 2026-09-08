@@ -739,11 +739,17 @@ export default function ProposerServicesClient({
         @keyframes lib-spin { to { transform: rotate(360deg) } }
         .provider-workspace{max-width:1600px;margin:0 auto;padding:0 0 110px}
         .provider-workspace-header{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+        .provider-tabs-bar{display:flex;gap:6px;margin:22px 0 16px;padding:4px;border-radius:13px;background:var(--surface-2);border:1px solid var(--surface-2)}
         .provider-profile-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(260px,.85fr);gap:16px}
         .provider-fields-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
         @media(max-width:720px){
           .provider-profile-grid,.provider-fields-two{grid-template-columns:1fr}
           .provider-workspace{padding-top:16px}
+          .provider-workspace-header{align-items:stretch!important}
+          .provider-workspace-header header,.provider-workspace-header button{width:100%}
+          .provider-tabs-bar{overflow-x:auto;scrollbar-width:none}
+          .provider-tabs-bar::-webkit-scrollbar{display:none}
+          .provider-tabs-bar button{flex:0 0 auto!important;min-width:max-content;white-space:nowrap}
           .provider-catalog-item{flex-wrap:wrap}
           .provider-catalog-actions{width:100%;justify-content:flex-start!important}
         }
@@ -782,7 +788,7 @@ export default function ProposerServicesClient({
           </Card>
         )}
 
-        <div role="tablist" aria-label="Sections de l’espace prestataire" style={{ display: 'flex', gap: 6, margin: '22px 0 16px', padding: 4, borderRadius: 13, background: 'var(--surface-2)', border: '1px solid var(--surface-2)' }}>
+        <div className="provider-tabs-bar" role="tablist" aria-label="Sections de l’espace prestataire">
           {[
             { id: 'profil' as const, label: 'Ma page publique', shortLabel: 'Ma page' },
             { id: 'catalogue' as const, label: `Catalogue (${profile.catalog.length})`, shortLabel: `Catalogue (${profile.catalog.length})` },

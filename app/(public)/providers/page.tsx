@@ -11,6 +11,7 @@ import styles from './providers.module.css'
 import { getCachedPublicProvidersDirectory } from '@/lib/server/publicCache'
 
 const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
+const DIRECTORY_RENDER_TIMEOUT_MS = 2_500
 
 export const metadata: Metadata = {
   title: 'Prestataires — LIVEINBLACK',
@@ -28,6 +29,15 @@ export const metadata: Metadata = {
 
 export const revalidate = 45
 
+function withDirectoryTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => {
+      setTimeout(() => resolve(fallback), DIRECTORY_RENDER_TIMEOUT_MS)
+    }),
+  ]).catch(() => fallback)
+}
+
 export default async function PublicPrestatairesPage({
   searchParams,
 }: {
@@ -38,7 +48,10 @@ export default async function PublicPrestatairesPage({
   const category = categorie || ''
   const region = normalizeRegionId(rawRegion) === 'benin' ? 'benin' : ''
   const requestedPage = Math.max(1, Number(pageParam) || 1)
-  const { providers, total, pageSize, totalPages } = await getCachedPublicProvidersDirectory({
+  const emptyDirectory = { providers: [], total: 0, page: requestedPage, pageSize: 24, totalPages: 1 }
+  const readDirectory = (params: Parameters<typeof getCachedPublicProvidersDirectory>[0]) =>
+    withDirectoryTimeout(getCachedPublicProvidersDirectory(params), emptyDirectory)
+  const { providers, total, pageSize, totalPages } = await readDirectory({
     q: search,
     categorie: category,
     region,
@@ -53,7 +66,7 @@ export default async function PublicPrestatairesPage({
   // déjà sélectionnée. Chaque compteur est calculé sur le même texte/région,
   // mais sans réutiliser la page déjà filtrée.
   const categoryCounts = await Promise.all(PROVIDER_CATEGORIES.map(async (item) => {
-    const result = await getCachedPublicProvidersDirectory({
+    const result = await readDirectory({
       q: search,
       categorie: item.id,
       region,
@@ -66,7 +79,7 @@ export default async function PublicPrestatairesPage({
   const counts = new Map(categoryCounts)
   // Un profil peut appartenir a plusieurs metiers : ne pas sommer leurs totaux.
   const allTotal = category
-    ? (await getCachedPublicProvidersDirectory({
+    ? (await readDirectory({
       q: search, region, page: 1, pageSize: 12, includeTotal: true,
     })).total
     : total

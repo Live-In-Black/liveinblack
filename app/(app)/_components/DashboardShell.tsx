@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { ChevronDown, Globe, Menu, X } from 'lucide-react'
+import { ChevronDown, Home, Menu, X } from 'lucide-react'
 import { Button, IconButton } from '@/app/components/ui'
 import AgentWorkspaceShell from './AgentWorkspaceShell'
 import { COMMON_NAV, ROLE_NAV, CLIENT_UPSELL, HIDE_SIDEBAR_PREFIXES, FULL_BLEED_PREFIXES, type DashboardNavItem } from './dashboardNav'
@@ -296,7 +296,7 @@ export default function DashboardShell({ activeRole, children }: { activeRole: R
           <Button variant="ghost" className={styles.drawerBackdrop} onClick={closeMobile} aria-label="Fermer le menu" />
           <nav ref={mobileDrawerRef} id="dashboard-mobile-navigation" className={styles.mobileDrawer} aria-label="Navigation de l’espace privé" onClick={closeMobile}>
             <SidebarNavigation groups={navGroups} upsell={upsell} isActive={isActive} hasActiveDescendant={hasActiveDescendant} badges={badges} mobile onNavigate={closeMobile} />
-            <Link href="/home" className={styles.publicLink}><Globe size={18} aria-hidden="true" /><span>Voir le site public</span></Link>
+            <Link href="/home" className={styles.publicLink}><Home size={18} aria-hidden="true" /><span>Accueil</span></Link>
           </nav>
         </>
       )}
@@ -313,7 +313,7 @@ export default function DashboardShell({ activeRole, children }: { activeRole: R
             <SidebarNavigation groups={navGroups} upsell={upsell} isActive={isActive} hasActiveDescendant={hasActiveDescendant} badges={badges} />
           </nav>
           <div className={styles.footer}>
-            <Link href="/home" className={styles.publicLink}><Globe size={18} aria-hidden="true" /><span>Voir le site public</span></Link>
+            <Link href="/home" className={styles.publicLink}><Home size={18} aria-hidden="true" /><span>Accueil</span></Link>
           </div>
         </aside>
 

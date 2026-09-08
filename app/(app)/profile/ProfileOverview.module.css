@@ -310,8 +310,8 @@
   .root { padding-top: 10px; padding-bottom: 80px; }
   .pageHeader { margin-bottom: 14px; }
   .identity { gap: 12px; padding: 14px 13px !important; }
-  .identityActions { padding-left: 0; }
-  .editLink, .logout { min-width: 0; padding-inline: 11px !important; }
+  .identityActions { width: 100%; display: grid; grid-template-columns: 1fr; padding-left: 0; }
+  .editLink, .logout { width: 100%; min-width: 0; padding-inline: 11px !important; white-space: normal; text-align: center; }
   .points { grid-template-columns: 1fr; gap: 10px; padding: 14px !important; }
   .pointsSummary { padding: 0 0 10px; border-right: 0; border-bottom: 1px solid var(--primary-a16); }
   .quickHeader { align-items: flex-start; flex-direction: column; gap: 3px; }

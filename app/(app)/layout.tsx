@@ -15,7 +15,7 @@ import DashboardShell from './_components/DashboardShell'
 // et l'ancien AccountMenu en haut à droite) n'est donc plus montée ici du
 // tout. Tout ce qu'AccountMenu portait (avatar, messages, cloche de
 // notifications, switch de rôle, déconnexion) vit maintenant dans l'en-tête
-// de DashboardShell (sidebar), avec un lien "Voir la page publique" en pied
+// de DashboardShell (sidebar), avec un lien "Accueil" en pied
 // de sidebar pour repartir sur le site public sans jamais réintroduire la
 // nav publique dans le dashboard lui-même.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {

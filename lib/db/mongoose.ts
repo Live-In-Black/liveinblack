@@ -31,7 +31,12 @@ import VercelOpsConfigChange from '../models/VercelOpsConfigChange'
 // que sur une simple variable de module).
 
 const MONGODB_URI = process.env.MONGODB_URI
-const MAX_CONNECT_ATTEMPTS = 3
+const IS_DEV = process.env.NODE_ENV !== 'production'
+const MAX_CONNECT_ATTEMPTS = IS_DEV ? 1 : 3
+const SERVER_SELECTION_TIMEOUT_MS = IS_DEV ? 1_200 : 10_000
+const CONNECT_TIMEOUT_MS = IS_DEV ? 1_200 : 10_000
+const SOCKET_TIMEOUT_MS = IS_DEV ? 5_000 : 30_000
+const WAIT_QUEUE_TIMEOUT_MS = IS_DEV ? 1_000 : 5_000
 const MAX_POOL_SIZE = Math.max(1, Number.parseInt(process.env.MONGODB_MAX_POOL_SIZE ?? '20', 10) || 20)
 const MIN_POOL_SIZE = Math.max(0, Number.parseInt(process.env.MONGODB_MIN_POOL_SIZE ?? '0', 10) || 0)
 let indexesInitialized = false
@@ -61,10 +66,10 @@ async function connectWithRetry(uri: string): Promise<typeof mongoose> {
     try {
       return await mongoose.connect(uri, {
         bufferCommands: false,
-        serverSelectionTimeoutMS: 10_000,
-        connectTimeoutMS: 10_000,
-        socketTimeoutMS: 30_000,
-        waitQueueTimeoutMS: 5_000,
+        serverSelectionTimeoutMS: SERVER_SELECTION_TIMEOUT_MS,
+        connectTimeoutMS: CONNECT_TIMEOUT_MS,
+        socketTimeoutMS: SOCKET_TIMEOUT_MS,
+        waitQueueTimeoutMS: WAIT_QUEUE_TIMEOUT_MS,
         maxIdleTimeMS: 120_000,
         maxPoolSize: MAX_POOL_SIZE,
         minPoolSize: MIN_POOL_SIZE,

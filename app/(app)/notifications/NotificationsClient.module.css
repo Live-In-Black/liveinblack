@@ -318,8 +318,9 @@
   .pushCard { grid-template-columns: 30px minmax(0, 1fr); }
   .pushCard > button { grid-column: 1 / -1; width: 100% !important; }
   .inboxHeader { align-items: stretch; flex-direction: column; gap: 10px; padding: 12px; }
-  .filters { width: 100%; }
-  .filterButton { flex: 1 1 0; padding-inline: 6px !important; }
+  .filters { width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .filters::-webkit-scrollbar { display: none; }
+  .filterButton { flex: 1 0 max-content; padding-inline: 8px !important; white-space: nowrap; }
   .notification { grid-template-columns: minmax(0, 1fr) 18px; min-height: 70px; padding: 10px 12px !important; column-gap: 10px !important; }
   .notificationMeta { position: absolute; top: 12px; right: 42px; min-width: 0; }
   .notificationTopRow { padding-right: 48px; }

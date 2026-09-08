@@ -7,7 +7,7 @@ import { auth } from '@/auth'
 import { getCachedPublicOrganizersDirectory } from '@/lib/server/publicCache'
 import { hasAuthSessionCookie } from '@/lib/server/authSessionCookie'
 import { listMyFollowedOrganizers } from '@/lib/server/organizer/organizerFollows'
-import { getEntityRegionIds, getRegionName, normalizeRegionId } from '@/lib/shared/locations'
+import { getEntityRegionIds, getRegionName } from '@/lib/shared/locations'
 import { reliablePhotoUrl } from '@/lib/shared/placeholderImage'
 import OrganizerFollowButtonClient from '@/app/components/features/organizer/OrganizerFollowButtonClient'
 import FilterSelect from '../_components/FilterSelect'
@@ -15,6 +15,9 @@ import { Button, Input, Mascot, PageLinks } from '@/app/components/ui'
 import styles from './organizers.module.css'
 
 const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
+const DIRECTORY_RENDER_TIMEOUT_MS = 2_500
+
+type OrganizerDirectoryResult = Awaited<ReturnType<typeof getCachedPublicOrganizersDirectory>>
 
 export const metadata: Metadata = {
   title: 'Organisateurs — LIVEINBLACK',
@@ -32,26 +35,34 @@ export const metadata: Metadata = {
 
 type DirectoryParams = { q?: string; region?: string; upcoming?: string; sort?: string; page?: string }
 
+function withDirectoryTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => {
+      setTimeout(() => resolve(fallback), DIRECTORY_RENDER_TIMEOUT_MS)
+    }),
+  ]).catch(() => fallback)
+}
+
 export default async function PublicOrganizersPage({ searchParams }: { searchParams: Promise<DirectoryParams> }) {
-  const [{ q, region: rawRegion = '', upcoming, sort = 'popular', page: pageParam }, cookieStore] = await Promise.all([
+  const [{ q, sort = 'popular', page: pageParam }, cookieStore] = await Promise.all([
     searchParams,
     cookies(),
   ])
   const search = (q || '').trim()
-  const region = normalizeRegionId(rawRegion) === 'benin' ? 'benin' : ''
-  const upcomingOnly = upcoming === '1'
   const requestedPage = Math.max(1, Number(pageParam) || 1)
   const hasSessionCookie = hasAuthSessionCookie(cookieStore.getAll())
   const session = hasSessionCookie ? await auth() : null
 
-  const { organizers, total, totalPages, pageSize } = await getCachedPublicOrganizersDirectory({
+  const emptyDirectory: OrganizerDirectoryResult = { organizers: [], total: 0, page: requestedPage, pageSize: 24, totalPages: 1 }
+  const { organizers, total, totalPages, pageSize } = await withDirectoryTimeout(getCachedPublicOrganizersDirectory({
     q: search,
     region: 'benin',
     upcoming: false,
     sort: sort === 'recent' ? 'recent' : 'popular',
     page: requestedPage,
     pageSize: 24,
-  })
+  }), emptyDirectory)
 
   const followResult = session?.user ? await listMyFollowedOrganizers({ id: session.user.id }) : { ok: true as const, follows: [] }
   const followedIds = new Set(followResult.ok ? followResult.follows.map((follow) => follow.organizerId) : [])

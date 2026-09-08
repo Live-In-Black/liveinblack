@@ -150,6 +150,16 @@
     gap: 18px;
   }
 
+  .sectionNav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .sectionNav::-webkit-scrollbar {
+    display: none;
+  }
+
   .applicationGrid {
     grid-template-columns: 1fr;
   }
@@ -160,8 +170,10 @@
   }
 
   .sectionNav a {
-    flex: 1;
+    flex: 0 0 auto;
+    max-width: calc(100vw - 44px);
     justify-content: center;
     text-align: center;
+    white-space: nowrap;
   }
 }

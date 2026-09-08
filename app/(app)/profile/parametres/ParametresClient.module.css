@@ -548,11 +548,13 @@
   .root :global(.settings-card-grid .lb-card > div[style*="display: flex"]) { flex-wrap: wrap; }
   .root :global(.settings-personal-section) { grid-template-columns: 1fr; gap: 10px; padding: 14px; }
   .root :global(.settings-personal-action) { grid-column: auto; justify-content: flex-start; }
-  .root :global(.settings-personal-action button) { width: auto !important; }
+  .root :global(.settings-personal-action button) { width: 100% !important; white-space: normal; }
   .root :global(.settings-personal-fields) { grid-template-columns: 1fr; }
+  .root :global(.settings-phone-fields) { grid-template-columns: 1fr; }
   .root :global(.settings-preferences-card) { grid-template-columns: 1fr; gap: 12px; }
-  .root :global(.settings-preferences-card > button) { grid-column: auto; justify-self: start; }
+  .root :global(.settings-preferences-card > button) { width: 100% !important; grid-column: auto; justify-self: stretch; white-space: normal; }
   .root :global(.settings-danger-card) { align-items: flex-start; flex-direction: column; }
+  .root :global(.settings-danger-card button) { width: 100% !important; white-space: normal; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -26,6 +26,11 @@ export default function CookieConsentBanner() {
     return () => clearTimeout(t)
   }, [])
 
+  useEffect(() => {
+    document.documentElement.classList.toggle('lb-cookie-consent-visible', visible)
+    return () => document.documentElement.classList.remove('lb-cookie-consent-visible')
+  }, [visible])
+
   if (!visible) return null
 
   function dismiss(value: CookieConsentValue) {

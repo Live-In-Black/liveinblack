@@ -401,6 +401,20 @@ export default function StudioClient({
           .studio-tabs-bar { overflow-x: auto; justify-content: flex-start; }
           .studio-tab-btn { flex: 0 0 auto; white-space: nowrap; }
         }
+        @media (max-width: 520px) {
+          .studio-root { min-width: 0; }
+          .studio-header { align-items: stretch !important; }
+          .studio-header > div,
+          .studio-header > button,
+          .studio-header > a { width: 100% !important; min-width: 0; }
+          .studio-tabs-bar { scrollbar-width: none; }
+          .studio-tabs-bar::-webkit-scrollbar { display: none; }
+          .studio-tab-btn { max-width: calc(100vw - 44px); overflow: hidden; text-overflow: ellipsis; }
+          .studio-stat-card { min-width: 0; padding: 12px; }
+          .studio-stat-card > div { min-width: 0; }
+          .studio-stat-card p,
+          .studio-stat-card strong { overflow-wrap: anywhere; }
+        }
       `}</style>
 
       <div className="studio-root">

@@ -41,6 +41,10 @@
 .workspace button { min-height: var(--density-action-min); border-radius: var(--radius-control) !important; font-size: var(--font-size-body-sm) !important; }
 .workspace label { color: var(--text-muted) !important; font-size: var(--font-size-callout) !important; }
 .workspace :where(p, li, td, th) { font-size: max(13px, .82rem); line-height: 1.5; }
+.workspace :global(.lb-agent-screen) :where(p, span, strong, small, a, button, td, th) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .workspace small { font-size: var(--font-size-footnote); }
 .workspace :global(.lb-modal-panel) { border-color: var(--border) !important; border-radius: 12px !important; background: var(--modal-surface) !important; backdrop-filter: blur(30px) saturate(150%); }
 
