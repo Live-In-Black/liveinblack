@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
-import { Ban, Handshake, Phone, Search, ShieldAlert, Trash2, UserMinus } from 'lucide-react'
+import { Ban, Check, Clock, Handshake, MessageSquare, Phone, Search, ShieldAlert, Trash2, UserCheck, UserMinus, UserPlus, Users, X } from 'lucide-react'
 import { Button, Checkbox, Input, Radio } from '@/app/components/ui'
 import { ModalActions, ModalShell } from './MessagingModals'
 import MessagingEmptyState from './MessagingEmptyState'
@@ -95,9 +95,36 @@ export function NewGroupModal({ friends, onCreate, onClose, onGoToFriends, onPic
   )
 }
 
-export function FriendsPanel({ received, sent, friends, newFriendIds, onDismissNew, onAction, onSend, onRemove, onClose, renderAvatar }: { received: FriendRequestView[]; sent: SentFriendRequestView[]; friends: FriendView[]; newFriendIds: Set<string>; onDismissNew: (userId: string) => void; onAction: (requestId: string, action: 'accept' | 'decline' | 'cancel') => void; onSend: (email: string) => Promise<boolean>; onRemove: (friendUserId: string, name: string) => void; onClose: () => void; renderAvatar: (userId: string, name: string, size?: number) => ReactNode }) {
+export function FriendsPanel({
+  received,
+  sent,
+  friends,
+  newFriendIds,
+  onDismissNew,
+  onAction,
+  onSend,
+  onRemove,
+  onClose,
+  renderAvatar,
+}: {
+  received: FriendRequestView[]
+  sent: SentFriendRequestView[]
+  friends: FriendView[]
+  newFriendIds: Set<string>
+  onDismissNew: (userId: string) => void
+  onAction: (requestId: string, action: 'accept' | 'decline' | 'cancel') => void
+  onSend: (email: string) => Promise<boolean>
+  onRemove: (friendUserId: string, name: string) => void
+  onClose: () => void
+  renderAvatar: (userId: string, name: string, size?: number) => ReactNode
+}) {
+  const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'add'>(
+    received.length > 0 ? 'requests' : 'friends'
+  )
   const [email, setEmail] = useState('')
+  const [searchFriend, setSearchFriend] = useState('')
   const [suggestions, setSuggestions] = useState<Array<{ userId: string; name: string; email: string }>>([])
+  const [sending, setSending] = useState(false)
   const showSuggestions = email.trim().length >= 2
 
   useEffect(() => {
@@ -113,49 +140,350 @@ export function FriendsPanel({ received, sent, friends, newFriendIds, onDismissN
         if (!cancelled) setSuggestions([])
       }
     }, 240)
-    return () => { cancelled = true; window.clearTimeout(timer) }
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
   }, [email])
 
   async function sendRequest(targetEmail: string) {
-    const success = await onSend(targetEmail)
-    if (success) {
-      setEmail('')
-      setSuggestions([])
+    if (sending) return
+    setSending(true)
+    try {
+      const success = await onSend(targetEmail)
+      if (success) {
+        setEmail('')
+        setSuggestions([])
+        setActiveTab('requests')
+      }
+    } finally {
+      setSending(false)
     }
   }
 
+  const filteredFriends = friends.filter((f) =>
+    f.name.toLowerCase().includes(searchFriend.trim().toLowerCase())
+  )
+
+  const totalRequests = received.length + sent.length
+
   return (
     <ModalShell title="Amis" onClose={onClose} wide>
-      <div style={{ marginBottom: 18 }}>
-        <div className={styles.modalEmailForm}>
-          <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Nom ou e-mail d’un ami" aria-label="Rechercher ou saisir l’e-mail d’un ami" leftIcon={<Search size={17} aria-hidden="true" />} style={{ ...inputStyle, marginBottom: 0 }} autoComplete="off" />
-          <Button variant="primary" onClick={() => { const trimmed = email.trim(); if (trimmed.includes('@')) void sendRequest(trimmed) }} disabled={!email.includes('@')} size="md">Envoyer</Button>
-        </div>
-        {showSuggestions ? (
-          <div className={`${styles.modalPeopleList} ${styles.modalSuggestionList}`} style={{ marginTop: 8 }}>
-            {suggestions.length === 0 ? <p className={styles.modalEmpty}>Aucune suggestion pour cette recherche.</p> : suggestions.map((user) => (
-              <div key={user.userId} className={styles.modalPersonRow}>
-                {renderAvatar(user.userId, user.name, 40)}
-                <span style={{ minWidth: 0, flex: 1 }}>
-                  <strong className={styles.modalPersonName} style={{ display: 'block' }}>{user.name}</strong>
-                  <span style={{ display: 'block', overflow: 'hidden', color: 'var(--text-faint)', fontSize: 'var(--font-size-footnote)', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</span>
-                </span>
-                <Button variant="secondary" size="sm" onClick={() => void sendRequest(user.email)}>Ajouter</Button>
+      {/* ─── Navigation par onglets ─── */}
+      <div className={styles.friendsTabs}>
+        <button
+          type="button"
+          onClick={() => setActiveTab('friends')}
+          className={`${styles.friendsTab} ${activeTab === 'friends' ? styles.friendsTabActive : ''}`}
+        >
+          <Users size={15} />
+          <span>Mes amis</span>
+          <span className={`${styles.friendsBadge} ${activeTab === 'friends' ? styles.friendsBadgeNeutral : ''}`}>
+            {friends.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('requests')}
+          className={`${styles.friendsTab} ${activeTab === 'requests' ? styles.friendsTabActive : ''}`}
+        >
+          <UserCheck size={15} />
+          <span>Demandes</span>
+          {totalRequests > 0 && (
+            <span className={`${styles.friendsBadge} ${received.length > 0 ? styles.friendsBadgePrimary : styles.friendsBadgeNeutral}`}>
+              {totalRequests}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('add')}
+          className={`${styles.friendsTab} ${activeTab === 'add' ? styles.friendsTabActive : ''}`}
+        >
+          <UserPlus size={15} />
+          <span>Ajouter</span>
+        </button>
+      </div>
+
+      {/* ─── Onglet : Mes amis ─── */}
+      {activeTab === 'friends' && (
+        <div>
+          {friends.length > 4 && (
+            <div style={{ marginBottom: 14 }}>
+              <Input
+                value={searchFriend}
+                onChange={(e) => setSearchFriend(e.target.value)}
+                placeholder="Filtrer mes amis…"
+                leftIcon={<Search size={16} aria-hidden="true" />}
+                style={{ ...inputStyle, marginBottom: 0 }}
+              />
+            </div>
+          )}
+
+          {friends.length === 0 ? (
+            <div style={{ padding: '48px 16px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--surface-2)', border: '1px solid var(--border)', display: 'grid', placeItems: 'center', color: 'var(--text-faint)' }}>
+                <Handshake size={24} />
               </div>
-            ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p style={{ margin: 0, fontSize: 'var(--font-size-headline)', fontWeight: 700, color: 'var(--text)' }}>
+                  Aucun ami pour le moment
+                </p>
+                <p style={{ margin: 0, fontSize: 'var(--font-size-footnote)', color: 'var(--text-faint)', maxWidth: 320 }}>
+                  Recherche un contact ou envoie une invitation par e-mail pour commencer à discuter.
+                </p>
+              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setActiveTab('add')}
+                style={{ borderRadius: 999, marginTop: 4 }}
+              >
+                <UserPlus size={14} />
+                <span>Ajouter un ami</span>
+              </Button>
+            </div>
+          ) : filteredFriends.length === 0 ? (
+            <p className={styles.modalEmpty}>Aucun ami ne correspond à ta recherche.</p>
+          ) : (
+            <div className={styles.friendsList}>
+              {filteredFriends.map((f) => {
+                const isNew = newFriendIds.has(f.userId)
+                return (
+                  <div key={f.userId} className={styles.friendCard}>
+                    <div className={styles.friendInfo}>
+                      {renderAvatar(f.userId, f.name, 42)}
+                      <div className={styles.friendText}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 'var(--font-size-callout)', fontWeight: 650, color: 'var(--text)' }}>
+                            {f.name}
+                          </span>
+                          {isNew && (
+                            <button
+                              type="button"
+                              onClick={() => onDismissNew(f.userId)}
+                              title="Marquer comme vu"
+                              style={{
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.04em',
+                                color: '#ffffff',
+                                background: 'var(--primary)',
+                                border: 'none',
+                                borderRadius: 999,
+                                padding: '1px 7px',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Nouveau
+                            </button>
+                          )}
+                        </div>
+                        <span style={{ fontSize: 'var(--font-size-caption)', color: 'var(--text-faint)' }}>
+                          Membre Live in Black
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.friendActions}>
+                      <Button
+                        variant="secondary"
+                        onClick={() => onRemove(f.userId, f.name)}
+                        size="sm"
+                        title="Retirer des amis"
+                        className={styles.friendActionBtn}
+                        style={{ border: '1px solid var(--border)', color: 'var(--text-faint)' }}
+                      >
+                        <Trash2 size={15} />
+                      </Button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── Onglet : Demandes (reçues / envoyées) ─── */}
+      {activeTab === 'requests' && (
+        <div>
+          {received.length === 0 && sent.length === 0 ? (
+            <div style={{ padding: '48px 16px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--surface-2)', border: '1px solid var(--border)', display: 'grid', placeItems: 'center', color: 'var(--text-faint)' }}>
+                <UserCheck size={24} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p style={{ margin: 0, fontSize: 'var(--font-size-headline)', fontWeight: 700, color: 'var(--text)' }}>
+                  Aucune demande en attente
+                </p>
+                <p style={{ margin: 0, fontSize: 'var(--font-size-footnote)', color: 'var(--text-faint)' }}>
+                  Toutes les demandes reçues ou envoyées apparaîtront ici.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          {received.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div className={styles.friendsSectionHeader}>
+                <p style={{ ...sectionLabelStyle, margin: 0 }}>Demandes reçues</p>
+                <span className={`${styles.friendsBadge} ${styles.friendsBadgePrimary}`}>{received.length}</span>
+              </div>
+              <div className={styles.friendsList}>
+                {received.map((r) => (
+                  <div key={r.id} className={styles.friendCard}>
+                    <div className={styles.friendInfo}>
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', display: 'grid', placeItems: 'center', fontWeight: 700, color: 'var(--text)' }}>
+                        {r.fromName.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className={styles.friendText}>
+                        <span style={{ fontSize: 'var(--font-size-callout)', fontWeight: 650, color: 'var(--text)' }}>
+                          {r.fromName}
+                        </span>
+                        <span style={{ fontSize: 'var(--font-size-caption)', color: 'var(--text-faint)' }}>
+                          Souhaite t&apos;ajouter comme ami
+                        </span>
+                      </div>
+                    </div>
+                    <div className={styles.friendActions}>
+                      <Button
+                        variant="primary"
+                        onClick={() => onAction(r.id, 'accept')}
+                        size="sm"
+                        style={{ borderRadius: 999, display: 'flex', alignItems: 'center', gap: 5 }}
+                      >
+                        <Check size={14} />
+                        <span>Accepter</span>
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => onAction(r.id, 'decline')}
+                        size="sm"
+                        style={{ borderRadius: 999, border: '1px solid var(--border)' }}
+                      >
+                        <X size={14} />
+                        <span>Refuser</span>
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {sent.length > 0 && (
+            <div>
+              <div className={styles.friendsSectionHeader}>
+                <p style={{ ...sectionLabelStyle, margin: 0 }}>Demandes envoyées</p>
+                <span className={`${styles.friendsBadge} ${styles.friendsBadgeNeutral}`}>{sent.length}</span>
+              </div>
+              <div className={styles.friendsList}>
+                {sent.map((r) => (
+                  <div key={r.id} className={styles.friendCard}>
+                    <div className={styles.friendInfo}>
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', display: 'grid', placeItems: 'center', color: 'var(--text-faint)' }}>
+                        <Clock size={18} />
+                      </div>
+                      <div className={styles.friendText}>
+                        <span style={{ fontSize: 'var(--font-size-callout)', fontWeight: 650, color: 'var(--text)' }}>
+                          {r.toName}
+                        </span>
+                        <span style={{ fontSize: 'var(--font-size-caption)', color: 'var(--text-faint)' }}>
+                          Invitation envoyée · En attente
+                        </span>
+                      </div>
+                    </div>
+                    <div className={styles.friendActions}>
+                      <Button
+                        variant="secondary"
+                        onClick={() => onAction(r.id, 'cancel')}
+                        size="sm"
+                        style={{ borderRadius: 999, border: '1px solid var(--border)' }}
+                      >
+                        Annuler
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── Onglet : Ajouter un ami ─── */}
+      {activeTab === 'add' && (
+        <div>
+          <div style={{ marginBottom: 14 }}>
+            <p style={{ margin: '0 0 10px', fontSize: 'var(--font-size-footnote)', color: 'var(--text-faint)' }}>
+              Entre l&apos;adresse e-mail ou le prénom/nom pour trouver un membre de la communauté.
+            </p>
+            <div className={styles.modalEmailForm}>
+              <Input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Ex. sophie@gmail.com ou Jean Dupont"
+                aria-label="Rechercher ou saisir l’e-mail d’un ami"
+                leftIcon={<Search size={16} aria-hidden="true" />}
+                style={{ ...inputStyle, marginBottom: 0 }}
+                autoComplete="off"
+                autoFocus
+              />
+              <Button
+                variant="primary"
+                onClick={() => {
+                  const trimmed = email.trim()
+                  if (trimmed.includes('@')) void sendRequest(trimmed)
+                }}
+                disabled={!email.includes('@') || sending}
+                size="md"
+                style={{ borderRadius: 999, fontWeight: 650 }}
+              >
+                {sending ? 'Envoi…' : 'Envoyer'}
+              </Button>
+            </div>
+
+            {showSuggestions ? (
+              <div className={`${styles.modalPeopleList} ${styles.modalSuggestionList}`} style={{ marginTop: 10 }}>
+                {suggestions.length === 0 ? (
+                  <p className={styles.modalEmpty}>Aucun membre trouvé pour cette recherche.</p>
+                ) : (
+                  suggestions.map((user) => (
+                    <div key={user.userId} className={styles.modalPersonRow}>
+                      {renderAvatar(user.userId, user.name, 40)}
+                      <span style={{ minWidth: 0, flex: 1 }}>
+                        <strong className={styles.modalPersonName} style={{ display: 'block' }}>
+                          {user.name}
+                        </strong>
+                        <span style={{ display: 'block', overflow: 'hidden', color: 'var(--text-faint)', fontSize: 'var(--font-size-footnote)', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {user.email}
+                        </span>
+                      </span>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => void sendRequest(user.email)}
+                        style={{ borderRadius: 999, border: '1px solid var(--border)' }}
+                      >
+                        <UserPlus size={14} />
+                        <span>Ajouter</span>
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : null}
           </div>
-        ) : null}
-      </div>
-      {received.length > 0 && <div style={{ marginBottom: 16 }}><p style={sectionLabelStyle}>Demandes reçues</p>{received.map((r) => <div key={r.id} style={rowStyle}><span style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text)' }}>{r.fromName}</span><div style={{ display: 'flex', gap: 6 }}><Button variant="secondary" onClick={() => onAction(r.id, 'accept')} size="sm" style={{ borderRadius: 999 }}>Accepter</Button><Button variant="danger" onClick={() => onAction(r.id, 'decline')} size="sm" style={{ borderRadius: 999 }}>Refuser</Button></div></div>)}</div>}
-      {sent.length > 0 && <div style={{ marginBottom: 16 }}><p style={sectionLabelStyle}>Demandes envoyées</p>{sent.map((r) => <div key={r.id} style={rowStyle}><span style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text)' }}>{r.toName}</span><Button variant="secondary" onClick={() => onAction(r.id, 'cancel')} size="sm" style={{ borderRadius: 999 }}>Annuler</Button></div>)}</div>}
-      <div>
-        <p style={sectionLabelStyle}>Mes amis ({friends.length})</p>
-        {friends.length === 0 && <MessagingEmptyState icon={<Handshake size={32} />} title="Aucun ami pour le moment" subtitle="Envoie une demande par email pour commencer" />}
-        {friends.map((f) => <div key={f.userId} style={rowStyle}><span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--font-size-callout)', color: 'var(--text)' }}>{renderAvatar(f.userId, f.name, 36)}{f.name}{newFriendIds.has(f.userId) && <Button variant="secondary" onClick={() => onDismissNew(f.userId)} title="Marquer comme vu" style={{ fontSize: 'var(--font-size-caption-2)', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--primary)', background: 'var(--primary-a12)', border: '1px solid var(--primary-a35)', borderRadius: 999, padding: '2px 8px' }}>Nouveau</Button>}</span><Button variant="secondary" onClick={() => onRemove(f.userId, f.name)} size="sm" style={{ borderRadius: 999 }}>Retirer</Button></div>)}
-      </div>
+        </div>
+      )}
     </ModalShell>
   )
 }
+
 
 export function GroupSettingsModal({ conversation, currentUserId, friends, addMemberSearch, onAddMemberSearchChange, onAddMember, onRemoveMember, onSetRole, onOpenMuteDialog, onClearMute, onRename, onUploadAvatar, groupAvatarInputRef, onLeave, onDelete, onClose, renderAvatar, renderGroupAvatar }: { conversation: ConversationView; currentUserId: string; friends: FriendView[]; addMemberSearch: string; onAddMemberSearchChange: (value: string) => void; onAddMember: (userId: string) => void; onRemoveMember: (userId: string, name: string) => void; onSetRole: (userId: string, role: 'admin' | 'member') => void; onOpenMuteDialog: (userId: string, name: string) => void; onClearMute: (userId: string) => void; onRename: (name: string) => void; onUploadAvatar: (file: File) => void; groupAvatarInputRef: RefObject<HTMLInputElement | null>; onLeave: () => void; onDelete: () => void; onClose: () => void; renderAvatar: (userId: string, name: string, size?: number) => ReactNode; renderGroupAvatar: (name: string, avatar: string | null, size?: number) => ReactNode }) {
   const [name, setName] = useState(conversation.name || '')

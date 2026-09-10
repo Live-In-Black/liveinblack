@@ -58,5 +58,20 @@
 .dangerAction { color:var(--danger)!important; }
 .dangerAction svg { color:var(--danger); }
 @media(max-width:520px){.toolbarRow{grid-template-columns:1fr}}
+.friendsTabs { display: flex; gap: 6px; padding: 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); margin-bottom: 16px; }
+.friendsTab { flex: 1; min-height: 34px !important; padding: 6px 12px !important; font-size: var(--font-size-footnote) !important; font-weight: 600 !important; border-radius: 999px !important; border: none !important; background: transparent !important; color: var(--text-muted) !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; cursor: pointer; transition: all .15s ease !important; }
+.friendsTab:hover { color: var(--text) !important; }
+.friendsTabActive { background: var(--surface) !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(var(--black-rgb), .3) !important; }
+.friendsBadge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.friendsBadgePrimary { background: var(--primary); color: var(--primary-ink); }
+.friendsBadgeNeutral { background: var(--border-strong); color: var(--text); }
+.friendsSectionHeader { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 10px; }
+.friendsList { display: flex; flex-direction: column; gap: 8px; }
+.friendCard { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface-2); transition: border-color .15s ease, background .15s ease; }
+.friendCard:hover { border-color: var(--border-strong); background: var(--surface); }
+.friendInfo { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+.friendText { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.friendActions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.friendActionBtn { width: 34px; min-width: 34px; height: 34px; min-height: 34px !important; padding: 0 !important; border-radius: 50% !important; display: grid !important; place-items: center !important; }
 @keyframes attachment-parasol-in { from{opacity:0;transform:translate(0,0) scale(.42) rotate(-18deg)} to{opacity:1;transform:translate(var(--parasol-x),var(--parasol-y)) scale(1) rotate(0)} }
 @media(max-width:520px){.modalActions{display:grid;grid-template-columns:1fr 1fr}.modalActions>*{width:100%}.modalEmailForm{grid-template-columns:1fr}.modalEmailForm button{width:100%}.modalPeopleList{max-height:46dvh}.modalSuggestionList{max-height:58dvh}.contactActionGrid{grid-template-columns:1fr}}
