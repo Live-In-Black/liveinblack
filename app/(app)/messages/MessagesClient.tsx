@@ -853,9 +853,9 @@ export default function MessagesClient({
         <aside
           className={styles.listPane}
           style={{
-            width: isDesktop && conversations.length > 0 ? 340 : '100%',
+            width: isDesktop ? 340 : '100%',
             flexShrink: 0,
-            borderRight: isDesktop && conversations.length > 0 ? '1px solid var(--border)' : 'none',
+            borderRight: isDesktop ? '1px solid var(--border)' : 'none',
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
@@ -912,11 +912,15 @@ export default function MessagesClient({
         </aside>
       )}
 
-      {showThreadPane && conversations.length > 0 && (
+      {showThreadPane && (
         <section className={styles.threadPane} style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100%', overflow: 'hidden' }}>
           {!activeConversation ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MessagingEmptyState icon={<MessageCircle size={32} />} title="Choisis une conversation" subtitle="Sélectionne un contact ou un groupe pour commencer à discuter" />
+              <MessagingEmptyState
+                icon={<MessageCircle size={32} />}
+                title={conversations.length === 0 ? "Aucune conversation" : "Choisis une conversation"}
+                subtitle={conversations.length === 0 ? "Ajoute un ami ou lance une nouvelle discussion pour commencer à échanger." : "Sélectionne un contact ou un groupe pour commencer à discuter"}
+              />
             </div>
           ) : (
             <>

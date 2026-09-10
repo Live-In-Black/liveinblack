@@ -66,23 +66,37 @@ export default function ConversationListPane({
 }) {
   return (
     <>
-      <div style={{ padding: '18px 16px 12px' }}>
-        <div style={{ marginBottom: 12 }}>
-          <h1 className="font-display" style={{ fontSize: 'var(--font-size-title-3)', fontWeight: 800, margin: 0, color: 'var(--text)' }}>Messages</h1>
+      <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h1 className="font-display" style={{ fontSize: 'var(--font-size-title-4)', fontWeight: 750, margin: 0, color: 'var(--text)' }}>Messages</h1>
         </div>
         <Input
           aria-label="Rechercher une conversation"
           value={convSearch}
           onChange={(e) => onConvSearchChange(e.target.value)}
           placeholder="Rechercher une conversation…"
-          style={{ width: '100%', borderRadius: 14, border: '1px solid var(--border)', background: 'var(--field-bg)', color: 'var(--text)', fontSize: 'var(--font-size-body-sm)', padding: '12px 18px', marginBottom: 0, fontFamily: 'inherit' }}
+          style={{ width: '100%', borderRadius: 14, border: '1px solid var(--border)', background: 'var(--field-bg)', color: 'var(--text)', fontSize: 'var(--font-size-body-sm)', padding: '10px 14px', marginBottom: 0, fontFamily: 'inherit' }}
         />
         {toolbar ? <div className={styles.toolbarRow}>{toolbar}</div> : null}
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '6px 12px 18px' }}>
-        {conversations.length === 0 ? <MessagingEmptyState icon={<Search size={32} />} title="Aucune conversation" subtitle="Ajoute un contact et commence à discuter" /> : null}
+        {conversations.length === 0 ? (
+          <div style={{ padding: '36px 16px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--surface-2)', border: '1px solid var(--border)', display: 'grid', placeItems: 'center', color: 'var(--text-faint)' }}>
+              <Search size={20} />
+            </div>
+            <p style={{ margin: 0, fontSize: 'var(--font-size-body-sm)', fontWeight: 700, color: 'var(--text)' }}>Boîte de réception vide</p>
+            <p style={{ margin: 0, fontSize: 'var(--font-size-footnote)', color: 'var(--text-muted)', lineHeight: 1.45 }}>Tes conversations privées et de groupe s’afficheront ici.</p>
+          </div>
+        ) : null}
         {conversations.length > 0 && filteredConversations.length === 0 ? (
-          <MessagingEmptyState icon={<Search size={32} />} title="Aucun résultat" subtitle="Essaie un autre terme de recherche" />
+          <div style={{ padding: '36px 16px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--surface-2)', border: '1px solid var(--border)', display: 'grid', placeItems: 'center', color: 'var(--text-faint)' }}>
+              <Search size={20} />
+            </div>
+            <p style={{ margin: 0, fontSize: 'var(--font-size-body-sm)', fontWeight: 700, color: 'var(--text)' }}>Aucun résultat</p>
+            <p style={{ margin: 0, fontSize: 'var(--font-size-footnote)', color: 'var(--text-muted)', lineHeight: 1.45 }}>Essaie un autre terme de recherche.</p>
+          </div>
         ) : null}
         {filteredConversations.map((conv) => {
           const label = conversationLabel(conv, currentUserId)

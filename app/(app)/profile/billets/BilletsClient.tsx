@@ -107,7 +107,7 @@ function RefundCasesPanel({ initialRefunds }: { initialRefunds: RefundCaseView[]
                 <p style={{ margin: 0, color: 'var(--gold)', fontSize: 'var(--font-size-caption)', textTransform: 'uppercase', letterSpacing: '.08em', fontWeight: 800 }}>{CAUSE_LABELS[refund.cause] || refund.cause}</p>
                 <h3 style={{ margin: '4px 0 0', color: 'var(--text)', fontSize: 'var(--font-size-title-4)' }}>{fmtMoney(refund.amountXOF, 'XOF')}</h3>
               </div>
-              <span style={{ alignSelf: 'start', padding: '5px 10px', borderRadius: 999, background: 'var(--primary-a10)', color: 'var(--primary)', fontSize: 'var(--font-size-caption-lg)', fontWeight: 800 }}>
+              <span style={{ alignSelf: 'start', padding: '5px 10px', borderRadius: 999, background: 'var(--surface-2)', border: '1px solid var(--border-subtle)', color: 'var(--text)', fontSize: 'var(--font-size-caption-lg)', fontWeight: 800 }}>
                 {STATUS_LABELS[refund.status] || refund.status}
               </span>
             </div>

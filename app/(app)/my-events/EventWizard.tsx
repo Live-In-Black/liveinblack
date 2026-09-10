@@ -953,7 +953,7 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
                   onClick={() => videoInputRef.current?.click()}
                   style={{ width: '100%', height: '100%', minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11, padding: 14, border: 0, background: 'transparent', textAlign: 'left' }}
                 >
-                  <span style={{ width: 42, height: 42, borderRadius: 14, display: 'grid', placeItems: 'center', background: 'var(--primary-a10)', border: '1px solid var(--focus-ring-color)', color: 'var(--primary)', flexShrink: 0 }}>
+                  <span style={{ width: 42, height: 42, borderRadius: 14, display: 'grid', placeItems: 'center', background: 'var(--surface-2)', border: '1px solid var(--border-subtle)', color: 'var(--text)', flexShrink: 0 }}>
                     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <polygon points="5 3 19 12 5 21 5 3" />
                     </svg>
@@ -1134,11 +1134,11 @@ export default function EventWizard({ eventId, initialRegion = '', onClose, onSa
                     padding: '10px',
                     borderRadius: 10,
                     display: 'block',
-                    border: category === g ? '1px solid var(--primary-a55)' : '1px solid var(--border)',
-                    background: category === g ? 'var(--primary-a10)' : 'var(--surface)',
+                    border: category === g ? '1px solid var(--border-strong)' : '1px solid var(--border)',
+                    background: category === g ? 'var(--surface-2)' : 'var(--surface)',
                     fontSize: 'var(--font-size-footnote)',
                     fontWeight: 600,
-                    color: category === g ? 'var(--gold)' : 'var(--text-muted)',
+                    color: category === g ? 'var(--text)' : 'var(--text-muted)',
                     textAlign: 'center',
                   }}
                 >

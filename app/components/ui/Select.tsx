@@ -106,7 +106,7 @@ export default function Select({ value, onChange, options, placeholder = 'Sélec
     }
   }
 
-  const sizeStyle = size === 'sm' ? { minHeight: 'var(--control-height-sm)', padding: '7px 10px', fontSize: 'var(--font-size-body-sm)' } : { minHeight: 'var(--control-height-md)', padding: '8px 12px', fontSize: 'var(--font-size-body-lg)' }
+  const sizeStyle = size === 'sm' ? { minHeight: 'var(--control-height-sm)', padding: '3px 8px', fontSize: 'var(--font-size-footnote)' } : { minHeight: 'var(--control-height-md)', padding: '4px 10px', fontSize: 'var(--font-size-callout)' }
 
   return (
     <div ref={rootRef} style={{ position: 'relative' }}>
@@ -136,7 +136,7 @@ export default function Select({ value, onChange, options, placeholder = 'Sélec
           background: 'var(--surface-2)',
           color: selected ? 'var(--text)' : 'var(--text-faint)',
           border: `1px solid ${invalid ? 'var(--danger)' : open ? 'var(--primary)' : 'var(--border-strong)'}`,
-          borderRadius: 'var(--radius-md)',
+          borderRadius: 'var(--radius-control)',
           fontFamily: 'inherit',
           fontWeight: 600,
           textAlign: 'left',

@@ -189,13 +189,53 @@ export default function MessagingComposer({
               <span aria-hidden="true" style={{ display: 'block', transform: showAttachMenu ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform .24s cubic-bezier(.2,.9,.2,1)', fontSize: 24, lineHeight: 1 }}>+</span>
             </ComposerIconButton>
             {showAttachMenu ? (
-              <div>
+              <>
                 <Button variant="ghost" onClick={onCloseAttachMenu} aria-label="Fermer les options" style={{ position: 'fixed', inset: 0, zIndex: 45, minHeight: 0, padding: 0, border: 0, background: 'transparent' }} />
-                <ParasolAttachmentButton delay={0} angle={-96} label="Photo" icon={<ImageIcon size={19} />} onClick={onOpenPhotoPicker} onClose={onCloseAttachMenu} />
-                <ParasolAttachmentButton delay={35} angle={-64} label="Caméra" icon={<Camera size={19} />} onClick={onOpenCamera} onClose={onCloseAttachMenu} />
-                <ParasolAttachmentButton delay={70} angle={-32} label="Sondage" icon={<BarChart3 size={19} />} onClick={onOpenPoll} onClose={onCloseAttachMenu} />
-                <ParasolAttachmentButton delay={105} angle={0} label="Événement" icon={<CalendarDays size={19} />} onClick={onOpenEventShare} onClose={onCloseAttachMenu} />
-              </div>
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: 54,
+                    left: 0,
+                    zIndex: 55,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 4,
+                    padding: 6,
+                    background: 'var(--modal-surface)',
+                    border: '1px solid var(--border-strong)',
+                    borderRadius: 16,
+                    boxShadow: '0 16px 40px rgba(var(--black-rgb), 0.32)',
+                    backdropFilter: 'blur(24px) saturate(140%)',
+                    minWidth: 170,
+                    animation: 'menu-in .18s cubic-bezier(.22,.9,.3,1) both',
+                  }}
+                >
+                  <AttachmentMenuItem
+                    icon={<ImageIcon size={18} />}
+                    label="Photo / Image"
+                    onClick={onOpenPhotoPicker}
+                    onClose={onCloseAttachMenu}
+                  />
+                  <AttachmentMenuItem
+                    icon={<Camera size={18} />}
+                    label="Caméra"
+                    onClick={onOpenCamera}
+                    onClose={onCloseAttachMenu}
+                  />
+                  <AttachmentMenuItem
+                    icon={<BarChart3 size={18} />}
+                    label="Sondage"
+                    onClick={onOpenPoll}
+                    onClose={onCloseAttachMenu}
+                  />
+                  <AttachmentMenuItem
+                    icon={<CalendarDays size={18} />}
+                    label="Partager un événement"
+                    onClick={onOpenEventShare}
+                    onClose={onCloseAttachMenu}
+                  />
+                </div>
+              </>
             ) : null}
             <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={(event) => onPhotoFileChange(event, activeConversationId)} />
           </div>
@@ -297,42 +337,58 @@ function ComposerIconButton({ title, open, onClick, children }: { title: string;
   )
 }
 
-function ParasolAttachmentButton({ angle, delay, label, icon, onClick, onClose }: { angle: number; delay: number; label: string; icon: React.ReactNode; onClick: () => void; onClose: () => void }) {
-  const radius = 72
-  const radians = (angle * Math.PI) / 180
-  const x = Math.round(Math.cos(radians) * radius)
-  const y = Math.round(Math.sin(radians) * radius)
-  const style = {
-    '--parasol-x': `${x}px`,
-    '--parasol-y': `${y}px`,
-    position: 'absolute',
-    left: 0,
-    bottom: 0,
-    zIndex: 54,
-    width: 44,
-    minWidth: 44,
-    height: 44,
-    minHeight: 44,
-    padding: 0,
-    borderRadius: '50%',
-    border: '1px solid var(--border-strong)',
-    background: 'var(--modal-surface)',
-    color: 'var(--text)',
-    transform: `translate(${x}px, ${y}px)`,
-    animation: `attachment-parasol-in .26s cubic-bezier(.18,.92,.24,1.18) ${delay}ms both`,
-  } as React.CSSProperties & Record<'--parasol-x' | '--parasol-y', string>
+function AttachmentMenuItem({
+  icon,
+  label,
+  onClick,
+  onClose,
+}: {
+  icon: React.ReactNode
+  label: string
+  onClick: () => void
+  onClose: () => void
+}) {
   return (
     <Button
-      variant="secondary"
-      aria-label={label}
-      title={label}
+      variant="ghost"
       onClick={() => {
         onClick()
         onClose()
       }}
-      style={style}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        width: '100%',
+        minHeight: 38,
+        padding: '6px 10px',
+        borderRadius: 10,
+        color: 'var(--text)',
+        fontSize: 'var(--font-size-body-sm)',
+        fontWeight: 500,
+        textAlign: 'left',
+        justifyContent: 'flex-start',
+        border: 'none',
+        background: 'transparent',
+      }}
+      className="interactive-surface"
     >
-      {icon}
+      <span
+        style={{
+          width: 30,
+          height: 30,
+          borderRadius: '50%',
+          background: 'var(--surface-2)',
+          border: '1px solid var(--border)',
+          display: 'grid',
+          placeItems: 'center',
+          color: 'var(--gold)',
+          flexShrink: 0,
+        }}
+      >
+        {icon}
+      </span>
+      <span style={{ whiteSpace: 'nowrap' }}>{label}</span>
     </Button>
   )
 }

@@ -498,7 +498,7 @@ export default function AuthForm() {
           </div>
         )}
         {mode === 'login' && !loginError && loginInfo && (
-          <div className="lb-banner-fade" style={{ marginBottom: 10, padding: '9px 12px', background: 'var(--primary-a10)', border: '1px solid var(--primary-a35)', borderRadius: 10, fontSize: 'var(--font-size-footnote-lg)', color: 'var(--primary)', textAlign: 'center', lineHeight: 1.45 }}>
+          <div className="lb-banner-fade" style={{ marginBottom: 10, padding: '9px 12px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 10, fontSize: 'var(--font-size-footnote-lg)', color: 'var(--text)', textAlign: 'center', lineHeight: 1.45 }}>
             {loginInfo}
           </div>
         )}
@@ -593,14 +593,14 @@ export default function AuthForm() {
                     justifyContent: 'flex-start',
                   }}
                 >
-                  <div style={{ width: 32, height: 32, borderRadius: 11, background: 'var(--primary-a10)', border: '1px solid var(--primary-a35)', color: accent, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 11, background: 'var(--surface-2)', border: '1px solid var(--border)', color: accent, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <RoleIcon role={role} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2, flexWrap: 'wrap' }}>
                       <p style={{ fontSize: 'var(--font-size-headline)', fontWeight: 700, letterSpacing: '-0.2px', color: 'var(--text)', margin: 0 }}>{title}</p>
                       {badge && (
-                        <span style={{ fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--primary)', padding: '2px 7px', borderRadius: 8, border: '1px solid var(--primary-a35)', background: 'var(--primary-a12)' }}>
+                        <span style={{ fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text)', padding: '2px 7px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-2)' }}>
                           {badge}
                         </span>
                       )}

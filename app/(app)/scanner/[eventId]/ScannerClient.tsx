@@ -525,8 +525,8 @@ export default function ScannerClient({ eventId, eventName, currency, rank }: Sc
                       height: 52,
                       borderRadius: '50%',
                       margin: '0 auto 8px',
-                      background: checkinResult.alreadyCheckedIn ? 'var(--primary-a10)' : 'var(--primary-a10)',
-                      border: checkinResult.alreadyCheckedIn ? '2px solid var(--primary-a55)' : '2px solid var(--primary-a55)',
+                      background: 'var(--surface-2)',
+                      border: checkinResult.alreadyCheckedIn ? '2px solid var(--gold)' : '2px solid var(--border-strong)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -643,9 +643,9 @@ export default function ScannerClient({ eventId, eventName, currency, rank }: Sc
                               loadingText="…"
                               onClick={() => void handleServe(item)}
                               style={{
-                                border: '1px solid var(--primary-a04)',
-                                color: 'var(--primary)',
-                                background: busyKey === serveKey ? 'var(--fill-secondary)' : 'var(--primary-a10)',
+                                border: '1px solid var(--border)',
+                                color: 'var(--text)',
+                                background: busyKey === serveKey ? 'var(--fill-secondary)' : 'var(--surface-2)',
                                 minWidth: 64,
                               }}
                             >

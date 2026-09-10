@@ -36,11 +36,11 @@
 .profileMenuRoot { position: relative; flex: 0 0 auto; width: 100%; }
 .profileCard {
   width: 100%;
-  min-height: 46px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 10px;
+  padding: 4px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
   background: var(--surface-2);
@@ -140,7 +140,7 @@
   flex-direction: column;
   gap: 8px;
 }
-.publicLink { min-height: 42px; display: flex; align-items: center; gap: 9px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--fill-secondary); color: var(--text-muted); font-size: var(--font-size-body-sm); font-weight: 600; text-decoration: none; }
+.publicLink { min-height: 32px; display: flex; align-items: center; gap: 9px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--fill-secondary); color: var(--text-muted); font-size: var(--font-size-footnote); font-weight: 600; text-decoration: none; }
 .mobileDrawerHeader {
   padding: 8px 12px 12px;
   border-bottom: 1px solid var(--border);
@@ -155,7 +155,7 @@
   gap: 8px;
 }
 .mobileLogoutButton {
-  min-height: 42px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -164,7 +164,7 @@
   border-radius: var(--radius-control);
   background: var(--fill-secondary);
   color: var(--danger);
-  font-size: var(--font-size-body-sm);
+  font-size: var(--font-size-footnote);
   font-weight: 600;
   text-align: left;
   cursor: pointer;
@@ -185,7 +185,13 @@
   padding: 30px clamp(22px, 4vw, 64px) 36px;
   scrollbar-width: thin;
 }
-.mainFull { height: auto; min-height: 0; padding: 0; overflow: hidden; }
+.mainFull {
+  height: 100%;
+  max-height: 100dvh;
+  min-height: 0;
+  padding: 10px 10px 10px 0;
+  overflow: hidden;
+}
 
 .mobileBar { display: none; position: fixed; top: 12px; left: 12px; z-index: 50; }
 .mobileBar button { width: 40px; height: 40px; min-height: 40px !important; background: var(--modal-surface) !important; backdrop-filter: blur(24px); }
@@ -232,8 +238,8 @@
 }
 .root :global(.lb-dashboard-description) { display: none !important; }
 .root :global(.lb-dashboard-main) :where(h1, h2, h3) { font-family: inherit !important; text-transform: none !important; }
-.root :global(.lb-dashboard-main) :where(input, textarea, select) { min-height: 44px; border-radius: var(--radius-control) !important; font-size: var(--font-size-body-sm) !important; }
-.root :global(.lb-dashboard-main) button { min-height: 44px; border-radius: var(--radius-control); font-size: var(--font-size-body-sm); }
+.root :global(.lb-dashboard-main) :where(input, textarea, select) { min-height: var(--control-height-md); border-radius: var(--radius-control) !important; font-size: var(--font-size-body-sm) !important; }
+.root :global(.lb-dashboard-main) button { min-height: var(--density-action-min); border-radius: var(--radius-control); font-size: var(--font-size-body-sm); }
 .root :global(.lb-dashboard-main) :where(section, article, aside, div) {
   min-width: 0;
 }

@@ -1256,7 +1256,7 @@ function OrganizerRefundsSection({ initialRefunds }: { initialRefunds: Organizer
                   <p style={{ margin: 0, color: 'var(--gold)', fontSize: 'var(--font-size-caption)', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 800 }}>{REFUND_CAUSE_LABELS[refund.cause] || refund.cause}</p>
                   <h3 style={{ margin: '5px 0 0', color: 'var(--text)', fontSize: 'var(--font-size-title-4)' }}>{fmtMoney(refund.amountXOF, 'XOF')}</h3>
                 </div>
-                <span style={{ alignSelf: 'start', padding: '5px 10px', borderRadius: 999, background: 'var(--primary-a10)', color: 'var(--primary)', fontSize: 'var(--font-size-caption-lg)', fontWeight: 800 }}>{REFUND_STATUS_LABELS[refund.status] || refund.status}</span>
+                <span style={{ alignSelf: 'start', padding: '5px 10px', borderRadius: 999, background: 'var(--surface-2)', border: '1px solid var(--border-subtle)', color: 'var(--text)', fontSize: 'var(--font-size-caption-lg)', fontWeight: 800 }}>{REFUND_STATUS_LABELS[refund.status] || refund.status}</span>
               </div>
               <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote)', lineHeight: 1.5 }}>
                 {refund.flow === 'cash_pickup'

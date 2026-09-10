@@ -106,16 +106,11 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
       <style>{`
         .ticket-wallet-section-grid {
           display: grid !important;
-          grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 300px)) !important;
-          gap: 10px !important;
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)) !important;
+          gap: 16px !important;
           width: 100% !important;
           justify-content: start !important;
           align-items: start !important;
-        }
-        @media (min-width: 640px) and (max-width: 1023px) {
-          .ticket-wallet-section-grid {
-            grid-template-columns: repeat(2, minmax(0, 300px)) !important;
-          }
         }
         @media (max-width: 639px) {
           .ticket-wallet-section-grid {
@@ -161,14 +156,16 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
         .ticket-wallet-summary-title { margin: 0; color: var(--text); font-size: var(--font-size-body-sm); font-weight: 500; }
         .ticket-wallet-summary-meta { margin: 3px 0 0; color: var(--text-muted); font-size: var(--font-size-caption); line-height: 1.35; }
         .ticket-wallet-overview {
-          width: min(100%, 820px);
+          width: 100%;
+          max-width: 1080px;
           display: flex;
           flex-direction: column;
-          gap: 18px;
-          padding: 16px;
+          gap: 20px;
+          padding: 22px;
           border: 1px solid var(--border);
           border-radius: var(--radius-card);
           background: var(--surface);
+          box-shadow: 0 14px 40px rgba(var(--black-rgb), .12);
         }
         .ticket-wallet-section { gap: 10px !important; }
         .ticket-wallet-section-label {
@@ -216,14 +213,13 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
           .ticket-wallet-empty-description { font-size: var(--font-size-body-sm); }
         }
       `}</style>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div className="ticket-wallet-toolbar">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div>
+            <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(24px,2.8vw,30px)', fontWeight: 700, letterSpacing: '-.025em' }}>Mes billets</h1>
+            <p style={{ maxWidth: 640, margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote)', lineHeight: 1.45 }}>Tous tes accès, QR codes et places à venir dans un seul portefeuille.</p>
+          </div>
           <ActionLink href="/events">Trouver une soirée</ActionLink>
-        </div>
-
-        <header className="lb-dashboard-page-header">
-          <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(26px,3.2vw,34px)', fontWeight: 500, letterSpacing: '-.035em' }}>Mes billets</h1>
-          <p style={{ maxWidth: 720, margin: '5px 0 0', color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote)', lineHeight: 1.38 }}>Tous tes accès, QR codes et places à venir dans un seul portefeuille.</p>
         </header>
 
         <SeatHoldsPanel />
@@ -373,17 +369,18 @@ function TicketGlyph() {
   return (
     <div
       style={{
-        width: 38,
-        height: 38,
-        borderRadius: 12,
-        background: 'var(--primary-a12)',
+        width: 40,
+        height: 40,
+        borderRadius: 999,
+        background: 'var(--surface-2)',
+        border: '1px solid var(--border)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
       }}
     >
-      <Ticket size={22} color="var(--gold)" strokeWidth={1.8} aria-hidden="true" />
+      <Ticket size={20} color="var(--gold)" strokeWidth={1.8} aria-hidden="true" />
     </div>
   )
 }
@@ -479,7 +476,7 @@ function EventTicketGroupCard({ group, currentUserId, bucket }: { group: TicketW
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
           {cancelled && <Pill color="var(--danger)" bg="var(--danger-fill)">Annulé</Pill>}
           {past && !cancelled && <Pill color="var(--text-faint)" bg="var(--surface-2)">Terminé</Pill>}
-          <Pill color="var(--primary)" bg="var(--primary-a10)">
+          <Pill color="var(--text)" bg="var(--surface-2)">
             {group.myTickets.length} billet{group.myTickets.length > 1 ? 's' : ''}
           </Pill>
         </div>

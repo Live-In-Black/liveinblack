@@ -6,7 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { ChevronDown, House, LogOut, Menu, Settings, X } from 'lucide-react'
+import { ChevronDown, Globe, LogOut, Menu, Settings, X } from 'lucide-react'
 import { Avatar, Button, ConfirmDialog, IconButton } from '@/app/components/ui'
 import AgentWorkspaceShell from './AgentWorkspaceShell'
 import { COMMON_NAV, ROLE_NAV, CLIENT_UPSELL, HIDE_SIDEBAR_PREFIXES, FULL_BLEED_PREFIXES, type DashboardNavItem } from './dashboardNav'
@@ -351,7 +351,7 @@ export default function DashboardShell({ activeRole, user, children }: { activeR
                 <LogOut size={16} aria-hidden="true" />
                 <span>Se déconnecter</span>
               </button>
-              <Link href="/home" className={styles.publicLink}><House size={18} aria-hidden="true" /><span>Accueil</span></Link>
+              <Link href="/home" className={styles.publicLink}><Globe size={18} aria-hidden="true" /><span>Site public</span></Link>
             </div>
           </nav>
         </>
@@ -407,7 +407,7 @@ export default function DashboardShell({ activeRole, user, children }: { activeR
                 </div>
               ) : null}
             </div>
-            <Link href="/home" className={styles.publicLink}><House size={18} aria-hidden="true" /><span>Accueil</span></Link>
+            <Link href="/home" className={styles.publicLink}><Globe size={18} aria-hidden="true" /><span>Site public</span></Link>
           </div>
         </aside>
 
@@ -497,8 +497,8 @@ function SidebarItem({
           display: 'flex',
           alignItems: 'center',
           borderRadius: 'var(--radius-control)',
-          background: active ? 'var(--primary-a12)' : 'transparent',
-          border: active ? '1px solid var(--primary-a20)' : '1px solid transparent',
+          background: active ? 'var(--surface-2)' : 'transparent',
+          border: active ? '1px solid var(--border-strong)' : '1px solid transparent',
         }}
       >
         <Link
@@ -557,9 +557,9 @@ function SidebarLink({ item, active, muted, badge, compact, onClick }: { item: D
         minHeight: compact ? 40 : 44,
         padding: compact ? '7px 13px' : '8px 14px',
         borderRadius: 'var(--radius-control)',
-        color: active ? 'var(--text)' : muted ? 'var(--text-faint)' : 'var(--text-muted)',
-        background: active ? 'var(--primary-a12)' : 'transparent',
-        border: active ? '1px solid var(--primary-a20)' : '1px solid transparent',
+        color: active ? '#ffffff' : muted ? 'var(--text-faint)' : 'var(--text-muted)',
+        background: active ? 'var(--surface-2)' : 'transparent',
+        border: active ? '1px solid var(--border-strong)' : '1px solid transparent',
         fontSize: compact ? 13 : 14,
         fontWeight: active ? 700 : 600,
         textDecoration: 'none',

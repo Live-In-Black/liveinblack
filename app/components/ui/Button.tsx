@@ -17,9 +17,9 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const SIZE_STYLES: Record<ButtonSize, CSSProperties> = {
-  sm: { minHeight: 'var(--control-height-sm)', padding: '8px 14px', fontSize: 'var(--font-size-body-sm)', borderRadius: 'var(--radius-control)', gap: 6 },
-  md: { minHeight: 'var(--control-height-md)', padding: '10px 18px', fontSize: 'var(--font-size-headline-xl)', borderRadius: 'var(--radius-control)', gap: 8 },
-  lg: { minHeight: 50, padding: '12px 24px', fontSize: 'var(--font-size-title-5)', borderRadius: 'var(--radius-control)', gap: 8 },
+  sm: { minHeight: 'var(--control-height-sm)', padding: '3px 10px', fontSize: 'var(--font-size-footnote)', borderRadius: 'var(--radius-control)', gap: 5 },
+  md: { minHeight: 'var(--control-height-md)', padding: '4px 12px', fontSize: 'var(--font-size-callout)', borderRadius: 'var(--radius-control)', gap: 6 },
+  lg: { minHeight: 28, padding: '5px 14px', fontSize: 'var(--font-size-body)', borderRadius: 'var(--radius-control)', gap: 7 },
 }
 
 function variantStyle(variant: ButtonVariant, disabled: boolean): CSSProperties {

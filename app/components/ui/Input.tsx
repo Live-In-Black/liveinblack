@@ -13,8 +13,8 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 }
 
 const SIZE_STYLES: Record<'sm' | 'md', CSSProperties> = {
-  sm: { minHeight: 'var(--control-height-sm)', padding: '8px 12px', fontSize: 'var(--font-size-body-sm)', lineHeight: 1.35, borderRadius: 'var(--radius-control)' },
-  md: { minHeight: 'var(--control-height-md)', padding: '10px 14px', fontSize: 'var(--font-size-headline-xl)', lineHeight: 1.38, borderRadius: 'var(--radius-control)' },
+  sm: { minHeight: 'var(--control-height-sm)', padding: '3px 10px', fontSize: 'var(--font-size-footnote)', lineHeight: 1.25, borderRadius: 'var(--radius-control)' },
+  md: { minHeight: 'var(--control-height-md)', padding: '4px 12px', fontSize: 'var(--font-size-callout)', lineHeight: 1.3, borderRadius: 'var(--radius-control)' },
 }
 
 const ICON_OFFSET = 38

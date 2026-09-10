@@ -31,13 +31,14 @@ const C = { obsidian: 'var(--background)', teal: 'var(--primary)', gold: 'var(--
 
 const CARD_SHADOW = 'none'
 const primaryButton: React.CSSProperties = {
-  minHeight: 38,
+  minHeight: 24,
+  padding: '4px 14px',
   border: '1px solid var(--border-strong)',
-  borderRadius: 3,
+  borderRadius: 'var(--radius-control)',
   background: 'var(--violet-cta)',
   color: 'var(--primary-ink)',
-  fontSize: 'var(--font-size-callout)',
-  fontWeight: 500,
+  fontSize: 'var(--font-size-footnote)',
+  fontWeight: 600,
   textTransform: 'none',
   letterSpacing: 'normal',
   boxShadow: 'none',
@@ -792,17 +793,17 @@ export default function ProposerServicesClient({
               <h2 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', margin: '0 0 5px' }}>Informations publiques</h2>
               <p style={{ fontSize: 'var(--font-size-footnote-lg)', color: 'var(--text-faint)', lineHeight: 1.5, margin: '0 0 18px' }}>Ce sont les informations que les clients et organisateurs verront.</p>
               {hasUnsavedProfileChanges && (
-                <div role="status" style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 13px', margin: '0 0 16px', borderRadius: 13, background: 'var(--primary-a10)', border: '1px solid var(--primary-a35)', color: 'var(--text)' }}>
-                  <span style={{ width: 28, height: 28, borderRadius: 9, display: 'grid', placeItems: 'center', flexShrink: 0, color: C.gold, background: 'var(--primary-a12)', border: '1px solid var(--focus-ring-color)' }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                <div role="status" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', margin: '0 0 16px', borderRadius: 14, background: 'var(--surface-2)', border: '1px solid rgba(245, 158, 11, 0.4)', color: 'var(--text)' }}>
+                  <span style={{ width: 28, height: 28, borderRadius: 8, display: 'grid', placeItems: 'center', flexShrink: 0, color: '#f59e0b', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 9v4" />
                       <path d="M12 17h.01" />
                       <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
                     </svg>
                   </span>
                   <div>
-                    <strong style={{ display: 'block', fontSize: 'var(--font-size-body)', color: C.gold, marginBottom: 3 }}>Modifications non enregistrées</strong>
-                    <p style={{ fontSize: 'var(--font-size-footnote-lg)', lineHeight: 1.45, color: 'var(--text-muted)', margin: 0 }}>Clique sur « Enregistrer ma page » pour que ces changements soient visibles sur ta page publique.</p>
+                    <strong style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#f59e0b', marginBottom: 2 }}>Modifications non enregistrées</strong>
+                    <p style={{ fontSize: 12.5, lineHeight: 1.45, color: 'var(--text)', margin: 0 }}>Clique sur « Enregistrer ma page » pour que ces changements soient visibles sur ta page publique.</p>
                   </div>
                 </div>
               )}
@@ -823,7 +824,15 @@ export default function ProposerServicesClient({
                           key={item.id}
                           variant="ghost"
                           onClick={() => toggleProviderCategory(item.id)}
-                          style={{ padding: '8px 11px', borderRadius: 999, fontSize: 'var(--font-size-caption-lg)', fontWeight: 700, color: selected ? item.color : 'var(--text-muted)', background: selected ? `${item.color}18` : 'var(--surface-2)', border: `1px solid ${selected ? `${item.color}88` : 'var(--border)'}` }}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: 999,
+                            fontSize: 'var(--font-size-footnote)',
+                            fontWeight: selected ? 700 : 500,
+                            color: selected ? '#ffffff' : 'var(--text-muted)',
+                            background: selected ? 'var(--surface-2)' : 'transparent',
+                            border: `1px solid ${selected ? item.color : 'var(--border)'}`,
+                          }}
                         >
                           {item.singular}
                         </Button>
@@ -856,7 +865,20 @@ export default function ProposerServicesClient({
                       {regions.map((r) => {
                         const selected = profile.zonesIntervention.includes(r.id)
                         return (
-                          <Button key={r.id} variant="ghost" onClick={() => toggleZone(r.id)} style={{ padding: '8px 12px', borderRadius: 999, fontSize: 'var(--font-size-footnote)', color: selected ? C.teal : 'var(--text-muted)', background: selected ? 'var(--primary-a10)' : 'var(--surface-2)', border: `1px solid ${selected ? 'var(--primary-a55)' : 'var(--border)'}` }}>
+                          <Button
+                            key={r.id}
+                            variant="ghost"
+                            onClick={() => toggleZone(r.id)}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: 999,
+                              fontSize: 'var(--font-size-footnote)',
+                              color: selected ? '#ffffff' : 'var(--text-muted)',
+                              background: selected ? 'var(--surface-2)' : 'transparent',
+                              border: `1px solid ${selected ? 'var(--primary)' : 'var(--border)'}`,
+                              fontWeight: selected ? 700 : 500,
+                            }}
+                          >
                             {r.flag} {r.name}
                           </Button>
                         )
@@ -1164,7 +1186,7 @@ export default function ProposerServicesClient({
                           {item.description && <p style={{ fontSize: 'var(--font-size-caption-lg)', color: 'var(--text-faint)', lineHeight: 1.45, margin: '5px 0 0' }}>{item.description}</p>}
                         </div>
                       </div>
-                      <div className="provider-catalog-actions" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                      <div className="provider-catalog-actions" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                         <Button variant="secondary" disabled={togglingItemId === item.id} onClick={() => void toggleItem(item)} style={secondaryButton}>
                           {item.available === false ? 'Publier' : 'Masquer'}
                         </Button>
@@ -1244,7 +1266,7 @@ export default function ProposerServicesClient({
                           <Stars value={review.rating} size={14} />
                           <span style={{ fontSize: 'var(--font-size-body)', fontWeight: 700, color: 'var(--text)' }}>{review.authorName || 'Membre'}</span>
                           {review.verified && (
-                            <span style={{ fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 700, color: 'var(--primary)', background: 'var(--primary-a10)', border: '1px solid var(--primary-a35)', borderRadius: 999, padding: '2px 8px' }}>Avis vérifié</span>
+                            <span style={{ fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 700, color: 'var(--text)', background: 'var(--surface-2)', border: '1px solid var(--border-subtle)', borderRadius: 999, padding: '2px 8px' }}>Avis vérifié</span>
                           )}
                           {hidden && (
                             <span style={{ fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 700, color: 'var(--accent-text)', background: 'var(--danger-fill)', border: '1px solid var(--danger-border)', borderRadius: 999, padding: '2px 8px' }}>Masqué par la modération</span>

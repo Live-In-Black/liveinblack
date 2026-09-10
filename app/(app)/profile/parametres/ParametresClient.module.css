@@ -23,12 +23,12 @@
 }
 
 .root :global(.settings-search) {
-  min-height: 40px;
+  min-height: 28px;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
-  padding: 3px 6px 3px 11px;
+  padding: 2px 6px 2px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
   background: var(--surface);
@@ -38,18 +38,18 @@
 .root :global(.settings-search > div) { min-width: 0; }
 
 .root :global(.settings-search input) {
-  min-height: 32px !important;
+  min-height: 24px !important;
   padding: 0 3px !important;
   border: 0 !important;
   background: transparent !important;
   color: var(--text) !important;
-  font-size: var(--font-size-body-sm) !important;
+  font-size: var(--font-size-footnote) !important;
   box-shadow: none !important;
 }
 
 .root :global(.settings-search button) {
-  min-height: 32px !important;
-  padding: 6px 8px !important;
+  min-height: 24px !important;
+  padding: 2px 6px !important;
   color: var(--primary) !important;
   font-size: var(--font-size-caption) !important;
 }
@@ -242,15 +242,15 @@
 }
 
 .root :global(.settings-card-grid input) {
-  min-height: 40px !important;
+  min-height: var(--control-height-md) !important;
   border-color: var(--border) !important;
   border-radius: var(--radius-control) !important;
   background: var(--field-bg) !important;
-  font-size: var(--font-size-body-sm) !important;
+  font-size: var(--font-size-footnote) !important;
 }
 
 .root :global(.settings-card-grid button) {
-  min-height: 38px;
+  min-height: var(--density-action-min);
   border-radius: var(--radius-control) !important;
   font-weight: 500 !important;
 }

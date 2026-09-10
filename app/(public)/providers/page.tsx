@@ -248,7 +248,6 @@ export default async function PublicPrestatairesPage({
 
         {filtered.length > 0 && (
           <aside className={styles.cta}>
-            <span className={styles.ctaIcon} aria-hidden="true"><Sparkles size={26} /></span>
             <div>
               <p className={styles.ctaKicker}>Professionnels</p>
               <h2>Votre savoir-faire mérite d’être vu.</h2>

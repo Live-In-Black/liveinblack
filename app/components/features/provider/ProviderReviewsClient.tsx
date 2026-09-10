@@ -227,7 +227,7 @@ export default function ProviderReviewsClient({
                       <Stars value={review.rating} size={13} />
                       <span style={{ fontSize: 'var(--font-size-footnote-lg)', fontWeight: 700, color: 'var(--text)' }}>{review.authorName || 'Membre'}</span>
                       {review.verified && (
-                        <span style={{ fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 700, color: TEAL, background: 'var(--primary-a10)', border: '1px solid var(--primary-a35)', borderRadius: 999, padding: '2px 8px' }}>
+                        <span style={{ fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 700, color: TEAL, background: 'var(--surface-2)', border: '1px solid var(--border-subtle)', borderRadius: 999, padding: '2px 8px' }}>
                           Avis vérifié
                         </span>
                       )}

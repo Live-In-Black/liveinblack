@@ -793,7 +793,7 @@ export default function EventCheckoutPanel({
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                           {availableShows.map((option) => {
                             const active = selectedShow?.showOptionId === option.id
-                            return <Button key={option.id} type="button" variant="ghost" onClick={() => chooseShow(item.name, option)} aria-pressed={active} style={{ padding: '6px 9px', borderRadius: 'var(--radius-md)', border: `1px solid ${active ? 'var(--primary)' : 'var(--border-strong)'}`, background: active ? 'var(--primary-a10)' : 'var(--surface-2)', color: active ? 'var(--primary)' : 'var(--text-muted)', fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 700 }}>{option.label}{option.requiresInfo && !active ? ' · à préciser' : ''}</Button>
+                            return <Button key={option.id} type="button" variant="ghost" onClick={() => chooseShow(item.name, option)} aria-pressed={active} style={{ padding: '6px 9px', borderRadius: 'var(--radius-md)', border: `1px solid ${active ? 'var(--primary)' : 'var(--border-strong)'}`, background: 'var(--surface-2)', color: active ? 'var(--text)' : 'var(--text-muted)', fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 700 }}>{option.label}{option.requiresInfo && !active ? ' · à préciser' : ''}</Button>
                           })}
                         </div>
                         {selectedShow && <p style={{ margin: '7px 0 0', color: 'var(--primary)', fontSize: 'var(--font-size-caption-2-lg)' }}>Show choisi : {selectedShow.showLabel}{selectedShow.showInfo ? ` · ${selectedShow.showInfo}` : ''}</p>}

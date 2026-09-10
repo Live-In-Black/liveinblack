@@ -72,7 +72,7 @@
 .detail .name { margin: 0; color: var(--text); font-size: clamp(25px, 3vw, 34px) !important; font-weight: 500; line-height: 1.08; letter-spacing: -.035em; }
 .headline { max-width: 680px; margin: 7px 0 0; color: var(--text-muted); font-size: var(--font-size-body); line-height: 1.5; }
 .categories { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.category { min-height: 27px; display: inline-flex; align-items: center; padding: 3px 10px; border: 1px solid var(--primary-a42); border-radius: 999px; background: var(--primary-a10); color: var(--primary); font-size: var(--font-size-caption); font-weight: 500; }
+.category { min-height: 27px; display: inline-flex; align-items: center; padding: 3px 10px; border: 1px solid var(--border-subtle); border-radius: 999px; background: var(--surface-2); color: var(--text); font-size: var(--font-size-caption); font-weight: 500; }
 .actions { align-self: end; padding-bottom: 2px; }
 .actions > div { justify-content: flex-end; margin-top: 0 !important; }
 .actions button { min-height: 40px !important; padding: 8px 13px !important; font-size: var(--font-size-body-sm) !important; }
