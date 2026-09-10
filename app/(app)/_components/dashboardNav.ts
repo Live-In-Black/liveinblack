@@ -24,6 +24,13 @@ import {
   UserRound,
   LifeBuoy,
   Bell,
+  Package,
+  MessageSquare,
+  BadgeCheck,
+  Sparkles,
+  Layers,
+  Wallet,
+  RotateCcw,
 } from 'lucide-react'
 import type { Role } from '@/lib/server/permissions'
 
@@ -91,13 +98,31 @@ export const ROLE_NAV: Record<Role, DashboardNavItem[]> = {
   // qu'elle contient aussi la config des encaissements (Stripe/Mobile Money).
   organisateur: [
     { label: 'Mes événements', href: '/my-events', icon: CalendarDays },
-    { label: 'Tableau de bord', href: '/organizer-studio', icon: LayoutDashboard },
+    {
+      label: 'Tableau de bord',
+      href: '/organizer-studio',
+      icon: LayoutDashboard,
+      children: [
+        { label: 'Identité & Profil', href: '/organizer-studio?tab=page', icon: Sparkles },
+        { label: 'Galerie Média', href: '/organizer-studio?tab=media', icon: Layers },
+        { label: 'Encaissements', href: '/organizer-studio?tab=paiements', icon: Wallet },
+        { label: 'Remboursements', href: '/organizer-studio?tab=remboursements', icon: RotateCcw },
+      ],
+    },
     { label: 'Mon inscription', href: '/my-application', icon: FileText },
   ],
   prestataire: [
-    { label: 'Mon espace', href: '/offer-services', icon: Store },
-    // L'abonnement est un onglet de /offer-services : page publique,
-    // catalogue, avis et facturation restent dans un seul espace métier.
+    {
+      label: 'Mon espace',
+      href: '/offer-services',
+      icon: Store,
+      children: [
+        { label: 'Ma page publique', href: '/offer-services?tab=profil', icon: UserRound },
+        { label: 'Catalogue', href: '/offer-services?tab=catalogue', icon: Package },
+        { label: 'Mes avis', href: '/offer-services?tab=avis', icon: MessageSquare },
+        { label: 'Abonnement', href: '/offer-services?tab=abonnement', icon: BadgeCheck },
+      ],
+    },
     { label: 'Mon inscription', href: '/my-application', icon: FileText },
   ],
   // Reprend l'intégralité des onglets qui vivaient auparavant dans la barre

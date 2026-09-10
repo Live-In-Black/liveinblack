@@ -768,11 +768,7 @@ export default function ProposerServicesClient({
         }
       `}</style>
       <main className="provider-workspace lb-dashboard-page">
-        <div className="provider-workspace-header" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
-          <header>
-            <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(28px,3.6vw,38px)', fontWeight: 720, letterSpacing: '-.045em' }}>Mon espace prestataire</h1>
-            <p style={{ maxWidth: 650, margin: '8px 0 0', color: 'var(--text-muted)', fontSize: 'var(--font-size-body)', lineHeight: 1.45 }}>Présente tes services, gère ton catalogue et suis les avis reçus.</p>
-          </header>
+        <div className="provider-workspace-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 20, flexWrap: 'wrap' }}>
           <Button variant="secondary" onClick={() => router.push(`/providers/${encodeURIComponent(profile.userId)}`)} style={secondaryButton}>
             Voir ma page publique
           </Button>
@@ -788,26 +784,7 @@ export default function ProposerServicesClient({
           </Card>
         )}
 
-        <div className="provider-tabs-bar" role="tablist" aria-label="Sections de l’espace prestataire">
-          {[
-            { id: 'profil' as const, label: 'Ma page publique', shortLabel: 'Ma page' },
-            { id: 'catalogue' as const, label: `Catalogue (${profile.catalog.length})`, shortLabel: `Catalogue (${profile.catalog.length})` },
-            { id: 'avis' as const, label: 'Mes avis', shortLabel: 'Avis' },
-            { id: 'abonnement' as const, label: 'Abonnement', shortLabel: 'Abonnement' },
-          ].map((item) => (
-            <Button
-              key={item.id}
-              variant="ghost"
-              role="tab"
-              aria-selected={tab === item.id}
-              onClick={() => setTab(item.id)}
-              style={{ flex: 1, minHeight: 38, borderRadius: 12, border: '1px solid transparent', background: tab === item.id ? 'var(--border)' : 'transparent', color: tab === item.id ? 'var(--text)' : 'var(--text-muted)', fontSize: 'var(--font-size-callout)', fontWeight: 700 }}
-            >
-              <span className="provider-tab-full">{item.label}</span>
-              <span className="provider-tab-short">{item.shortLabel}</span>
-            </Button>
-          ))}
-        </div>
+
 
         {tab === 'profil' && (
           <div className="provider-profile-grid">

@@ -273,12 +273,19 @@ export default function DashboardShell({ activeRole, user, children }: { activeR
     (item) => item.href !== '/my-shifts' || hasStaffedEvents || pathname.startsWith('/my-shifts')
   )
   const upsell = activeRole === 'client' ? CLIENT_UPSELL : []
-  const personalItems = commonItems.filter((item) => ['/profile', '/profile/billets', '/profile/interested-events', '/my-shifts'].includes(item.href))
+  const personalHrefsByRole: Record<Role, string[]> = {
+    client: ['/profile', '/profile/billets', '/profile/interested-events', '/my-shifts'],
+    organisateur: ['/profile', '/my-shifts'],
+    prestataire: ['/profile'],
+    agent: ['/profile'],
+  }
+  const allowedPersonalHrefs = personalHrefsByRole[activeRole] ?? ['/profile']
+  const personalItems = commonItems.filter((item) => allowedPersonalHrefs.includes(item.href))
   const communicationItems = commonItems.filter((item) => item.href === '/messages')
   const accountItems = commonItems.filter((item) => ['/notifications', '/profile/parametres', '/help'].includes(item.href))
   const memberGroups = [
     { label: 'Mon activité', items: roleItems },
-    { label: activeRole === 'client' ? 'Mon espace' : 'Personnel', items: personalItems },
+    { label: activeRole === 'client' ? 'Mon espace' : 'Profil & Équipe', items: personalItems },
     { label: 'Communication', items: communicationItems },
     { label: 'Compte et assistance', items: accountItems },
   ]
@@ -323,8 +330,29 @@ export default function DashboardShell({ activeRole, user, children }: { activeR
         <>
           <Button variant="ghost" className={styles.drawerBackdrop} onClick={closeMobile} aria-label="Fermer le menu" />
           <nav ref={mobileDrawerRef} id="dashboard-mobile-navigation" className={styles.mobileDrawer} aria-label="Navigation de l’espace privé" onClick={closeMobile}>
+            <div className={styles.mobileDrawerHeader}>
+              <div className={styles.roleSubBadge}>{`Espace ${getRoleLabel(activeRole)}`}</div>
+            </div>
             <SidebarNavigation groups={navGroups} upsell={upsell} isActive={isActive} hasActiveDescendant={hasActiveDescendant} badges={badges} mobile onNavigate={closeMobile} />
-            <Link href="/home" className={styles.publicLink}><House size={18} aria-hidden="true" /><span>Accueil</span></Link>
+            <div className={styles.mobileDrawerFooter}>
+              <Link href="/profile/parametres?section=profil" className={styles.publicLink}>
+                <Avatar src={user.image} name={user.name} size="sm" />
+                <span>{user.name}</span>
+              </Link>
+              <button
+                type="button"
+                className={styles.mobileLogoutButton}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  closeMobile()
+                  setLogoutOpen(true)
+                }}
+              >
+                <LogOut size={16} aria-hidden="true" />
+                <span>Se déconnecter</span>
+              </button>
+              <Link href="/home" className={styles.publicLink}><House size={18} aria-hidden="true" /><span>Accueil</span></Link>
+            </div>
           </nav>
         </>
       )}
@@ -335,59 +363,55 @@ export default function DashboardShell({ activeRole, user, children }: { activeR
             <Link href="/profile" className={styles.brand} aria-label="LIVEINBLACK — vue d’ensemble">
               <Image src="/branding/liveinblack-logo-header.png" alt="LIVEINBLACK" width={1876} height={285} className={styles.brandLogo} priority />
             </Link>
+            <div className={styles.roleSubBadge}>
+              {`Espace ${getRoleLabel(activeRole)}`}
+            </div>
           </div>
           <nav className={styles.nav} aria-label="Navigation de l’espace privé">
             <SidebarNavigation groups={navGroups} upsell={upsell} isActive={isActive} hasActiveDescendant={hasActiveDescendant} badges={badges} />
           </nav>
           <div className={styles.footer}>
+            <div ref={profileMenuRef} className={styles.profileMenuRoot}>
+              <button
+                type="button"
+                className={styles.profileCard}
+                onClick={() => setProfileOpen((open) => !open)}
+                aria-expanded={profileOpen}
+                aria-haspopup="menu"
+              >
+                <Avatar src={user.image} name={user.name} size="md" />
+                <span className={styles.profileCopy}>
+                  <strong>{user.name}</strong>
+                </span>
+                <ChevronDown size={16} aria-hidden="true" className={profileOpen ? styles.chevronOpen : undefined} />
+              </button>
+
+              {profileOpen ? (
+                <div className={styles.profileMenu} role="menu">
+                  <Link href="/profile/parametres?section=profil" role="menuitem" onClick={() => setProfileOpen(false)}>
+                    <Settings size={16} aria-hidden="true" />
+                    Modifier mes informations
+                  </Link>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={styles.logoutAction}
+                    onClick={() => {
+                      setProfileOpen(false)
+                      setLogoutOpen(true)
+                    }}
+                  >
+                    <LogOut size={16} aria-hidden="true" />
+                    Se déconnecter
+                  </button>
+                </div>
+              ) : null}
+            </div>
             <Link href="/home" className={styles.publicLink}><House size={18} aria-hidden="true" /><span>Accueil</span></Link>
           </div>
         </aside>
 
         <div className={styles.workspaceColumn}>
-          {!fullBleed ? (
-            <header className={styles.dashboardHeader}>
-              <div className={styles.dashboardContext}>
-                <h1>{`Espace ${getRoleLabel(activeRole)}`}</h1>
-              </div>
-              <div ref={profileMenuRef} className={styles.profileMenuRoot}>
-                <button
-                  type="button"
-                  className={styles.profileCard}
-                  onClick={() => setProfileOpen((open) => !open)}
-                  aria-expanded={profileOpen}
-                  aria-haspopup="menu"
-                >
-                  <Avatar src={user.image} name={user.name} size="md" />
-                  <span className={styles.profileCopy}>
-                    <strong>{user.name}</strong>
-                  </span>
-                  <ChevronDown size={16} aria-hidden="true" className={profileOpen ? styles.chevronOpen : undefined} />
-                </button>
-
-                {profileOpen ? (
-                  <div className={styles.profileMenu} role="menu">
-                    <Link href="/profile/parametres?section=profil" role="menuitem" onClick={() => setProfileOpen(false)}>
-                      <Settings size={16} aria-hidden="true" />
-                      Modifier mes informations
-                    </Link>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className={styles.logoutAction}
-                      onClick={() => {
-                        setProfileOpen(false)
-                        setLogoutOpen(true)
-                      }}
-                    >
-                      <LogOut size={16} aria-hidden="true" />
-                      Se déconnecter
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-            </header>
-          ) : null}
           <div className={`lb-dashboard-main ${styles.main}${fullBleed ? ` ${styles.mainFull}` : ''}`}>{children}</div>
         </div>
       </div>
@@ -424,7 +448,7 @@ function SidebarNavigation({ groups, upsell, isActive, hasActiveDescendant, badg
                   </div>
                 )
               }
-              return <SidebarItem key={`${item.href}:${autoOpen}`} item={item} isActive={isActive} autoOpen={autoOpen} badge={badges[item.href]} />
+              return <SidebarItem key={`${item.href}:${autoOpen}`} item={item} isActive={isActive} autoOpen={autoOpen} badge={badges[item.href]} onNavigate={onNavigate} />
             })}
           </div>
         </section>
@@ -448,21 +472,23 @@ function SidebarItem({
   isActive,
   autoOpen,
   badge,
+  onNavigate,
 }: {
   item: DashboardNavItem
   isActive: (href: string) => boolean
   autoOpen: boolean
   badge?: number
+  onNavigate?: () => void
 }) {
   const [open, setOpen] = useState(autoOpen)
   const expanded = open
 
   if (!item.children || item.children.length === 0) {
-    return <SidebarLink item={item} active={isActive(item.href)} badge={badge} />
+    return <SidebarLink item={item} active={isActive(item.href)} badge={badge} onClick={onNavigate} />
   }
 
   const Icon = item.icon
-  const active = false
+  const active = isActive(item.href) && !item.children.some((c) => isActive(c.href))
 
   return (
     <div>
@@ -477,6 +503,7 @@ function SidebarItem({
       >
         <Link
           href={item.href}
+          onClick={onNavigate}
           aria-current={active ? 'page' : undefined}
           style={{
             display: 'flex',
@@ -507,7 +534,7 @@ function SidebarItem({
       {expanded && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2, paddingLeft: 12 }}>
           {item.children.map((child) => (
-            <SidebarLink key={child.href} item={child} active={isActive(child.href)} compact />
+            <SidebarLink key={child.href} item={child} active={isActive(child.href)} compact onClick={onNavigate} />
           ))}
         </div>
       )}

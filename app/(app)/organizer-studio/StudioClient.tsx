@@ -432,51 +432,7 @@ export default function StudioClient({
           </div>
         )}
 
-        {/* Barres d'onglets principales */}
-        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-          <div className="studio-tabs-bar" role="tablist" aria-label="Sections du studio">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === 'page'}
-              onClick={() => setTab('page')}
-              className={`studio-tab-btn ${tab === 'page' ? 'active' : ''}`}
-            >
-              <Sparkles size={15} />
-              Identité & Profil
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === 'media'}
-              onClick={() => setTab('media')}
-              className={`studio-tab-btn ${tab === 'media' ? 'active' : ''}`}
-            >
-              <Layers size={15} />
-              Galerie Média ({profile.media.length})
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === 'paiements'}
-              onClick={() => setTab('paiements')}
-              className={`studio-tab-btn ${tab === 'paiements' ? 'active' : ''}`}
-            >
-              <Wallet size={15} />
-              Encaissements
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === 'remboursements'}
-              onClick={() => setTab('remboursements')}
-              className={`studio-tab-btn ${tab === 'remboursements' ? 'active' : ''}`}
-            >
-              <HandCoins size={15} />
-              Remboursements
-            </button>
-          </div>
-        </div>
+
 
         {/* ─────────────────── TAB 1: IDENTITÉ & PROFIL ─────────────────── */}
         {tab === 'page' && (

@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { CircleHelp, Heart, KeyRound, LifeBuoy, Mail, Search, Settings, ShieldCheck, Ticket, UserRound } from 'lucide-react'
+import { CalendarDays, CircleHelp, Heart, KeyRound, LayoutDashboard, LifeBuoy, Mail, Search, Settings, ShieldCheck, Store, Ticket, UserRound } from 'lucide-react'
 import PreferencesModal, { summarizePreferences, type Preferences } from './PreferencesWizard'
 import { getPasswordStrength } from '@/lib/shared/ticketExtras'
 import { phoneCallingCodeOptions } from '@/lib/shared/phoneCallingCodes'
@@ -154,8 +154,21 @@ function MainView({ user, setUser }: { user: ProfilUser; setUser: (u: ProfilUser
             </div>
             <div className={overviewStyles.quickGrid}>
               <QuickAccessCard href="/profile/parametres" icon={<Settings size={19} />} label="Paramètres du compte" imageSrc="/images/live-in-black/night-benin/night-benin-hero.png" />
-              <QuickAccessCard href="/profile/billets" icon={<Ticket size={19} />} label="Mes billets" imageSrc="/images/live-in-black/night-benin/night-benin-concert.png" />
-              <QuickAccessCard href="/profile/interested-events" icon={<Heart size={19} />} label="Mes favoris" imageSrc="/images/live-in-black/night-benin/night-benin-dancefloor.png" />
+              {user.role === 'client' && (
+                <>
+                  <QuickAccessCard href="/profile/billets" icon={<Ticket size={19} />} label="Mes billets" imageSrc="/images/live-in-black/night-benin/night-benin-concert.png" />
+                  <QuickAccessCard href="/profile/interested-events" icon={<Heart size={19} />} label="Mes favoris" imageSrc="/images/live-in-black/night-benin/night-benin-dancefloor.png" />
+                </>
+              )}
+              {user.role === 'organisateur' && (
+                <>
+                  <QuickAccessCard href="/my-events" icon={<CalendarDays size={19} />} label="Mes événements" imageSrc="/images/live-in-black/night-benin/night-benin-concert.png" />
+                  <QuickAccessCard href="/organizer-studio" icon={<LayoutDashboard size={19} />} label="Tableau de bord" imageSrc="/images/live-in-black/night-benin/night-benin-dancefloor.png" />
+                </>
+              )}
+              {user.role === 'prestataire' && (
+                <QuickAccessCard href="/offer-services" icon={<Store size={19} />} label="Mon espace pro" imageSrc="/images/live-in-black/night-benin/night-benin-organizer.png" />
+              )}
               <QuickAccessCard href="/help" icon={<LifeBuoy size={19} />} label="Aide & FAQ" imageSrc="/images/live-in-black/night-benin/night-benin-lounge.png" />
             </div>
           </section>
@@ -429,27 +442,7 @@ export function SettingsPanel({ user, setUser }: { user: ProfilUser; setUser: (u
           </div>
         </header>
 
-        <nav className="settings-tabs" aria-label="Catégories des paramètres">
-          {settingGroups.map((group) => {
-            const Icon = group.icon
-            const active = group.id === activeGroup && tokens.length === 0
-            return (
-              <Link
-                key={group.id}
-                href={`/profile/parametres?section=${group.id}`}
-                className={`settings-nav-item${active ? ' settings-nav-item--active' : ''}`}
-                aria-current={active ? 'page' : undefined}
-                style={{ '--setting-color': 'var(--primary)' } as React.CSSProperties}
-              >
-                <span className="settings-nav-icon"><Icon size={16} aria-hidden="true" /></span>
-                <span>
-                  <strong>{group.shortTitle}</strong>
-                  <small>{group.description}</small>
-                </span>
-              </Link>
-            )
-          })}
-        </nav>
+
 
         <section className="settings-content" aria-live="polite">
           {filtered.length === 0 ? (

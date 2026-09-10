@@ -14,6 +14,8 @@ export const phoneCallingCodeOptions = [...countriesByDial].map(([value, countri
   value,
   label: `${value} · ${countries.map((country) => names.of(country) ?? country).join(', ')}`,
 })).sort((a, b) => {
+  if (a.value === DEFAULT_PHONE_CALLING_CODE) return -1
+  if (b.value === DEFAULT_PHONE_CALLING_CODE) return 1
   const countryA = a.label.split(' · ')[1] ?? a.label
   const countryB = b.label.split(' · ')[1] ?? b.label
   return countryA.localeCompare(countryB, 'fr', { sensitivity: 'base' })
