@@ -663,7 +663,7 @@ function IdentityCard({ user, setUser }: { user: ProfilUser; setUser: (u: Profil
           <div className="settings-personal-body">
             <Label>Numéro</Label>
             <div className="settings-phone-fields">
-              <Select aria-label="Indicatif téléphonique" value={dialCode} onChange={setDialCode} options={phoneCallingCodeOptions} size="sm" />
+              <Select aria-label="Indicatif téléphonique" value={dialCode} onChange={setDialCode} options={phoneCallingCodeOptions} />
               <Input aria-label="Numéro de téléphone" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Numéro" />
             </div>
             <p className="settings-personal-note">Visible uniquement par les professionnels avec qui tu échanges.</p>

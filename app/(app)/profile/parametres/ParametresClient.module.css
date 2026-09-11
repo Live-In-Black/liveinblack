@@ -32,6 +32,12 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
   background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.root :global(.settings-search:focus-within) {
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
 }
 
 .root :global(.settings-search > svg) { color: var(--text-faint); }

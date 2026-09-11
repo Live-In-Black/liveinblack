@@ -227,8 +227,8 @@
   --space-8: 32px;
   --space-12: 48px;
   --density-action-min: 44px;
-  --control-height-sm: 30px;
-  --control-height-md: 24px;
+  --control-height-sm: 36px;
+  --control-height-md: 44px;
   --density-card-gap: 8px;
   --density-card-min: 180px;
   --density-card-min-compact: 148px;
@@ -387,7 +387,7 @@ nextjs-portal {
   display: none !important;
 }
 
-:where(button, a, input, textarea, select, summary, [role='button'], [role='tab'], [role='option']):focus-visible {
+:where(button, a, select, summary, [role='button'], [role='tab'], [role='option']):focus-visible {
   outline: 3px solid rgba(var(--primary-rgb), .52);
   outline-offset: 3px;
 }
@@ -1296,9 +1296,14 @@ html body *:not(#lb-shadow-opt-in)::after {
 /* Les styles inline historiques retirent souvent l'outline. Cette règle
    restaure un indicateur clavier commun sur tous les contrôles, y compris
    quand un composant définit outline:none localement. */
-:where(a, button, input, select, textarea, summary, [role='button'], [tabindex]):focus-visible {
+:where(a, button, select, summary, [role='button'], [tabindex]):focus-visible {
   outline: 2px solid var(--primary) !important;
   outline-offset: 3px !important;
+}
+
+:where(input:not([type='checkbox']):not([type='radio']), textarea):focus,
+:where(input:not([type='checkbox']):not([type='radio']), textarea):focus-visible {
+  outline: none !important;
 }
 
 :where(button, input, select, textarea):disabled {
