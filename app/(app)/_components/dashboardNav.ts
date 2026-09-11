@@ -150,12 +150,8 @@ export const ROLE_NAV: Record<Role, DashboardNavItem[]> = {
   ],
 }
 
-// CTA de bas de sidebar, client uniquement — upsell vers les deux wizards
-// d'inscription existants (déjà utilisés par le site public).
-export const CLIENT_UPSELL: DashboardNavItem[] = [
-  { label: 'Devenir organisateur', href: '/organizer-signup', icon: UserPlus },
-  { label: 'Devenir prestataire', href: '/provider-signup', icon: UserPlus },
-]
+// CTA de bas de sidebar, client uniquement.
+export const CLIENT_UPSELL: DashboardNavItem[] = []
 
 // Routes immersives (plein écran, sans sidebar) — même esprit que HIDE_ON
 // dans app/components/AmbientMusicPlayer.tsx : la sidebar gênerait un flux
