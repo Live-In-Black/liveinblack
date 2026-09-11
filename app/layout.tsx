@@ -153,9 +153,10 @@ export const viewport: Viewport = {
 
 const themeBootScript = `
 try {
-  window.localStorage.setItem('lib_theme', 'dark');
-  document.documentElement.dataset.theme = 'dark';
-  document.documentElement.style.colorScheme = 'dark';
+  var stored = window.localStorage.getItem('lib_theme');
+  var theme = (stored === 'light' || stored === 'dark') ? stored : 'dark';
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
 } catch (_) {}
 `;
 

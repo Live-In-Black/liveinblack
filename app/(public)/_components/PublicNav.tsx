@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import AccountMenu from './AccountMenu'
+import ThemeModeToggle from '@/app/components/layout/ThemeModeToggle'
 import { IconButton, Input } from '@/app/components/ui'
 import { LogIn, Menu, Search, UserPlus, X } from 'lucide-react'
 
@@ -354,6 +355,7 @@ export default function PublicNav({ dashboardLinks }: { dashboardLinks?: Dashboa
         <span className="lb-navlink lb-nav-search">
           <HeaderSearch />
         </span>
+        <ThemeModeToggle size={42} />
         {status === 'authenticated' && session?.user && <AccountMenu user={session.user} />}
         {status !== 'authenticated' && (
           <>
@@ -508,6 +510,9 @@ export default function PublicNav({ dashboardLinks }: { dashboardLinks?: Dashboa
               </Link>
             </div>
           )}
+          <div style={{ padding: '10px 14px', borderTop: '1px solid var(--border)', marginTop: 6 }}>
+            <ThemeModeToggle variant="row" />
+          </div>
         </nav>
       )}
 

@@ -3,3 +3,5 @@ export type { PageShellProps } from './PageShell'
 export { default as PublicNav } from '@/app/(public)/_components/PublicNav'
 export type { DashboardNavLink } from '@/app/(public)/_components/PublicNav'
 export { default as Footer } from '@/app/(public)/_components/Footer'
+export { default as ThemeModeToggle } from './ThemeModeToggle'
+
