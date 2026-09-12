@@ -1,26 +1,4 @@
 .shell {
-  --obsidian-rgb: 8, 8, 10;
-  --surface-rgb: 15, 15, 18;
-  --surface-2-rgb: 20, 20, 24;
-  --primary-rgb: 245, 61, 141;
-  --text-rgb: 255, 255, 255;
-  --text-soft-rgb: 255, 255, 255;
-  --danger-rgb: 245, 61, 141;
-  --obsidian: rgb(var(--obsidian-rgb));
-  --surface: rgb(var(--surface-rgb));
-  --surface-2: rgb(var(--surface-2-rgb));
-  --primary: rgb(var(--primary-rgb));
-  --primary-strong: rgb(224, 45, 125);
-  --pink: var(--primary);
-  --danger: var(--primary);
-  --card-bg: var(--surface);
-  --field-bg: var(--surface-2);
-  --fill-secondary: rgba(var(--text-rgb), .07);
-  --border: rgba(var(--text-rgb), .13);
-  --border-strong: rgba(var(--text-rgb), .22);
-  --text: rgb(var(--text-rgb));
-  --text-muted: rgba(var(--text-soft-rgb), .72);
-  --text-faint: rgba(var(--text-soft-rgb), .52);
   width: 100vw;
   max-width: none;
   margin: 0;
@@ -31,8 +9,7 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 0;
   overflow: hidden;
-  color-scheme: dark;
-  background: rgb(var(--obsidian-rgb)) !important;
+  background: var(--obsidian) !important;
 }
 
 .visual {

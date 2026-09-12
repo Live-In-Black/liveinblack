@@ -8,6 +8,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { ChevronDown, Globe, LogOut, Menu, Settings, X } from 'lucide-react'
 import { Avatar, Button, ConfirmDialog, IconButton } from '@/app/components/ui'
+import ThemeModeToggle from '@/app/components/layout/ThemeModeToggle'
 import AgentWorkspaceShell from './AgentWorkspaceShell'
 import { COMMON_NAV, ROLE_NAV, CLIENT_UPSELL, HIDE_SIDEBAR_PREFIXES, FULL_BLEED_PREFIXES, type DashboardNavItem } from './dashboardNav'
 import { getRoleLabel, type Role } from '@/lib/server/permissions'
@@ -351,7 +352,10 @@ export default function DashboardShell({ activeRole, user, children }: { activeR
                 <LogOut size={16} aria-hidden="true" />
                 <span>Se déconnecter</span>
               </button>
-              <Link href="/home" className={styles.publicLink}><Globe size={18} aria-hidden="true" /><span>Site public</span></Link>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Link href="/home" className={styles.publicLink} style={{ flex: 1 }}><Globe size={18} aria-hidden="true" /><span>Site public</span></Link>
+                <ThemeModeToggle size={34} />
+              </div>
             </div>
           </nav>
         </>
@@ -407,7 +411,10 @@ export default function DashboardShell({ activeRole, user, children }: { activeR
                 </div>
               ) : null}
             </div>
-            <Link href="/home" className={styles.publicLink}><Globe size={18} aria-hidden="true" /><span>Site public</span></Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Link href="/home" className={styles.publicLink} style={{ flex: 1 }}><Globe size={18} aria-hidden="true" /><span>Site public</span></Link>
+              <ThemeModeToggle size={34} />
+            </div>
           </div>
         </aside>
 
@@ -557,7 +564,7 @@ function SidebarLink({ item, active, muted, badge, compact, onClick }: { item: D
         minHeight: compact ? 40 : 44,
         padding: compact ? '7px 13px' : '8px 14px',
         borderRadius: 'var(--radius-control)',
-        color: active ? '#ffffff' : muted ? 'var(--text-faint)' : 'var(--text-muted)',
+        color: active ? 'var(--text)' : muted ? 'var(--text-faint)' : 'var(--text-muted)',
         background: active ? 'var(--surface-2)' : 'transparent',
         border: active ? '1px solid var(--border-strong)' : '1px solid transparent',
         fontSize: compact ? 13 : 14,

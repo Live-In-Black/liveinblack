@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import ThemeModeToggle from '@/app/components/layout/ThemeModeToggle'
 import styles from './AuthSplitLayout.module.css'
 
 const HERO_IMG = '/images/live-in-black/night-benin/night-benin-hero.png'
@@ -27,11 +28,13 @@ export default function AuthSplitLayout({ children, tagline, heroImage, wide = f
           <Link href="/home" className={styles.mobileBrand} aria-label="LIVEINBLACK — accueil">
             <Image src="/branding/liveinblack-logo-header.png" alt="LIVEINBLACK" width={1876} height={285} className={styles.mobileBrandLogo} priority />
           </Link>
-          <Link href="/home" className={styles.back}>
-            <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-            Retour au site
-          </Link>
-
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <ThemeModeToggle size={36} />
+            <Link href="/home" className={styles.back}>
+              <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+              Retour au site
+            </Link>
+          </div>
         </div>
         <div className={styles.content}>{children}</div>
         <p className={styles.privacy}>LIVE IN BLACK protège tes informations et ne les partage jamais sans ton accord.</p>
