@@ -65,96 +65,25 @@ function roleCta(role: string): string {
   return 'Ouvrir le POS bar'
 }
 
+import MyShiftsClient, { type StaffedEventItem } from './MyShiftsClient'
+
 export default async function MesSoireesPage() {
   const session = await auth()
   if (!session?.user) {
     redirect('/login')
   }
 
-  const events = await listMyStaffedEvents({ id: session.user.id })
+  const rawEvents = await listMyStaffedEvents({ id: session.user.id })
+  const events: StaffedEventItem[] = rawEvents.map((ev) => ({
+    eventId: ev.eventId,
+    eventName: ev.eventName,
+    dateDisplay: ev.dateDisplay,
+    city: ev.city,
+    role: ev.role,
+    live: Boolean(ev.live),
+    started: Boolean(ev.started),
+  }))
 
-  return (
-    <main className="lb-dashboard-page lb-dashboard-page--medium">
-      <div>
-        <header className="lb-dashboard-page-header">
-          <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(26px,3.2vw,34px)', fontWeight: 720, letterSpacing: '-.045em' }}>Mes soirées</h1>
-          <p style={{ maxWidth: 650, margin: '7px 0 0', color: 'var(--text-faint)', fontSize: 'var(--font-size-callout)', lineHeight: 1.42 }}>Accède aux événements pour lesquels tu fais partie de l’équipe.</p>
-        </header>
-        {events.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            <Mascot mood="sleeping" size={250} />
-            <p style={{ fontWeight: 700, fontSize: 'var(--font-size-headline-lg)', color: 'var(--text)', margin: 0 }}>Aucune soirée pour l&apos;instant</p>
-            <p style={{ fontSize: 'var(--font-size-footnote-lg)', color: 'var(--text-muted)', margin: 0, maxWidth: 340, lineHeight: 1.45 }}>
-              Quand un organisateur t&apos;ajoute à l&apos;équipe d&apos;une soirée (serveur, contrôle entrée ou DJ), ou dès que tu crées toi-même un événement, elle apparaît ici.
-            </p>
-          </div>
-        ) : (
-          <div className={styles.grid}>
-            {events.map((ev) => {
-              const meta = ROLE_META[ev.role] ? ROLE_META[ev.role] : { ...FALLBACK_ROLE_META, label: ev.role }
-              const dateLine = [ev.dateDisplay, ev.city].filter(Boolean).join(' · ')
-
-              return (
-                <Card
-                  key={ev.eventId}
-                  accent={ev.live ? meta.border : undefined}
-                  className={styles.card}
-                >
-                  <div className={styles.cardHeader}>
-                    <div style={{ minWidth: 0 }}>
-                      <p
-                        className={styles.eventName}
-                      >
-                        {ev.eventName || 'Événement'}
-                      </p>
-                      {dateLine && <p className={styles.date}>{dateLine}</p>}
-                    </div>
-                    <span
-                      style={{
-                        flexShrink: 0,
-                        fontSize: 'var(--font-size-caption)',
-                        fontWeight: 700,
-                        letterSpacing: '0.04em',
-                        textTransform: 'uppercase',
-                        color: meta.color,
-                        background: meta.soft,
-                        border: `1px solid ${meta.border}`,
-                        borderRadius: 'var(--radius-control)',
-                        padding: '4px 10px',
-                      }}
-                    >
-                      {meta.label}
-                    </span>
-                  </div>
-
-                  <div className={styles.statusRow}>
-                    {ev.live ? (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--font-size-caption-lg)', fontWeight: 700, color: meta.color }}>
-                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: meta.color }} /> En cours
-                      </span>
-                    ) : ev.started ? (
-                      <span style={{ fontSize: 'var(--font-size-caption-lg)', color: 'var(--text-faint)' }}>Soirée terminée</span>
-                    ) : (
-                      <span style={{ fontSize: 'var(--font-size-caption-lg)', color: 'var(--text-faint)' }}>À venir</span>
-                    )}
-                    <span className={styles.description}>{meta.desc}</span>
-                  </div>
-
-                  <Link
-                    href={roleHref(ev.eventId, ev.role)}
-                    className={styles.action}
-                  >
-                    {roleCta(ev.role)}
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
-                  </Link>
-                </Card>
-              )
-            })}
-          </div>
-        )}
-      </div>
-    </main>
-  )
+  return <MyShiftsClient events={events} />
 }
+

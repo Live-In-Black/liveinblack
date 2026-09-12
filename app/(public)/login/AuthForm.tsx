@@ -452,17 +452,18 @@ export default function AuthForm() {
         .lb-tab:hover:not(.lb-tab-active) { background: var(--fill-secondary) !important }
         .lb-toggle-btn { transition: color .15s ease }
         .lb-toggle-btn:hover { color: var(--text) !important }
-        .lb-register-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 10px; }
+        .lb-register-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
         .lb-register-field { min-width: 0; display: grid; grid-template-rows: 26px minmax(38px, auto); align-items: start; }
+        .lb-register-field--full { grid-column: 1 / -1; }
         .lb-register-label { min-height: 26px; display: flex; align-items: center; gap: 4px; margin: 0 !important; }
         .lb-register-label button { width: 22px !important; height: 22px !important; min-height: 22px !important; padding: 2px !important; }
         .lb-register-field .lb-toggle-btn button { width: 30px !important; height: 30px !important; min-height: 30px !important; padding: 4px !important; }
-        .lb-register-phone { min-width: 0; display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 6px; }
+        .lb-register-phone { min-width: 0; display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 8px; }
         .lb-register-phone > * { min-width: 0; }
-        .lb-register-phone > div:first-child ul { width: 220px; max-width: calc(100vw - 32px); }
+        .lb-register-phone > div:first-child ul { width: 240px; max-width: calc(100vw - 32px); }
         @media (max-width: 560px) {
-          .lb-register-grid { grid-template-columns: 1fr; gap: 9px; }
-          .lb-register-phone { grid-template-columns: 112px minmax(0, 1fr); }
+          .lb-register-grid { grid-template-columns: 1fr; gap: 11px; }
+          .lb-register-phone { grid-template-columns: 130px minmax(0, 1fr); }
         }
         @keyframes lb-fade-in { from { opacity: 0; transform: translateY(-4px) } to { opacity: 1; transform: none } }
         .lb-banner-fade { animation: lb-fade-in 0.22s ease }
@@ -650,12 +651,12 @@ export default function AuthForm() {
                 <Input id="reg-lastname" name="family-name" type="text" autoComplete="family-name" placeholder="Dupont" disabled={regLoading} value={lastName} onChange={(e) => setLastName(e.target.value)} invalid={regError === 'Le nom est requis.'} style={{ minHeight: 38, padding: '6px 10px' }} />
               </div>
 
-              <div className="lb-register-field">
+              <div className="lb-register-field lb-register-field--full">
                 <Label className="lb-register-label" htmlFor="reg-email" style={{ fontSize: 'var(--font-size-footnote)' }}>Email</Label>
                 <Input id="reg-email" name="email" type="text" inputMode="email" autoComplete="email" placeholder="ton@email.com" disabled={regLoading} value={regEmail} onChange={(e) => setRegEmail(e.target.value)} invalid={regError === 'Adresse email invalide.'} style={{ minHeight: 38, padding: '6px 10px' }} />
               </div>
 
-              <div className="lb-register-field">
+              <div className="lb-register-field lb-register-field--full">
                 <Label className="lb-register-label" htmlFor="reg-phone" style={{ fontSize: 'var(--font-size-footnote)' }}>Téléphone (optionnel)</Label>
                 <div className="lb-register-phone">
                   <div>

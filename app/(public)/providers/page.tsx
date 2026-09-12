@@ -7,6 +7,7 @@ import { normalizeRegionId } from '@/lib/shared/locations'
 import { Button, HiddenField, Input, PageLinks } from '@/app/components/ui'
 import FilterSelect from '../_components/FilterSelect'
 import ProviderDirectoryCard from '../_components/ProviderDirectoryCard'
+import UnifiedSearchBar from '../_components/UnifiedSearchBar'
 import styles from './providers.module.css'
 import { getCachedPublicProvidersDirectory } from '@/lib/server/publicCache'
 
@@ -142,35 +143,12 @@ export default async function PublicPrestatairesPage({
           DJ, lieux, photographes, traiteurs et équipes techniques : trouvez le partenaire qui donnera vie à votre prochain événement.
         </p>
 
-        <form action="/providers" method="get" role="search" className={styles.searchPanel}>
-          {category && <HiddenField name="categorie" value={category} />}
-          <div className={styles.searchField}>
-            <Search size={22} strokeWidth={2} aria-hidden="true" />
-            <Input
-              type="search"
-              name="q"
-              defaultValue={search}
-              placeholder="Prestataire, service ou ville"
-              aria-label="Rechercher un prestataire"
-              containerStyle={{ flex: 1, minWidth: 0 }}
-              style={{ border: 0, background: 'transparent', boxShadow: 'none' }}
-            />
-            <Button type="submit" className={styles.searchButton}>
-              <Search size={19} strokeWidth={2.2} aria-hidden="true" />
-              <span>Rechercher</span>
-            </Button>
-          </div>
-          <div className={styles.regionField}>
-            <FilterSelect
-              name="region"
-              defaultValue="benin"
-              ariaLabel="Périmètre du lancement"
-              options={[{ value: 'benin', label: '🇧🇯 Bénin uniquement' }]}
-              style={{ minHeight: 42, borderRadius: 'var(--radius-control)', background: 'var(--field-bg)', borderColor: 'var(--border)', fontSize: 'var(--font-size-body-sm)', padding: '0 14px' }}
-            />
-          </div>
-          <Button type="submit" variant="secondary" className={styles.filterButton}>Appliquer</Button>
-        </form>
+        <UnifiedSearchBar
+          actionUrl="/providers"
+          placeholder="Prestataire, service ou ville"
+          defaultValue={search}
+          extraParams={category ? { categorie: category } : {}}
+        />
       </section>
 
       <section className={styles.directory} aria-labelledby="directory-title">

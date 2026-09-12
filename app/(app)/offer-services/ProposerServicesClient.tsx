@@ -769,10 +769,62 @@ export default function ProposerServicesClient({
         }
       `}</style>
       <main className="provider-workspace lb-dashboard-page">
-        <div className="provider-workspace-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 20, flexWrap: 'wrap' }}>
-          <Button variant="secondary" onClick={() => router.push(`/providers/${encodeURIComponent(profile.userId)}`)} style={secondaryButton}>
-            Voir ma page publique
-          </Button>
+        {/* Header structuré selon l'onglet courant : Titre, sous-titre et bouton d'action principal à droite */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 16,
+            flexWrap: 'wrap',
+            marginBottom: 24,
+          }}
+        >
+          <div>
+            <h1 style={{ margin: 0, fontSize: 'clamp(24px, 3.5vw, 32px)', fontWeight: 800, color: 'var(--text)' }}>
+              {tab === 'profil' && 'Ma page publique'}
+              {tab === 'catalogue' && 'Offres et services'}
+              {tab === 'avis' && 'Mes avis clients'}
+              {tab === 'abonnement' && 'Mon abonnement'}
+            </h1>
+            <p style={{ margin: '6px 0 0', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+              {tab === 'profil' && 'Personnalise les informations visibles par les organisateurs et les clients.'}
+              {tab === 'catalogue' && 'Gère les prestations, formules et services disponibles à la réservation.'}
+              {tab === 'avis' && 'Consulte et réponds aux retours d’expérience de tes clients.'}
+              {tab === 'abonnement' && 'Active ou prolonge ton forfait pour maximiser ta visibilité.'}
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <Button
+              variant="secondary"
+              onClick={() => router.push(`/providers/${encodeURIComponent(profile.userId)}`)}
+              style={{ ...secondaryButton, minHeight: 40, padding: '8px 16px' }}
+            >
+              Voir ma page en ligne ↗
+            </Button>
+
+            {tab === 'profil' && (
+              <Button
+                onClick={handleSaveProfile}
+                disabled={saving || Boolean(uploading)}
+                loading={saving || Boolean(uploading)}
+                loadingText="Enregistrement…"
+                style={{ ...primaryButton, minHeight: 40, padding: '8px 18px' }}
+              >
+                Enregistrer ma page
+              </Button>
+            )}
+
+            {tab === 'catalogue' && !showItemForm && (
+              <Button
+                onClick={() => setShowItemForm(true)}
+                style={{ ...primaryButton, minHeight: 40, padding: '8px 18px' }}
+              >
+                + Ajouter une offre
+              </Button>
+            )}
+          </div>
         </div>
 
         {message && (

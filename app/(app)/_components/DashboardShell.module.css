@@ -93,7 +93,7 @@
 }
 .profileMenu a:hover,
 .profileMenu button:hover { background: var(--fill-secondary); color: var(--text); }
-.profileMenu .logoutAction { margin-top: 4px; border-top: 1px solid var(--border); border-radius: 0 0 calc(var(--radius-control) - 3px) calc(var(--radius-control) - 3px); color: var(--danger); }
+.profileMenu .logoutAction { margin-top: 4px; border-top: 1px solid var(--border); border-radius: 0 0 calc(var(--radius-control) - 3px) calc(var(--radius-control) - 3px); color: var(--danger); border: 0; }
 
 .sidebar {
   width: var(--dashboard-sidebar);
@@ -160,14 +160,17 @@
   align-items: center;
   gap: 9px;
   padding: 0 12px;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-control);
-  background: var(--fill-secondary);
+  background: transparent;
   color: var(--danger);
   font-size: var(--font-size-footnote);
   font-weight: 600;
   text-align: left;
   cursor: pointer;
+}
+.mobileLogoutButton:hover {
+  background: var(--fill-secondary);
 }
 .main {
   flex: 1;

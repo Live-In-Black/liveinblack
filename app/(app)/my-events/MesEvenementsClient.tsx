@@ -16,10 +16,10 @@ import GuestlistModal from './GuestlistModal'
 import BoostModal from './BoostModal'
 import EventStaffModal from '@/app/components/features/events/EventStaffModal'
 import PromoCodesPanel from '@/app/components/features/events/PromoCodesPanel'
-import { Button, Card, EmptyState, Pagination, pagedSlice, ToastViewport } from '@/app/components/ui'
+import { Button, Card, EmptyState, Pagination, pagedSlice, ToastViewport, SlideOverModal } from '@/app/components/ui'
 import { useQueryParamState } from '@/lib/client/useQueryParamState'
 import { LoadingPlacesModal, useEventPlaces } from './eventModalHelpers'
-import { ArrowUpRight, CalendarPlus, ScanLine, Store } from 'lucide-react'
+import { ArrowUpRight, CalendarPlus, ScanLine, Store, Plus, ExternalLink, Ticket, Users, BarChart2 } from 'lucide-react'
 
 const PAST_PAGE_SIZE = 15
 
@@ -36,6 +36,7 @@ export interface MesEvenementsClientProps {
 
 type ModalState =
   | { type: 'none' }
+  | { type: 'detail'; event: OrganizerEventView }
   | { type: 'bookings'; event: OrganizerEventView }
   | { type: 'boost'; event: OrganizerEventView }
   | { type: 'guests'; event: OrganizerEventView }
@@ -216,9 +217,40 @@ export default function MesEvenementsClient({ initialEvents, initialStripeCharge
 
   return (
     <main className="lb-dashboard-page">
-      <header className="lb-dashboard-page-header">
-        <h1 className="lb-dashboard-title">Mes événements</h1>
-        <p className="lb-dashboard-description">Crée, publie et pilote toutes tes soirées depuis un même espace.</p>
+      <header
+        className="lb-dashboard-page-header"
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 14,
+        }}
+      >
+        <div>
+          <h1 className="lb-dashboard-title" style={{ margin: 0 }}>Mes événements</h1>
+          <p className="lb-dashboard-description" style={{ marginTop: 6, maxWidth: 660 }}>
+            Crée, publie et pilote toutes tes soirées depuis un même espace.
+          </p>
+        </div>
+        <Button
+          variant="primary"
+          onClick={startCreate}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            minHeight: 44,
+            padding: '0 20px',
+            borderRadius: 'var(--radius-control)',
+            fontWeight: 700,
+            fontSize: 'var(--font-size-footnote-lg)',
+            boxShadow: '0 4px 14px rgba(215, 68, 126, 0.28)',
+          }}
+        >
+          <Plus size={18} aria-hidden="true" />
+          <span>Créer une soirée</span>
+        </Button>
       </header>
       {message && (
         <div
@@ -304,7 +336,13 @@ export default function MesEvenementsClient({ initialEvents, initialStripeCharge
         ) : (
           <div className="lb-organizer-event-grid">
             {upcomingEvents.map((event) => (
-              <EventDashboardCard key={event.id} event={event} onAction={handleAction} duplicating={duplicating === event.id} />
+              <EventDashboardCard
+                key={event.id}
+                event={event}
+                onAction={handleAction}
+                onOpenDetail={(ev) => setModal({ type: 'detail', event: ev })}
+                duplicating={duplicating === event.id}
+              />
             ))}
           </div>
         )}
@@ -339,6 +377,153 @@ export default function MesEvenementsClient({ initialEvents, initialStripeCharge
             Les événements annulés restent accessibles aux personnes ayant déjà un billet (elles voient ton message d&rsquo;annulation). « Retirer de ma liste » les enlève seulement de ton tableau de bord.
           </p>
         </section>
+      )}
+
+      {pagedPastEvents.length > 0 && (
+        <section style={{ marginBottom: 28 }}>
+          <p style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, letterSpacing: '3.2px', textTransform: 'uppercase', color: 'var(--primary)', fontFamily: 'var(--font-display), sans-serif', margin: '0 0 12px' }}>Passés</p>
+          <div className="lb-organizer-event-grid">
+            {pagedPastEvents.map((event) => (
+              <EventDashboardCard
+                key={event.id}
+                event={event}
+                onAction={handleAction}
+                onOpenDetail={(ev) => setModal({ type: 'detail', event: ev })}
+                duplicating={duplicating === event.id}
+              />
+            ))}
+          </div>
+          {pastPageCount > 1 && (
+            <div style={{ marginTop: 16 }}>
+              <Pagination page={pastPage} pageCount={pastPageCount} onPageChange={setPastPage} />
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* SlideOver Drawer d'événement avec toutes les infos et boutons d'action */}
+      {modal.type === 'detail' && (
+        <SlideOverModal
+          onClose={() => setModal({ type: 'none' })}
+          title={modal.event.name}
+          subtitle={`${modal.event.dateDisplay || modal.event.date} · ${modal.event.city}`}
+          padded
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div
+              style={{
+                width: '100%',
+                height: 180,
+                borderRadius: 14,
+                background: modal.event.imageUrl ? `url(${modal.event.imageUrl}) center/cover` : 'var(--surface-2)',
+                position: 'relative',
+              }}
+            />
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <Card style={{ padding: 14 }}>
+                <span style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase' }}>Recettes</span>
+                <p style={{ margin: '4px 0 0', fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>
+                  {formatMoney(modal.event.revenue, modal.event.currency)}
+                </p>
+              </Card>
+              <Card style={{ padding: 14 }}>
+                <span style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 700, textTransform: 'uppercase' }}>Ventes</span>
+                <p style={{ margin: '4px 0 0', fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>
+                  {modal.event.soldCount} / {modal.event.totalCapacity}
+                </p>
+              </Card>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Link
+                href={`/events/${modal.event.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  padding: '12px 18px',
+                  borderRadius: 'var(--radius-control)',
+                  background: 'var(--primary)',
+                  color: 'var(--primary-ink)',
+                  fontWeight: 700,
+                  fontSize: 14,
+                  textDecoration: 'none',
+                }}
+              >
+                <ExternalLink size={16} />
+                <span>Voir l&rsquo;événement sur la page publique</span>
+              </Link>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <h4 style={{ margin: 0, fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--text-muted)' }}>
+                Gestion de l&rsquo;événement
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleAction('stats', modal.event)}
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  <BarChart2 size={15} /> Statistiques
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleAction('bookings', modal.event)}
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  <Ticket size={15} /> Réservations
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleAction('staff', modal.event)}
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  <Users size={15} /> Équipe
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleAction('guests', modal.event)}
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  Guestlist
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleAction('promo', modal.event)}
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  Codes promo
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleAction('boost', modal.event)}
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  Booster
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleAction('edit', modal.event)}
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  Modifier
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleAction('duplicate', modal.event)}
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  Dupliquer
+                </Button>
+              </div>
+            </div>
+          </div>
+        </SlideOverModal>
       )}
 
       {pastEvents.length > 0 && (

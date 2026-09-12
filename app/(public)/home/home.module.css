@@ -31,11 +31,11 @@
 
 .hero {
   position: relative;
-  min-height: min(72svh, 820px);
-  height: min(72svh, 820px);
+  min-height: min(76svh, 860px);
+  height: min(76svh, 860px);
   display: grid;
   align-items: center;
-  padding: clamp(92px, 11vh, 130px) max(var(--public-page-gutter), calc((100vw - var(--public-page-max)) / 2)) clamp(54px, 7vh, 88px);
+  padding: clamp(125px, 15vh, 165px) max(var(--public-page-gutter), calc((100vw - var(--public-page-max)) / 2)) clamp(54px, 7vh, 88px);
   overflow: hidden;
   isolation: isolate;
   text-align: left;
@@ -103,7 +103,13 @@
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: rgba(var(--media-black-rgb), .62);
+  background: linear-gradient(
+    180deg,
+    rgba(var(--media-black-rgb), 0.72) 0%,
+    rgba(var(--media-black-rgb), 0.85) 60%,
+    rgba(var(--media-black-rgb), 0.95) 100%
+  );
+  backdrop-filter: blur(1px);
 }
 
 .heroContent {
@@ -117,18 +123,20 @@
   font-weight: 800;
   letter-spacing: .08em;
   text-transform: uppercase;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7), 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 .heroTitle {
   max-width: 860px;
   margin: 16px 0 22px;
-  color: var(--image-text);
+  color: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
   font-size: clamp(42px, 4.8vw, 72px);
   line-height: 1;
   font-weight: 500;
   letter-spacing: -.045em;
   text-wrap: balance;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.8), 0 1px 4px rgba(0, 0, 0, 0.95);
 }
 
 .heroTitleLine {
@@ -137,7 +145,8 @@
 }
 
 .heroTitleAccent {
-  color: var(--image-text-muted);
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.8);
 }
 
 .heroDescription {

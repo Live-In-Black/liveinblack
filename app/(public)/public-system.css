@@ -158,9 +158,9 @@
 .lb-auth-wizard .lb-password-label { min-height: 26px; display: flex; align-items: center; gap: 4px; }
 .lb-auth-wizard .lb-password-label > label { margin: 0 !important; }
 .lb-auth-wizard .lb-password-label button { width: 22px !important; height: 22px !important; min-height: 22px !important; padding: 2px !important; }
-.lb-auth-wizard .lb-phone-field { min-width: 0; display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 6px; }
+.lb-auth-wizard .lb-phone-field { min-width: 0; display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 8px; }
 .lb-auth-wizard .lb-phone-field > * { min-width: 0; }
-.lb-auth-wizard .lb-phone-field > div:first-child ul { width: 220px; max-width: calc(100vw - 32px); }
+.lb-auth-wizard .lb-phone-field > div:first-child ul { width: 240px; max-width: calc(100vw - 32px); }
 
 @media (max-width: 640px) {
   .lb-organizer-auth-grid { grid-template-columns: 1fr !important; }
@@ -223,7 +223,7 @@
   .lb-auth-split__form h1 { font-size: var(--font-size-display-md) !important; }
   .lb-auth-form [style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
   .lb-auth-wizard > div > div:nth-child(3) { padding: 16px 12px !important; border-radius: 16px !important; }
-  .lb-auth-wizard .lb-phone-field { grid-template-columns: 112px minmax(0, 1fr); }
+  .lb-auth-wizard .lb-phone-field { grid-template-columns: 130px minmax(0, 1fr); }
   .lb-auth-state > .lb-mascot-image {
     width: 120px !important;
     height: 120px !important;

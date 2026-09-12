@@ -11,6 +11,7 @@ import { getEntityRegionIds, getRegionName } from '@/lib/shared/locations'
 import { reliablePhotoUrl } from '@/lib/shared/placeholderImage'
 import OrganizerFollowButtonClient from '@/app/components/features/organizer/OrganizerFollowButtonClient'
 import FilterSelect from '../_components/FilterSelect'
+import UnifiedSearchBar from '../_components/UnifiedSearchBar'
 import { Button, Input, Mascot, PageLinks } from '@/app/components/ui'
 import styles from './organizers.module.css'
 
@@ -110,15 +111,12 @@ export default async function PublicOrganizersPage({ searchParams }: { searchPar
         <h1 id="organizers-title">Suivez celles et ceux qui créent l’émotion.</h1>
         <p className={styles.intro}>Découvrez leur univers, suivez leur actualité et retrouvez leurs prochains rendez-vous.</p>
 
-        <form action="/organizers" method="get" role="search" className={styles.searchPanel}>
-          <div className={styles.searchField}>
-            <Search size={22} aria-hidden="true" />
-            <Input type="search" name="q" defaultValue={search} placeholder="Nom, ville ou événement" aria-label="Rechercher un organisateur" containerStyle={{ flex: 1, minWidth: 0 }} style={{ border: 0, background: 'transparent', boxShadow: 'none' }} />
-          </div>
-          <FilterSelect name="region" defaultValue="benin" ariaLabel="Périmètre du lancement" options={[{ value: 'benin', label: '🇧🇯 Bénin uniquement' }]} style={{ minHeight: 36, borderRadius: 15, background: 'var(--field-bg)', borderColor: 'var(--border)', fontSize: 'var(--font-size-body)', padding: '0 12px' }} />
-          <FilterSelect name="sort" defaultValue={sort} ariaLabel="Trier les organisateurs" options={[{ value: 'popular', label: 'Plus populaires' }, { value: 'recent', label: 'Plus récents' }]} style={{ minHeight: 36, borderRadius: 15, background: 'var(--field-bg)', borderColor: 'var(--border)', fontSize: 'var(--font-size-body)', padding: '0 12px' }} />
-          <Button type="submit" className={styles.submitButton} style={{ minHeight: 36, borderRadius: 14, background: 'var(--primary)', color: 'var(--primary-ink)', fontSize: 'var(--font-size-body-sm)' }}>Appliquer</Button>
-        </form>
+        <UnifiedSearchBar
+          actionUrl="/organizers"
+          placeholder="Nom, ville ou événement"
+          defaultValue={search}
+          extraParams={sort !== 'popular' ? { sort } : {}}
+        />
       </section>
 
       <section className={styles.directory} aria-labelledby="organizer-directory-title">

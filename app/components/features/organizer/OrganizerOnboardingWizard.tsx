@@ -307,7 +307,7 @@ export default function OrganizerOnboardingWizard({
                     placeholder="contact@monclub.com"
                   />
                 </div>
-                <div>
+                <div style={{ gridColumn: '1 / -1' }}>
                   <Label style={labelStyle}>Téléphone professionnel {requiredMark}</Label>
                   <div className="lb-phone-field">
                     <div>

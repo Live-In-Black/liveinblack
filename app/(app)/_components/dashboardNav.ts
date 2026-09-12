@@ -97,14 +97,22 @@ export const ROLE_NAV: Record<Role, DashboardNavItem[]> = {
   // de revue agent) → "Mon inscription" ; "Ma page publique" ne disait pas
   // qu'elle contient aussi la config des encaissements (Stripe/Mobile Money).
   organisateur: [
+    { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Mes événements', href: '/my-events', icon: CalendarDays },
     {
-      label: 'Tableau de bord',
-      href: '/organizer-studio',
-      icon: LayoutDashboard,
+      label: 'Studio & Médias',
+      href: '/organizer-studio?tab=media',
+      icon: Layers,
       children: [
-        { label: 'Identité & Profil', href: '/organizer-studio?tab=page', icon: Sparkles },
         { label: 'Galerie Média', href: '/organizer-studio?tab=media', icon: Layers },
+        { label: 'Page publique', href: '/organizer-studio?tab=page', icon: Sparkles },
+      ],
+    },
+    {
+      label: 'Finances',
+      href: '/organizer-studio?tab=paiements',
+      icon: Wallet,
+      children: [
         { label: 'Encaissements', href: '/organizer-studio?tab=paiements', icon: Wallet },
         { label: 'Remboursements', href: '/organizer-studio?tab=remboursements', icon: RotateCcw },
       ],
@@ -123,7 +131,6 @@ export const ROLE_NAV: Record<Role, DashboardNavItem[]> = {
         { label: 'Abonnement', href: '/offer-services?tab=abonnement', icon: BadgeCheck },
       ],
     },
-    { label: 'Mon inscription', href: '/my-application', icon: FileText },
   ],
   // Reprend l'intégralité des onglets qui vivaient auparavant dans la barre
   // horizontale interne d'AgentShell.tsx (#107, supprimé) — chaque section a

@@ -186,7 +186,7 @@ export default function MessagingComposer({
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', position: 'relative' }}>
           <div style={{ position: 'relative', width: 44, height: 44, flexShrink: 0 }}>
             <ComposerIconButton title={showAttachMenu ? 'Fermer les options' : 'Joindre'} open={showAttachMenu} onClick={showAttachMenu ? onCloseAttachMenu : onOpenAttachMenu}>
-              <span aria-hidden="true" style={{ display: 'block', transform: showAttachMenu ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform .24s cubic-bezier(.2,.9,.2,1)', fontSize: 24, lineHeight: 1 }}>+</span>
+              <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', transform: showAttachMenu ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform .24s cubic-bezier(.2,.9,.2,1)', fontSize: 26, lineHeight: 1, marginTop: -2 }}>+</span>
             </ComposerIconButton>
             {showAttachMenu ? (
               <>
@@ -330,6 +330,8 @@ function ComposerIconButton({ title, open, onClick, children }: { title: string;
         fontSize: 'var(--font-size-body-sm)',
         background: open ? 'var(--primary)' : 'var(--surface-2)',
         color: open ? 'var(--primary-ink)' : 'var(--text)',
+        display: 'grid',
+        placeItems: 'center',
       }}
     >
       {children}

@@ -99,7 +99,7 @@ function HeaderSearch() {
         <Input
           className="lb-header-search__input"
           type="search"
-          leftIcon={<Search size={16} strokeWidth={2.2} aria-hidden="true" />}
+          leftIcon={<Search size={18} strokeWidth={2.2} aria-hidden="true" />}
           value={value}
           onChange={(e) => {
             const nextValue = e.target.value
@@ -109,13 +109,13 @@ function HeaderSearch() {
             setDropdownOpen(true)
           }}
           onFocus={() => setDropdownOpen(true)}
-          placeholder="Rechercher…"
+          placeholder="Rechercher événements, prestataires, organisateurs…"
           aria-label="Recherche globale (événements, organisateurs, prestataires)"
           containerStyle={{ flex: 1, minWidth: 0 }}
           style={{
-            width: 'clamp(500px, 42vw, 680px)',
-            minHeight: 38,
-            height: 38,
+            width: 'clamp(580px, 55vw, 840px)',
+            minHeight: 42,
+            height: 42,
             border: 0,
             borderRadius: 0,
             background: 'transparent',
@@ -128,31 +128,97 @@ function HeaderSearch() {
       </form>
 
       {showDropdown && (
-        <div
-          role="region"
-          aria-label="Résultats de recherche"
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 8px)',
-            right: 0,
-            width: 280,
-            maxWidth: '90vw',
-            maxHeight: 320,
-            overflowY: 'auto',
-            background: 'var(--modal-surface)',
-            backdropFilter: 'blur(24px) saturate(160%)',
-            border: '1px solid var(--border)',
-            borderRadius: 16,
-            boxShadow: 'none',
-            zIndex: 60,
-          }}
-        >
-          {loading && !hasResults && (
-            <p style={{ padding: 16, margin: 0, fontSize: 'var(--font-size-callout)', color: 'var(--text-faint)' }}>Recherche…</p>
-          )}
-          {!loading && !hasResults && (
-            <p style={{ padding: 16, margin: 0, fontSize: 'var(--font-size-callout)', color: 'var(--text-faint)' }}>Aucun résultat pour « {value.trim()} ».</p>
-          )}
+        <>
+          {/* Backdrop style MacOS Spotlight */}
+          <div
+            onClick={() => setDropdownOpen(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.55)',
+              backdropFilter: 'blur(8px)',
+              zIndex: 9998,
+            }}
+          />
+
+          {/* Modal Spotlight centré */}
+          <div
+            role="region"
+            aria-label="Résultats de recherche"
+            style={{
+              position: 'fixed',
+              top: '15vh',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 'min(92vw, 680px)',
+              maxHeight: '65vh',
+              overflowY: 'auto',
+              background: 'var(--modal-surface)',
+              backdropFilter: 'blur(32px) saturate(180%)',
+              border: '1px solid var(--border-strong)',
+              borderRadius: 20,
+              boxShadow: '0 25px 80px rgba(0, 0, 0, 0.65)',
+              zIndex: 9999,
+              padding: 12,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '8px 14px 14px',
+                borderBottom: '1px solid var(--border)',
+                marginBottom: 8,
+              }}
+            >
+              <Search size={20} color="var(--primary)" />
+              <input
+                type="text"
+                autoFocus
+                value={value}
+                onChange={(e) => {
+                  const nextValue = e.target.value
+                  setValue(nextValue)
+                  setResults(EMPTY_RESULTS)
+                  setLoading(Boolean(nextValue.trim()))
+                }}
+                placeholder="Tapez pour rechercher…"
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: 0,
+                  outline: 'none',
+                  color: 'var(--text)',
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                }}
+              />
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  padding: '3px 8px',
+                  borderRadius: 6,
+                  background: 'var(--surface-2)',
+                  color: 'var(--text-muted)',
+                  border: '1px solid var(--border)',
+                }}
+              >
+                ESC pour fermer
+              </span>
+            </div>
+
+            {loading && !hasResults && (
+              <p style={{ padding: '24px 16px', margin: 0, fontSize: 'var(--font-size-callout)', color: 'var(--text-faint)', textAlign: 'center' }}>
+                Recherche en temps réel…
+              </p>
+            )}
+            {!loading && !hasResults && (
+              <p style={{ padding: '24px 16px', margin: 0, fontSize: 'var(--font-size-callout)', color: 'var(--text-faint)', textAlign: 'center' }}>
+                Aucun résultat trouvé pour « {value.trim()} ».
+              </p>
+            )}
 
           {results.events.length > 0 && (
             <QuickResultGroup title="Événements">
@@ -206,7 +272,8 @@ function HeaderSearch() {
               ))}
             </QuickResultGroup>
           )}
-        </div>
+          </div>
+        </>
       )}
     </div>
   )

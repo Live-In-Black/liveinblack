@@ -208,7 +208,6 @@ export default function NotificationsClient({ initialNotifications }: { initialN
                           </span>
                           <span className={styles.notificationBadge}>{notificationLabel(notification.type)}</span>
                         </span>
-                        {notification.body && !expanded ? <span className={styles.notificationPreview}>{notification.body}</span> : null}
                       </span>
                       <span className={styles.notificationMeta}><time dateTime={notification.createdAt}>{timeAgo(notification.createdAt)}</time></span>
                       <ChevronDown className={styles.expandIcon} size={18} aria-hidden="true" style={{ transform: expanded ? 'rotate(180deg)' : 'none' }} />

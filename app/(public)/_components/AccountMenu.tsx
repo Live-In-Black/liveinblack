@@ -208,7 +208,6 @@ export default function AccountMenu({
                 masquée dans le header une fois connecté (PublicNav.tsx),
                 confirmé en réunion live le 11/08/2026. */}
             <div style={{ height: 1, background: 'var(--border)', margin: '6px 4px' }} />
-            <MenuLink href="/home" onClick={() => setAccountOpen(false)} icon={<House size={15} />} label="Accueil" />
             <Button
               variant="ghost"
               onClick={() => {

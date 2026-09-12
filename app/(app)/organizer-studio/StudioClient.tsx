@@ -12,6 +12,7 @@ import { regions } from '@/lib/shared/regions'
 import { SOCIAL_NETWORKS, type SocialNetworkKey } from '@/lib/shared/social'
 import {
   AlertCircle,
+  ArrowUpRight,
   Calendar,
   Camera,
   Check,
@@ -22,6 +23,7 @@ import {
   HandCoins,
   Layers,
   Plus,
+  RotateCcw,
   ShieldCheck,
   Smartphone,
   Sparkles,
@@ -432,7 +434,76 @@ export default function StudioClient({
           </div>
         )}
 
+        <header className="lb-dashboard-page-header studio-header">
+          <div>
+            <h1 className="lb-dashboard-title" style={{ margin: 0 }}>
+              {tab === 'page' ? 'Page publique & Profil' : tab === 'media' ? 'Galerie & Médias' : tab === 'paiements' ? 'Encaissements' : 'Remboursements'}
+            </h1>
+            <p className="lb-dashboard-description" style={{ marginTop: 6 }}>
+              {tab === 'page' ? 'Personnalise ton univers de marque, ta bio et tes liens de contact.' : tab === 'media' ? 'Gère les photos et vidéos de tes soirées passées.' : tab === 'paiements' ? 'Configure tes comptes Stripe et Mobile Money Bénin.' : 'Suis les demandes et dossiers de remboursement.'}
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            onClick={() => window.open(`/organizers/${profile.slug}`, '_blank')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              minHeight: 42,
+              padding: '0 18px',
+              borderRadius: 'var(--radius-control)',
+              fontWeight: 600,
+              fontSize: 'var(--font-size-footnote)',
+            }}
+          >
+            <span>Voir ma page en ligne</span>
+            <ArrowUpRight size={15} />
+          </Button>
+        </header>
 
+        <div className="studio-tabs-bar" role="tablist" aria-label="Sections du studio">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'page'}
+            className={`studio-tab-btn ${tab === 'page' ? 'active' : ''}`}
+            onClick={() => setTab('page')}
+          >
+            <Sparkles size={16} />
+            <span>Page publique</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'media'}
+            className={`studio-tab-btn ${tab === 'media' ? 'active' : ''}`}
+            onClick={() => setTab('media')}
+          >
+            <Layers size={16} />
+            <span>Galerie Média</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'paiements'}
+            className={`studio-tab-btn ${tab === 'paiements' ? 'active' : ''}`}
+            onClick={() => setTab('paiements')}
+          >
+            <Wallet size={16} />
+            <span>Encaissements</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'remboursements'}
+            className={`studio-tab-btn ${tab === 'remboursements' ? 'active' : ''}`}
+            onClick={() => setTab('remboursements')}
+          >
+            <RotateCcw size={16} />
+            <span>Remboursements</span>
+          </button>
+        </div>
 
         {/* ─────────────────── TAB 1: IDENTITÉ & PROFIL ─────────────────── */}
         {tab === 'page' && (

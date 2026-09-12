@@ -12,6 +12,7 @@ import { listActiveInterestSignals } from '@/lib/server/events/eventInterests'
 import { getRecommendedEvents, type RecommendationPreferences } from '@/lib/shared/recommendations'
 import { Button, HiddenField, Input, PageLinks } from '@/app/components/ui'
 import EventListCard from '../_components/EventListCard'
+import UnifiedSearchBar from '../_components/UnifiedSearchBar'
 import styles from './events.module.css'
 
 const PAGE_SIZE = 24
@@ -142,27 +143,12 @@ export default async function EventsPage({
           Concerts, soirées et rendez-vous culturels choisis pour vous. Recherchez simplement, puis réservez en quelques instants.
         </p>
 
-        <form action="/events" method="get" role="search" className={styles.searchForm}>
-          {category && <HiddenField name="category" value={category} />}
-          <Search size={22} strokeWidth={2} aria-hidden="true" className={styles.searchIcon} />
-          <Input
-            type="search"
-            name="q"
-            defaultValue={search}
-            placeholder="Événement, artiste ou ville"
-            aria-label="Rechercher un événement"
-            className={styles.searchInput}
-            containerStyle={{ flex: 1, minWidth: 0 }}
-            style={{ border: 0, background: 'transparent', boxShadow: 'none' }}
-          />
-          <Button
-            type="submit"
-            className={styles.searchButton}
-          >
-            <Search size={19} strokeWidth={2.2} aria-hidden="true" />
-            <span>Rechercher</span>
-          </Button>
-        </form>
+        <UnifiedSearchBar
+          actionUrl="/events"
+          placeholder="Événement, artiste ou ville"
+          defaultValue={search}
+          extraParams={category ? { category } : {}}
+        />
       </section>
 
       <section className={styles.catalogue} aria-labelledby="catalogue-title">
