@@ -71,7 +71,7 @@ export default function AgentReportsClient() {
 
   async function loadCounts() {
     try {
-      const [openRes, handledRes] = await Promise.all([fetch('/api/agent/reports?status=open'), fetch('/api/agent/reports?status=handled')])
+      const [openRes, handledRes] = await Promise.all([fetch('/api/admin/reports?status=open'), fetch('/api/admin/reports?status=handled')])
       const [openData, handledData] = await Promise.all([openRes.json(), handledRes.json()])
       if (openRes.ok && openData.ok && handledRes.ok && handledData.ok) {
         setCounts({ open: (openData.reports as unknown[]).length, handled: (handledData.reports as unknown[]).length })
@@ -90,7 +90,7 @@ export default function AgentReportsClient() {
     setListLoading(true)
     setListError(false)
     try {
-      const res = await fetch(`/api/agent/reports?status=${status}`)
+      const res = await fetch(`/api/admin/reports?status=${status}`)
       const data = await res.json()
       if (!res.ok || !data.ok) throw new Error('load_failed')
       setReports(data.reports)
@@ -107,7 +107,7 @@ export default function AgentReportsClient() {
       setListLoading(true)
       setListError(false)
       try {
-        const res = await fetch(`/api/agent/reports?status=${filter}`)
+        const res = await fetch(`/api/admin/reports?status=${filter}`)
         const data = await res.json()
         if (!res.ok || !data.ok) throw new Error('load_failed')
         if (!cancelled) setReports(data.reports)
@@ -127,7 +127,7 @@ export default function AgentReportsClient() {
     let cancelled = false
     async function run() {
       try {
-        const [openRes, handledRes] = await Promise.all([fetch('/api/agent/reports?status=open'), fetch('/api/agent/reports?status=handled')])
+        const [openRes, handledRes] = await Promise.all([fetch('/api/admin/reports?status=open'), fetch('/api/admin/reports?status=handled')])
         const [openData, handledData] = await Promise.all([openRes.json(), handledRes.json()])
         if (!cancelled && openRes.ok && openData.ok && handledRes.ok && handledData.ok) {
           setCounts({ open: (openData.reports as unknown[]).length, handled: (handledData.reports as unknown[]).length })
@@ -155,7 +155,7 @@ export default function AgentReportsClient() {
   async function handleMark(id: string) {
     setBusyId(id)
     try {
-      const res = await fetch(`/api/agent/reports/${id}/handle`, {
+      const res = await fetch(`/api/admin/reports/${id}/handle`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ note: note.trim() || undefined }),

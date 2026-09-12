@@ -95,7 +95,7 @@ export default function AgentHomepageConfigClient() {
       setLoaded(false)
       setLoadError(false)
       try {
-        const response = await fetch('/api/agent/homepage-config')
+        const response = await fetch('/api/admin/homepage-config')
         const data = await response.json()
         if (!response.ok || !data.ok) throw new Error('load_failed')
         if (cancelled) return
@@ -172,7 +172,7 @@ export default function AgentHomepageConfigClient() {
     setMessage(null)
     try {
       const clean = normalizeForPreview(draft)
-      const response = await fetch('/api/agent/homepage-config', {
+      const response = await fetch('/api/admin/homepage-config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(clean),

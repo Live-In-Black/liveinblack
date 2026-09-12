@@ -37,7 +37,7 @@ function useAgentBadges(activeRole: Role): Partial<Record<string, number>> {
     let cancelled = false
     async function run() {
       try {
-        const res = await fetch('/api/agent/applications')
+        const res = await fetch('/api/admin/applications')
         const data = await res.json()
         if (!cancelled && res.ok && data.ok) {
           const count = (data.applications as { status: string }[]).filter((a) => PENDING_APPLICATION_STATUSES.has(a.status)).length
@@ -64,7 +64,7 @@ function useAgentBadges(activeRole: Role): Partial<Record<string, number>> {
     let cancelled = false
     async function run() {
       try {
-        const res = await fetch('/api/agent/reports?status=open')
+        const res = await fetch('/api/admin/reports?status=open')
         const data = await res.json()
         if (!cancelled && res.ok && data.ok) {
           setOpenReports((data.reports as unknown[]).length)
@@ -86,7 +86,7 @@ function useAgentBadges(activeRole: Role): Partial<Record<string, number>> {
     let cancelled = false
     async function run() {
       try {
-        const res = await fetch('/api/agent/deletion-requests')
+        const res = await fetch('/api/admin/deletion-requests')
         const data = await res.json()
         if (!cancelled && res.ok && data.ok) {
           setPendingDeletions((data.requests as unknown[]).length)
@@ -105,9 +105,9 @@ function useAgentBadges(activeRole: Role): Partial<Record<string, number>> {
 
   if (activeRole !== 'agent') return {}
   return {
-    '/agent/dossiers': pendingDossiers,
-    '/agent/signalements': openReports,
-    '/agent/suppressions': pendingDeletions,
+    '/admin/dossiers': pendingDossiers,
+    '/admin/signalements': openReports,
+    '/admin/suppressions': pendingDeletions,
   }
 }
 
@@ -296,13 +296,13 @@ export default function DashboardShell({ activeRole, user, children }: { activeR
     await signOut({ redirectTo: '/home' })
   }
 
-  // Comparaison de path simple : "/profile" et "/agent" sont des racines
+  // Comparaison de path simple : "/profile" et "/admin" sont des racines
   // partagées par plusieurs sous-routes réelles (/profile/billets,
   // /agent/comptes, etc.) — les exclure du match par préfixe pour qu'elles
   // ne restent pas actives en même temps qu'une sous-route.
   function isActive(href: string) {
     const [path, rawQuery] = href.split('?')
-    const pathMatches = pathname === path || (path !== '/profile' && path !== '/agent' && pathname.startsWith(path + '/'))
+    const pathMatches = pathname === path || (path !== '/profile' && path !== '/admin' && pathname.startsWith(path + '/'))
     if (!pathMatches || !rawQuery) return pathMatches
     const expected = new URLSearchParams(rawQuery)
     return Array.from(expected.entries()).every(([key, value]) => searchParams.get(key) === value)

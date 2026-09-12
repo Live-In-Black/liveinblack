@@ -58,7 +58,7 @@ export default function AgentBoostsClient({ embedded = false }: { embedded?: boo
     setLoading(true)
     setError(false)
     try {
-      const res = await fetch('/api/agent/boosts')
+      const res = await fetch('/api/admin/boosts')
       const body = await res.json()
       if (!res.ok || !body.ok) throw new Error('load_failed')
       setData({ active: body.active, conflicts: body.conflicts, expired: body.expired, totalRevenue: body.totalRevenue })
@@ -75,7 +75,7 @@ export default function AgentBoostsClient({ embedded = false }: { embedded?: boo
       setLoading(true)
       setError(false)
       try {
-        const res = await fetch('/api/agent/boosts')
+        const res = await fetch('/api/admin/boosts')
         const body = await res.json()
         if (!res.ok || !body.ok) throw new Error('load_failed')
         if (!cancelled) setData({ active: body.active, conflicts: body.conflicts, expired: body.expired, totalRevenue: body.totalRevenue })

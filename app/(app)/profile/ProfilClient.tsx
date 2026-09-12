@@ -93,7 +93,7 @@ const ROLE_LABELS: Record<string, { label: string; badgeTone: 'teal' | 'violet' 
   client: { label: 'Client', badgeTone: 'teal' },
   prestataire: { label: 'Prestataire', badgeTone: 'violet' },
   organisateur: { label: 'Organisateur', badgeTone: 'teal' },
-  agent: { label: 'Agent', badgeTone: 'gold' },
+  agent: { label: 'Admin', badgeTone: 'gold' },
 }
 
 // Racine du dashboard "Mon profil" — identité/avatar/points uniquement.

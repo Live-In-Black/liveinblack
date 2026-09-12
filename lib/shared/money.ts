@@ -54,13 +54,13 @@ export function payRailLabel(currency: string = 'XOF'): string {
 export function fmtMoney(amount: unknown, currency: string = 'XOF'): string {
   const n = Number(amount) || 0
   if (String(currency).toUpperCase() === 'XOF') {
-    return `${Math.round(n).toLocaleString('fr-FR')} FCFA`
+    return `${Math.round(n).toLocaleString('fr-FR').replace(/\s/g, '\u00A0')}\u00A0FCFA`
   }
   const hasCents = Math.round(n * 100) % 100 !== 0
   return `${n.toLocaleString('fr-FR', {
     minimumFractionDigits: hasCents ? 2 : 0,
     maximumFractionDigits: 2,
-  })} €`
+  }).replace(/\s/g, '\u00A0')}\u00A0€`
 }
 
 export function currencySymbol(currency: string = 'XOF'): string {

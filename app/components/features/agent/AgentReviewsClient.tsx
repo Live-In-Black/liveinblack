@@ -69,7 +69,7 @@ const TOAST_LABEL: Record<ModerationOp, string> = {
   note: 'Note enregistrée.',
 }
 
-// Codes bruts renvoyés par POST /api/agent/reviews/[id]/moderate (voir
+// Codes bruts renvoyés par POST /api/admin/reviews/[id]/moderate (voir
 // moderateReview dans lib/server/providerReviews.ts) — jamais affichés tels
 // quels à l'agent.
 const MODERATE_ERROR_LABELS: Record<string, string> = {
@@ -136,7 +136,7 @@ export default function AgentReviewsClient() {
     setListLoading(true)
     setListError(false)
     try {
-      const res = await fetch('/api/agent/reviews')
+      const res = await fetch('/api/admin/reviews')
       const data = await res.json()
       if (!res.ok || !data.ok) throw new Error('load_failed')
       setReviews(data.reviews)
@@ -153,7 +153,7 @@ export default function AgentReviewsClient() {
       setListLoading(true)
       setListError(false)
       try {
-        const res = await fetch('/api/agent/reviews')
+        const res = await fetch('/api/admin/reviews')
         const data = await res.json()
         if (!res.ok || !data.ok) throw new Error('load_failed')
         if (!cancelled) setReviews(data.reviews)
@@ -205,7 +205,7 @@ export default function AgentReviewsClient() {
     if (busyId) return
     setBusyId(review.id)
     try {
-      const res = await fetch(`/api/agent/reviews/${review.id}/moderate`, {
+      const res = await fetch(`/api/admin/reviews/${review.id}/moderate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ op, note }),

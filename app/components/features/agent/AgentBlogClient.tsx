@@ -146,7 +146,7 @@ export default function AgentBlogClient() {
       setLoaded(false)
       setLoadError(false)
       try {
-        const res = await fetch('/api/agent/blog')
+        const res = await fetch('/api/admin/blog')
         const data = await res.json()
         if (!res.ok || !data.ok) throw new Error('load_failed')
         if (!cancelled) setPosts(data.posts ?? [])
@@ -248,7 +248,7 @@ export default function AgentBlogClient() {
         metaDescription: draft.metaDescription.trim() || draft.excerpt.trim(),
         readingTimeMinutes,
       }
-      const res = await fetch(editingId ? `/api/agent/blog/${editingId}` : '/api/agent/blog', {
+      const res = await fetch(editingId ? `/api/admin/blog/${editingId}` : '/api/admin/blog', {
         method: editingId ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -277,7 +277,7 @@ export default function AgentBlogClient() {
   async function onDelete(id: string) {
     setDeletingId(id)
     try {
-      const res = await fetch(`/api/agent/blog/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/admin/blog/${id}`, { method: 'DELETE' })
       const data = await res.json()
       if (res.ok && data.ok) setPosts((cur) => cur.filter((p) => p.id !== id))
     } finally {

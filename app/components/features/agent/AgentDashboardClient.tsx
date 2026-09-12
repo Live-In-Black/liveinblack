@@ -73,7 +73,7 @@ export default function AgentDashboardClient() {
     setLoading(true)
     setError(false)
     try {
-      const res = await fetch('/api/agent/dashboard')
+      const res = await fetch('/api/admin/dashboard')
       const data = await res.json()
       if (!res.ok || !data.ok) throw new Error('load_failed')
       setStats(data.stats)
@@ -90,7 +90,7 @@ export default function AgentDashboardClient() {
       setLoading(true)
       setError(false)
       try {
-        const res = await fetch('/api/agent/dashboard')
+        const res = await fetch('/api/admin/dashboard')
         const data = await res.json()
         if (!res.ok || !data.ok) throw new Error('load_failed')
         if (!cancelled) setStats(data.stats)

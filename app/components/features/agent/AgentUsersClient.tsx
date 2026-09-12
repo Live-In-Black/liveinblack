@@ -55,7 +55,7 @@ const ROLE_FILTERS: { key: RoleFilter; label: string }[] = [
   { key: 'client', label: 'Utilisateurs' },
   { key: 'prestataire', label: 'Prestataires' },
   { key: 'organisateur', label: 'Organisateurs' },
-  { key: 'agent', label: 'Agents' },
+  { key: 'agent', label: 'Admins' },
 ]
 
 const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
@@ -66,7 +66,7 @@ const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
   { key: 'disabled', label: 'Désactivé' },
 ]
 
-const ROLE_LABEL: Record<Role, string> = { client: 'Client', organisateur: 'Organisateur', prestataire: 'Prestataire', agent: 'Agent' }
+const ROLE_LABEL: Record<Role, string> = { client: 'Client', organisateur: 'Organisateur', prestataire: 'Prestataire', agent: 'Admin' }
 
 // Bordure/fond précalculés (plutôt que `${color}55`/`${color}22` en template
 // string) : les couleurs en `var(--*)` ne supportent pas la concaténation
@@ -174,7 +174,7 @@ export default function AgentUsersClient() {
       setListLoading(true)
       setListError(false)
       try {
-        const res = await fetch(`/api/agent/users${queryString ? `?${queryString}` : ''}`)
+        const res = await fetch(`/api/admin/users${queryString ? `?${queryString}` : ''}`)
         const data = await res.json()
         if (!res.ok || !data.ok) throw new Error('load_failed')
         if (!cancelled) {
@@ -233,7 +233,7 @@ export default function AgentUsersClient() {
       setDetailLoading(true)
       setDetailError(false)
       try {
-        const res = await fetch(`/api/agent/users/${selectedId}`)
+        const res = await fetch(`/api/admin/users/${selectedId}`)
         const data = await res.json()
         if (!res.ok || !data.ok) throw new Error('load_failed')
         if (!cancelled) setDetail(data.user)
@@ -253,7 +253,7 @@ export default function AgentUsersClient() {
     if (!detail) return
     setActionBusy(true)
     try {
-      const res = await fetch(`/api/agent/users/${detail.id}/verify-email`, { method: 'POST' })
+      const res = await fetch(`/api/admin/users/${detail.id}/verify-email`, { method: 'POST' })
       const data = await res.json()
       if (!res.ok || !data.ok) {
         showToast('Vérification impossible — réessaie.', 'error')
@@ -272,7 +272,7 @@ export default function AgentUsersClient() {
     setActionBusy(true)
     try {
       const endpoint = kind === 'verification' ? 'send-verification' : 'send-password-reset'
-      const res = await fetch(`/api/agent/users/${detail.id}/${endpoint}`, { method: 'POST' })
+      const res = await fetch(`/api/admin/users/${detail.id}/${endpoint}`, { method: 'POST' })
       const data = await res.json()
       if (!res.ok || !data.ok) {
         const message =
@@ -301,7 +301,7 @@ export default function AgentUsersClient() {
     if (!detail) return
     setActionBusy(true)
     try {
-      const res = await fetch(`/api/agent/users/${detail.id}/disable`, {
+      const res = await fetch(`/api/admin/users/${detail.id}/disable`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ disabled }),
@@ -330,7 +330,7 @@ export default function AgentUsersClient() {
     if (!detail || !editField) return
     setEditBusy(true)
     try {
-      const res = await fetch(`/api/agent/users/${detail.id}`, {
+      const res = await fetch(`/api/admin/users/${detail.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [editField.field]: editField.value }),

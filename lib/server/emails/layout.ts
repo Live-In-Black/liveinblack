@@ -39,7 +39,7 @@ const CATEGORY_VISUALS: Record<EmailCategory, CategoryVisual> = {
   staff: { label: 'Équipe événement' },
   review: { label: 'Avis' },
   moderation: { label: 'Modération' },
-  agent: { label: 'Espace agent' },
+  agent: { label: 'Espace admin' },
   messaging: { label: 'Messagerie' },
   interest: { label: 'À ne pas manquer' },
 }

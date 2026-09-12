@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { ArrowUpRight, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react'
 import { PROVIDER_CATEGORIES } from '@/lib/shared/providerCategories'
 import { normalizeRegionId } from '@/lib/shared/locations'
-import { Button, HiddenField, Input, PageLinks } from '@/app/components/ui'
+import { Button, EmptyState, HiddenField, Input, PageLinks } from '@/app/components/ui'
 import FilterSelect from '../_components/FilterSelect'
 import ProviderDirectoryCard from '../_components/ProviderDirectoryCard'
 import UnifiedSearchBar from '../_components/UnifiedSearchBar'
@@ -198,26 +198,18 @@ export default async function PublicPrestatairesPage({
             ))}
           </div>
         ) : (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyVisual} aria-hidden="true">
-              <Image
-                src="/images/live-in-black/night-benin/night-benin-organizer.png"
-                alt=""
-                fill
-                className={styles.emptyImage}
-                sizes="(max-width: 680px) 100vw, 38vw"
-              />
-              <span>Talents</span>
-            </div>
-            <div className={styles.emptyContent}>
-              <p className={styles.emptyEyebrow}>{hasFilters ? 'Aucun résultat' : 'Annuaire en préparation'}</p>
-              <h3>{hasFilters ? 'Aucun professionnel ne correspond à ces critères.' : 'Les talents qui font vivre vos événements arrivent.'}</h3>
-              <p>{hasFilters ? 'Essayez un autre métier ou repartez de tout l’annuaire Bénin.' : 'DJ, lieux, image, son et création rejoignent progressivement notre sélection.'}</p>
+          <EmptyState
+            eyebrow={hasFilters ? 'Aucun résultat' : 'Annuaire en préparation'}
+            tag="Talents"
+            imageSrc="/images/live-in-black/night-benin/night-benin-organizer.png"
+            title={hasFilters ? 'Aucun professionnel ne correspond à ces critères.' : 'Les talents qui font vivre vos événements arrivent.'}
+            description={hasFilters ? 'Essayez un autre métier ou repartez de tout l’annuaire Bénin.' : 'DJ, lieux, image, son et création rejoignent progressivement notre sélection.'}
+            action={
               <Link href={hasFilters ? '/providers' : '/provider-signup'}>
                 {hasFilters ? 'Effacer les filtres' : 'Proposer mes services'} <span aria-hidden="true">↗</span>
               </Link>
-            </div>
-          </div>
+            }
+          />
         )}
 
         <div className={styles.pagination}>

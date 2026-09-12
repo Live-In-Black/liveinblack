@@ -12,7 +12,7 @@ import { reliablePhotoUrl } from '@/lib/shared/placeholderImage'
 import OrganizerFollowButtonClient from '@/app/components/features/organizer/OrganizerFollowButtonClient'
 import FilterSelect from '../_components/FilterSelect'
 import UnifiedSearchBar from '../_components/UnifiedSearchBar'
-import { Button, Input, Mascot, PageLinks } from '@/app/components/ui'
+import { Button, Input, EmptyState, PageLinks } from '@/app/components/ui'
 import styles from './organizers.module.css'
 
 const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
@@ -159,7 +159,18 @@ export default async function PublicOrganizersPage({ searchParams }: { searchPar
             })}
           </div>
         ) : (
-          <div className={styles.empty}><Mascot mood="search" size={250} /><h3>Aucun organisateur trouvé</h3><p>Essayez une autre recherche dans le catalogue Bénin.</p><Link href="/organizers">Voir tous les organisateurs</Link></div>
+          <EmptyState
+            eyebrow={hasFilters ? 'Aucun résultat' : 'Catalogue en préparation'}
+            tag="Organisateurs"
+            imageSrc="/images/live-in-black/night-benin/night-benin-organizer.png"
+            title={hasFilters ? 'Aucun organisateur ne correspond à ces critères.' : 'Les organisateurs d’expériences arrivent.'}
+            description={hasFilters ? 'Essayez un autre mot-clé ou repartez de tout l’annuaire Bénin.' : 'Les collectifs, promoteurs et lieux événementiels rejoignent progressivement la plateforme.'}
+            action={
+              <Link href={hasFilters ? '/organizers' : '/organizer-signup'}>
+                {hasFilters ? 'Effacer les filtres' : 'Créer un profil organisateur'} <span aria-hidden="true">↗</span>
+              </Link>
+            }
+          />
         )}
 
         <PageLinks page={requestedPage} pageCount={totalPages} makeHref={makeHref} totalItems={total} pageSize={pageSize} />

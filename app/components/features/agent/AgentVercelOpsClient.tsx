@@ -447,7 +447,7 @@ export default function AgentVercelOpsClient() {
     try {
       const params = new URLSearchParams({ limit: '60' })
       if (nextSource !== 'all') params.set('source', nextSource)
-      const res = await fetch(`/api/agent/vercel/ops-events?${params.toString()}`, { cache: 'no-store' })
+      const res = await fetch(`/api/admin/vercel/ops-events?${params.toString()}`, { cache: 'no-store' })
       const data = await res.json()
       if (!res.ok || !data.ok) throw new Error('load_failed')
       setEvents(data.events ?? [])
@@ -462,7 +462,7 @@ export default function AgentVercelOpsClient() {
     setConfigLoading(true)
     setConfigError(false)
     try {
-      const res = await fetch('/api/agent/vercel/ops-config', { cache: 'no-store' })
+      const res = await fetch('/api/admin/vercel/ops-config', { cache: 'no-store' })
       const data = await res.json()
       if (!res.ok || !data.ok) throw new Error('config_load_failed')
       setConfig(data.config)
@@ -497,7 +497,7 @@ export default function AgentVercelOpsClient() {
     setSavingKey(nextSavingKey)
     setConfigError(false)
     try {
-      const res = await fetch('/api/agent/vercel/ops-config', {
+      const res = await fetch('/api/admin/vercel/ops-config', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
@@ -549,7 +549,7 @@ export default function AgentVercelOpsClient() {
       setLoading(true)
       setError(false)
       try {
-        const res = await fetch('/api/agent/vercel/ops-events?limit=60', { cache: 'no-store' })
+        const res = await fetch('/api/admin/vercel/ops-events?limit=60', { cache: 'no-store' })
         const data = await res.json()
         if (!res.ok || !data.ok) throw new Error('load_failed')
         if (!cancelled) setEvents(data.events ?? [])

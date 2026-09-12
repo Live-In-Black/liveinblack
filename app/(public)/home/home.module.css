@@ -535,11 +535,15 @@
 }
 
 .home :global(.lb-editorial-card) {
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-xl, 24px);
   background: var(--surface);
+  overflow: hidden;
 }
 
-.home :global(.lb-editorial-card__media) { aspect-ratio: 16 / 10; }
+.home :global(.lb-editorial-card__media) {
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-xl, 24px) var(--radius-xl, 24px) 0 0 !important;
+}
 
 .home :global(.lb-editorial-card__body) { padding: 22px 20px 24px; }
 

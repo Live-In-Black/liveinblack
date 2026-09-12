@@ -10,7 +10,7 @@ import { hasAuthSessionCookie } from '@/lib/server/authSessionCookie'
 import { getMyProfile } from '@/lib/server/users/profile'
 import { listActiveInterestSignals } from '@/lib/server/events/eventInterests'
 import { getRecommendedEvents, type RecommendationPreferences } from '@/lib/shared/recommendations'
-import { Button, HiddenField, Input, PageLinks } from '@/app/components/ui'
+import { Button, EmptyState, HiddenField, Input, PageLinks } from '@/app/components/ui'
 import EventListCard from '../_components/EventListCard'
 import UnifiedSearchBar from '../_components/UnifiedSearchBar'
 import styles from './events.module.css'
@@ -194,24 +194,18 @@ export default async function EventsPage({
             ))}
           </div>
         ) : (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyVisual} aria-hidden="true">
-              <Image
-                src="/images/live-in-black/night-benin/night-benin-hero.png"
-                alt=""
-                fill
-                className={styles.emptyImage}
-                sizes="(max-width: 640px) 100vw, 38vw"
-              />
-              <span>Prochainement</span>
-            </div>
-            <div className={styles.emptyContent}>
-              <p className={styles.emptyEyebrow}>{hasFilters ? 'Aucun résultat' : 'Programmation en préparation'}</p>
-              <h3>{hasFilters ? 'Cette recherche ne correspond à aucun événement.' : 'La prochaine expérience se prépare.'}</h3>
-              <p>{hasFilters ? 'Essayez une autre ville, un autre artiste ou repartez de toute la sélection.' : 'De nouvelles soirées, concerts et rencontres seront bientôt disponibles sur LIVEINBLACK.'}</p>
-              <Link href={hasFilters ? '/events' : '/home'}>{hasFilters ? 'Effacer les filtres' : 'Retour à l’accueil'} <span aria-hidden="true">↗</span></Link>
-            </div>
-          </div>
+          <EmptyState
+            eyebrow={hasFilters ? 'Aucun résultat' : 'Programmation en préparation'}
+            tag="Prochainement"
+            imageSrc="/images/live-in-black/night-benin/night-benin-hero.png"
+            title={hasFilters ? 'Cette recherche ne correspond à aucun événement.' : 'La prochaine expérience se prépare.'}
+            description={hasFilters ? 'Essayez une autre ville, un autre artiste ou repartez de toute la sélection.' : 'De nouvelles soirées, concerts et rencontres seront bientôt disponibles sur LIVEINBLACK.'}
+            action={
+              <Link href={hasFilters ? '/events' : '/home'}>
+                {hasFilters ? 'Effacer les filtres' : 'Retour à l’accueil'} <span aria-hidden="true">↗</span>
+              </Link>
+            }
+          />
         )}
 
         <div className={styles.pagination}>

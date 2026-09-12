@@ -137,23 +137,23 @@ export const ROLE_NAV: Record<Role, DashboardNavItem[]> = {
   // maintenant sa PROPRE route sous app/(app)/agent/, plus de query param
   // `?tab=X` pour la navigation principale (liens de sidebar = vraies URLs).
   agent: [
-    { label: 'Tableau de bord', href: '/agent', icon: Briefcase },
-    { label: 'Ops Vercel', href: '/agent/vercel', icon: ServerCog },
-    { label: 'Comptes', href: '/agent/comptes', icon: Users },
-    { label: 'Événements', href: '/agent/evenements', icon: CalendarDays },
-    { label: 'Dossiers', href: '/agent/dossiers', icon: FileText },
+    { label: 'Tableau de bord', href: '/admin', icon: Briefcase },
+    { label: 'Ops Vercel', href: '/admin/vercel', icon: ServerCog },
+    { label: 'Comptes', href: '/admin/comptes', icon: Users },
+    { label: 'Événements', href: '/admin/evenements', icon: CalendarDays },
+    { label: 'Dossiers', href: '/admin/dossiers', icon: FileText },
     // 'Boosts' n'a plus sa propre entrée — fusionné comme onglet dans
     // Paiements (vue lecture seule, sans file d'action propre, sa place
     // naturelle à côté des autres files financières).
-    { label: 'Paiements', href: '/agent/paiements', icon: CreditCard },
-    { label: 'Suppressions', href: '/agent/suppressions', icon: Trash2 },
-    { label: 'Signalements', href: '/agent/signalements', icon: Flag },
-    { label: 'Avis', href: '/agent/avis', icon: Star },
-    { label: 'Actualité', href: '/agent/actualite', icon: Newspaper },
+    { label: 'Paiements', href: '/admin/paiements', icon: CreditCard },
+    { label: 'Suppressions', href: '/admin/suppressions', icon: Trash2 },
+    { label: 'Signalements', href: '/admin/signalements', icon: Flag },
+    { label: 'Avis', href: '/admin/avis', icon: Star },
+    { label: 'Actualité', href: '/admin/actualite', icon: Newspaper },
     // Nouvelle entrée (pas un port legacy) : gestion des articles de
     // lib/models/BlogPost.ts, jusqu'ici sans aucune UI (voir
     // app/(app)/agent/blog/page.tsx).
-    { label: 'Blog', href: '/agent/blog', icon: BookOpen },
+    { label: 'Blog', href: '/admin/blog', icon: BookOpen },
   ],
 }
 

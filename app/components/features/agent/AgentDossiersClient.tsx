@@ -344,7 +344,7 @@ export default function AgentDossiersClient() {
     setListLoading(true)
     setListError(false)
     try {
-      const res = await fetch('/api/agent/applications')
+      const res = await fetch('/api/admin/applications')
       const data = await res.json()
       if (!res.ok || !data.ok) throw new Error('load_failed')
       setApplications(data.applications)
@@ -358,7 +358,7 @@ export default function AgentDossiersClient() {
   async function loadDetail(id: string) {
     setDetailLoading(true)
     try {
-      const res = await fetch(`/api/agent/applications/${id}`)
+      const res = await fetch(`/api/admin/applications/${id}`)
       const data = await res.json()
       if (!res.ok || !data.ok) throw new Error('load_failed')
       setDetail(data.application)
@@ -374,7 +374,7 @@ export default function AgentDossiersClient() {
       setListLoading(true)
       setListError(false)
       try {
-        const res = await fetch('/api/agent/applications')
+        const res = await fetch('/api/admin/applications')
         const data = await res.json()
         if (!res.ok || !data.ok) throw new Error('load_failed')
         if (!cancelled) setApplications(data.applications)
@@ -403,7 +403,7 @@ export default function AgentDossiersClient() {
       setDetailLoading(true)
       setDetailError(false)
       try {
-        const res = await fetch(`/api/agent/applications/${selectedId}`)
+        const res = await fetch(`/api/admin/applications/${selectedId}`)
         const data = await res.json()
         if (!res.ok || !data.ok) throw new Error('load_failed')
         if (!cancelled) {
@@ -449,7 +449,7 @@ export default function AgentDossiersClient() {
     if (!detail) return
     setActionBusy(true)
     try {
-      const res = await fetch(`/api/agent/applications/${detail.id}/moderate`, {
+      const res = await fetch(`/api/admin/applications/${detail.id}/moderate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action, note }),
@@ -473,7 +473,7 @@ export default function AgentDossiersClient() {
     if (!detail) return
     setNoteBusy(true)
     try {
-      const res = await fetch(`/api/agent/applications/${detail.id}/note`, {
+      const res = await fetch(`/api/admin/applications/${detail.id}/note`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ note: noteDraft }),

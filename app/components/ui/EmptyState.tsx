@@ -1,13 +1,44 @@
 import type { ReactNode } from 'react'
-import Mascot, { type MascotMood } from './Mascot'
+import Image from 'next/image'
+import styles from './EmptyState.module.css'
 
-export default function EmptyState({ title, description, action, mood = 'search', imageSize = 360 }: { title: string; description?: string; action?: ReactNode; mood?: MascotMood; imageSize?: number }) {
+export interface EmptyStateProps {
+  title: string
+  description?: string
+  action?: ReactNode
+  eyebrow?: string
+  tag?: string
+  imageSrc?: string
+  className?: string
+}
+
+export default function EmptyState({
+  title,
+  description,
+  action,
+  eyebrow = 'Aucun résultat',
+  tag = 'LIVEINBLACK',
+  imageSrc = '/images/live-in-black/night-benin/night-benin-hero.png',
+  className,
+}: EmptyStateProps) {
   return (
-    <div style={{ minHeight: 'clamp(440px, 64vh, 720px)', display: 'grid', alignContent: 'center', justifyItems: 'center', gap: 22, padding: 'clamp(38px, 7vw, 86px) 18px', textAlign: 'center' }}>
-      <Mascot mood={mood} size={imageSize} />
-      <h2 style={{ margin: '6px 0 0', fontSize: 'clamp(22px, 3vw, 32px)', fontWeight: 780, textTransform: 'none', letterSpacing: 0 }}>{title}</h2>
-      {description && <p style={{ maxWidth: 540, margin: 0, color: 'var(--text-muted)', fontSize: 'var(--font-size-headline)', lineHeight: 1.55 }}>{description}</p>}
-      {action && <div style={{ marginTop: 8 }}>{action}</div>}
+    <div className={`${styles.emptyCard} ${className || ''}`}>
+      <div className={styles.emptyVisual} aria-hidden="true">
+        <Image
+          src={imageSrc}
+          alt=""
+          fill
+          className={styles.emptyImage}
+          sizes="(max-width: 768px) 100vw, 36vw"
+        />
+        {tag && <span className={styles.emptyTag}>{tag}</span>}
+      </div>
+      <div className={styles.emptyContent}>
+        {eyebrow && <p className={styles.emptyEyebrow}>{eyebrow}</p>}
+        <h3>{title}</h3>
+        {description && <p className={styles.emptyDescription}>{description}</p>}
+        {action && <div className={styles.emptyAction}>{action}</div>}
+      </div>
     </div>
   )
 }

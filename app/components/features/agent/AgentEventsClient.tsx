@@ -92,7 +92,7 @@ export default function AgentEventsClient() {
       setListLoading(true)
       setListError(false)
       try {
-        const res = await fetch(`/api/agent/events${queryString ? `?${queryString}` : ''}`)
+        const res = await fetch(`/api/admin/events${queryString ? `?${queryString}` : ''}`)
         const data = await res.json()
         if (!res.ok || !data.ok) throw new Error('load_failed')
         if (cancelled) return
@@ -133,7 +133,7 @@ export default function AgentEventsClient() {
     if (!adminCancel) return
     setAdminCancelBusy(true)
     try {
-      const res = await fetch(`/api/agent/events/${adminCancel.id}/cancel`, {
+      const res = await fetch(`/api/admin/events/${adminCancel.id}/cancel`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: adminCancelMsg }),

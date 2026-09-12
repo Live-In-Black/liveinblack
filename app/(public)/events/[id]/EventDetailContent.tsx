@@ -170,31 +170,31 @@ export default async function EventDetailContent({
       </div>
 
       {/* HERO */}
-      <div className={styles.hero} style={{ position: 'relative', margin: '12px 0 0', borderRadius: 20, overflow: 'hidden', height: 220, background: 'var(--surface-2)' }}>
+      <div className={styles.hero} style={{ position: 'relative', margin: '14px 0 0', borderRadius: 24, overflow: 'hidden', background: 'var(--surface-2)' }}>
         <Image
-          src={reliablePhotoUrl(event.imageUrl, event.id, 880, 495)}
+          src={reliablePhotoUrl(event.imageUrl, event.id, 1440, 600)}
           alt={event.name}
           fill
           loading="eager"
           className={styles.heroImage}
           style={{ objectFit: 'cover' }}
-          sizes="(max-width: 768px) 100vw, 880px"
+          sizes="(max-width: 1440px) 100vw, 1440px"
         />
         <div className={styles.heroOverlay} />
-        <div className={styles.heroActions} style={{ position: 'absolute', top: 12, right: 12, display: 'flex', alignItems: 'center', gap: 8, zIndex: 10 }}>
+        <div className={styles.heroActions} style={{ position: 'absolute', top: 16, right: 16, display: 'flex', alignItems: 'center', gap: 10, zIndex: 10 }}>
           <EventShareButton eventName={event.name} />
           <EventInterestButtonClient eventId={event.id} initialInterested={interestState.interested} isAuthenticated={Boolean(session?.user)} floating />
         </div>
-        <div className={styles.heroCopy} style={{ position: 'absolute', left: 18, right: 18, bottom: 16 }}>
+        <div className={styles.heroCopy} style={{ position: 'absolute', left: 24, right: 24, bottom: 22 }}>
           {event.cancelled && (
-            <span style={{ display: 'inline-block', marginBottom: 8, fontSize: 'var(--font-size-footnote)', fontWeight: 800, color: 'var(--text)', background: 'var(--pink)', padding: '4px 12px', borderRadius: 999 }}>ANNULÉ</span>
+            <span style={{ display: 'inline-block', marginBottom: 10, fontSize: 'var(--font-size-footnote)', fontWeight: 800, color: 'var(--text)', background: 'var(--pink)', padding: '5px 14px', borderRadius: 999 }}>ANNULÉ</span>
           )}
-          <h1 className={`font-display ${styles.title}`} style={{ fontSize: 'clamp(25px, 3vw, 34px)', fontWeight: 500, margin: 0, letterSpacing: '-.02em', lineHeight: 1.15, color: 'var(--text)' }}>{event.name}</h1>
-          {event.subtitle && <p className={styles.subtitle} style={{ fontSize: 'var(--font-size-headline-lg)', color: 'var(--text)', margin: '6px 0 0', lineHeight: 1.4 }}>{event.subtitle}</p>}
+          <h1 className={`font-display ${styles.title}`} style={{ margin: 0, color: 'var(--text)' }}>{event.name}</h1>
+          {event.subtitle && <p className={styles.subtitle} style={{ fontSize: 'var(--font-size-headline-lg)', color: 'rgba(255,255,255,0.92)', margin: '8px 0 0', lineHeight: 1.4, maxWidth: 840 }}>{event.subtitle}</p>}
           {event.tags?.length ? (
-            <div className={styles.tags} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+            <div className={styles.tags} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
               {event.tags.map((tag) => (
-                <span key={tag} style={{ fontSize: 'var(--font-size-footnote-lg)', fontWeight: 500, color: 'var(--text)', background: 'var(--border-strong)', padding: '3px 10px', borderRadius: 999 }}>
+                <span key={tag} style={{ fontSize: 'var(--font-size-footnote-lg)', fontWeight: 550, color: 'var(--text)', background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)', padding: '4px 12px', borderRadius: 999 }}>
                   {tag}
                 </span>
               ))}
@@ -204,7 +204,7 @@ export default async function EventDetailContent({
       </div>
 
       {/* QUICK INFO STRIP */}
-      <div className={styles.quickInfo} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '14px 16px 0' }}>
+      <div className={styles.quickInfo} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {countdown && <Chip label={countdown} tone={urgent ? 'urgent' : 'default'} />}
         {stock && <Chip label={stock.label} color={stock.color} ink={stock.ink} />}
         <Chip label={[event.dateDisplay, event.time].filter(Boolean).join(' · ')} />
@@ -213,21 +213,22 @@ export default async function EventDetailContent({
       </div>
 
       {event.playlist && (
-        <div style={{ padding: '12px 16px 0' }}>
+        <div style={{ marginTop: 12 }}>
           <Link
             href={session?.user ? `/playlist/${event.id}` : `/login?next=${encodeURIComponent(`/playlist/${event.id}`)}`}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 'var(--radius-control)', border: '1px solid var(--primary-a35)', background: 'var(--primary-a12)', color: 'var(--primary)', fontSize: 'var(--font-size-body-sm)', fontWeight: 500, textDecoration: 'none' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 'var(--radius-control)', border: '1px solid var(--primary-a35)', background: 'var(--primary-a12)', color: 'var(--primary)', fontSize: 'var(--font-size-body)', fontWeight: 500, textDecoration: 'none' }}
           >
             🎵 Playlist interactive · Proposer un son
           </Link>
         </div>
       )}
 
-      <div className={styles.contentGrid} style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 14, alignItems: 'start', marginTop: 12 }}>
+      <div className={styles.contentGrid}>
+        <div className={styles.leftColumn}>
           {/* DESCRIPTION */}
           {event.description && (
             <Section title="Description">
-              <p style={{ fontSize: 'var(--font-size-headline-xl)', color: 'var(--text)', lineHeight: 1.55, whiteSpace: 'pre-wrap', margin: 0 }}>{event.description}</p>
+              <p style={{ fontSize: 'var(--font-size-headline)', color: 'var(--text)', lineHeight: 1.6, whiteSpace: 'pre-wrap', margin: 0 }}>{event.description}</p>
             </Section>
           )}
 
@@ -237,8 +238,8 @@ export default async function EventDetailContent({
               {event.artists?.length ? (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {event.artists.map((a) => (
-                    <li key={a.name} style={{ fontSize: 'var(--font-size-body-sm)', color: 'var(--text)', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 12, padding: '8px 12px' }}>
-                      <span style={{ fontWeight: 500 }}>{a.name}</span> <span style={{ color: 'var(--text-muted)' }}>· {a.role}</span>
+                    <li key={a.name} style={{ fontSize: 'var(--font-size-body-sm)', color: 'var(--text)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '8px 14px' }}>
+                      <span style={{ fontWeight: 600 }}>{a.name}</span> <span style={{ color: 'var(--text-muted)' }}>· {a.role}</span>
                     </li>
                   ))}
                 </ul>
@@ -251,11 +252,11 @@ export default async function EventDetailContent({
           {/* ORGANIZER */}
           <Section title="Organisateur">
             {organizerProfile ? (
-              <Link href={`/organizers/${organizerProfile.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: 'inherit' }}>
+              <Link href={`/organizers/${organizerProfile.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', color: 'inherit' }}>
                 <div
                   style={{
-                    width: 44,
-                    height: 44,
+                    width: 48,
+                    height: 48,
                     borderRadius: 14,
                     overflow: 'hidden',
                     background: 'var(--primary)',
@@ -269,18 +270,23 @@ export default async function EventDetailContent({
                   }}
                 >
                   {organizerProfile.avatarUrl ? (
-                    <Image src={organizerProfile.avatarUrl} alt="" width={44} height={44} style={{ objectFit: 'cover' }} />
+                    <Image src={organizerProfile.avatarUrl} alt="" width={48} height={48} style={{ objectFit: 'cover' }} />
                   ) : (
                     organizerProfile.publicName?.[0]?.toUpperCase() || '?'
                   )}
                 </div>
-                <span style={{ fontSize: 'var(--font-size-headline-xl)', fontWeight: 500, color: 'var(--text)' }}>{organizerProfile.publicName}</span>
+                <div>
+                  <span style={{ fontSize: 'var(--font-size-headline-xl)', fontWeight: 600, color: 'var(--text)', display: 'block' }}>{organizerProfile.publicName}</span>
+                  <span style={{ fontSize: 'var(--font-size-caption)', color: 'var(--text-muted)' }}>Voir le profil organisateur →</span>
+                </div>
               </Link>
             ) : (
               <p style={{ fontSize: 'var(--font-size-headline)', color: 'var(--text-muted)' }}>{event.organizerName || event.organizer || 'Organisateur'}</p>
             )}
           </Section>
+        </div>
 
+        <div className={styles.rightColumn}>
           {/* VENUE */}
           {(event.location || event.city) && (
             <Section title="Lieu">
@@ -288,6 +294,7 @@ export default async function EventDetailContent({
               <EventVenueMap address={[event.location, event.city, event.region].filter(Boolean).join(', ')} />
             </Section>
           )}
+        </div>
       </div>
 
       {!session?.user && event.places?.length ? (
@@ -300,16 +307,16 @@ export default async function EventDetailContent({
               const fillPct = place.total > 0 ? Math.round(((place.total - place.available) / place.total) * 100) : 0
               return (
                 <Card key={place.id} style={{ padding: '14px 16px', border: '1px solid var(--border)', borderRadius: 18, background: 'var(--surface-2)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontSize: 'var(--font-size-headline-xl)', fontWeight: 750, color: 'var(--text)' }}>{place.type}</span>
-                    <span style={{ fontSize: 'var(--font-size-headline-xl)', fontWeight: 800, color: 'var(--gold)' }}>{fmtMoney(place.price, currency)}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+                    <span style={{ fontSize: 'var(--font-size-headline-xl)', fontWeight: 750, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{place.type}</span>
+                    <span style={{ fontSize: 'var(--font-size-headline-xl)', fontWeight: 800, color: 'var(--gold)', whiteSpace: 'nowrap', flexShrink: 0 }}>{fmtMoney(place.price, currency)}</span>
                   </div>
                   {place.groupType === 'group' && (
-                    <span style={{ display: 'inline-block', marginTop: 6, fontSize: 'var(--font-size-footnote-lg)', fontWeight: 700, color: 'var(--primary)', background: 'var(--primary-a14)', padding: '3px 10px', borderRadius: 999 }}>
+                    <span style={{ display: 'inline-block', marginTop: 6, fontSize: 'var(--font-size-footnote-lg)', fontWeight: 700, color: 'var(--primary)', background: 'var(--primary-a14)', padding: '3px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>
                       Place de groupe · {place.groupMin}-{place.groupMax} pers.
                     </span>
                   )}
-                  <p style={{ fontSize: 'var(--font-size-body)', color: 'var(--text-muted)', margin: '6px 0 0' }}>
+                  <p style={{ fontSize: 'var(--font-size-body)', color: 'var(--text-muted)', margin: '6px 0 0', whiteSpace: 'nowrap' }}>
                     {place.available > 0 ? `${place.available}/${place.total} restantes` : 'Complet'}
                   </p>
                   <div style={{ height: 4, borderRadius: 999, background: 'var(--surface-2)', marginTop: 6, overflow: 'hidden' }}>
@@ -327,12 +334,12 @@ export default async function EventDetailContent({
           <div className="lb-card-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 240px), 1fr))', gap: 12, marginTop: 8 }}>
             {event.menu.filter((item) => item.available !== false).map((item) => (
               <Card key={item.name} style={{ padding: '14px 16px', border: '1px solid var(--border)', borderRadius: 18, background: 'var(--surface-2)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, fontSize: 'var(--font-size-headline)', fontWeight: 750, color: 'var(--text)' }}>
                     {item.imageUrl ? <Image src={item.imageUrl} alt="" width={32} height={32} style={{ borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} /> : item.emoji ? <span aria-hidden="true">{item.emoji}</span> : null}
-                    {item.name}
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</span>
                   </span>
-                  <span style={{ fontSize: 'var(--font-size-headline)', fontWeight: 800, color: 'var(--gold)' }}>{fmtMoney(item.price, currency)}</span>
+                  <span style={{ fontSize: 'var(--font-size-headline)', fontWeight: 800, color: 'var(--gold)', whiteSpace: 'nowrap', flexShrink: 0 }}>{fmtMoney(item.price, currency)}</span>
                 </div>
                 {item.description && <p style={{ fontSize: 'var(--font-size-body)', color: 'var(--text-muted)', margin: '6px 0 0', lineHeight: 1.4 }}>{item.description}</p>}
               </Card>

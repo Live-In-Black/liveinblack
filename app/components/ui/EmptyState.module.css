@@ -1,0 +1,135 @@
+.emptyCard {
+  min-height: 310px;
+  display: grid;
+  grid-template-columns: minmax(260px, 36%) minmax(0, 1fr);
+  overflow: hidden;
+  margin: 28px 0 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+}
+
+.emptyVisual {
+  position: relative;
+  min-height: 280px;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.emptyVisual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(var(--media-black-rgb), .2) 0%, rgba(var(--media-black-rgb), .65) 100%);
+  pointer-events: none;
+}
+
+.emptyImage {
+  object-fit: cover;
+}
+
+.emptyTag {
+  position: absolute;
+  z-index: 2;
+  left: 24px;
+  bottom: 24px;
+  color: #fff;
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 600;
+  letter-spacing: -.03em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.emptyContent {
+  align-self: center;
+  max-width: 680px;
+  padding: clamp(26px, 4vw, 52px);
+}
+
+.emptyEyebrow {
+  margin: 0 0 10px;
+  color: var(--primary);
+  font-size: var(--font-size-caption);
+  font-weight: 750;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.emptyContent h3 {
+  margin: 0;
+  font-size: clamp(20px, 2.3vw, 28px);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -.02em;
+  color: var(--text);
+}
+
+.emptyDescription {
+  max-width: 540px;
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-body-lg);
+  line-height: 1.55;
+}
+
+.emptyAction {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.emptyAction :global(a),
+.emptyAction :global(button) {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px;
+  border-radius: var(--radius-control);
+  background: var(--primary);
+  color: var(--primary-ink);
+  font-size: var(--font-size-body-sm);
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.emptyAction :global(a:hover),
+.emptyAction :global(button:hover) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .emptyCard {
+    grid-template-columns: 1fr;
+    margin: 20px 0 0;
+    min-height: auto;
+  }
+
+  .emptyVisual {
+    min-height: 180px;
+    height: 180px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .emptyTag {
+    left: 18px;
+    bottom: 16px;
+    font-size: 20px;
+  }
+
+  .emptyContent {
+    padding: 22px 18px 26px;
+  }
+
+  .emptyDescription {
+    font-size: var(--font-size-body);
+  }
+}

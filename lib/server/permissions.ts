@@ -62,7 +62,7 @@ export function getBookingBlockedReason(user: PermissionUser | null): string | n
   if (!user) return 'Connecte-toi pour réserver une place.'
   if (user.activeRole === 'organisateur') return 'Les organisateurs ne peuvent pas réserver de places. Utilise un compte client.'
   if (user.activeRole === 'prestataire') return 'Les prestataires ne peuvent pas réserver de places. Utilise un compte client.'
-  if (user.activeRole === 'agent') return 'Les agents administrateurs ne peuvent pas réserver de places.'
+  if (user.activeRole === 'agent') return 'Les admins ne peuvent pas réserver de places.'
   if (isBlockedStatus(user.status, ['pending'])) return 'Ton compte est en attente de validation.'
   if (isBlockedStatus(user.status, ['rejected'])) return 'Ton compte a été rejeté. Contacte le support.'
   return null
@@ -98,7 +98,7 @@ const ROLE_LABELS: Record<Role, string> = {
   client: 'Client',
   prestataire: 'Prestataire',
   organisateur: 'Organisateur',
-  agent: 'Agent',
+  agent: 'Admin',
 }
 
 export function getRoleLabel(role: Role | string): string {

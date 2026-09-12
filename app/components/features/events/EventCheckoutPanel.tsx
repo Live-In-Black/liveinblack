@@ -519,9 +519,9 @@ export default function EventCheckoutPanel({
                 opacity: placeDisabled ? 0.55 : 1,
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 700, color: 'var(--text)' }}>{place.type}</span>
-                <span style={{ fontSize: 'var(--font-size-headline)', fontWeight: 800, color: 'var(--gold)' }}>{fmtMoney(place.price, currency)}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                <span style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{place.type}</span>
+                <span style={{ fontSize: 'var(--font-size-headline)', fontWeight: 800, color: 'var(--gold)', whiteSpace: 'nowrap', flexShrink: 0 }}>{fmtMoney(place.price, currency)}</span>
               </div>
               {place.groupType === 'group' && (
                 <span

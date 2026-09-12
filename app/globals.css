@@ -601,11 +601,10 @@ textarea::placeholder {
   border-radius: 48% 52% 61% 39% / 39% 57% 43% 61%;
 }
 
-/* Même traitement pour les illustrations publiques autonomes. Les sélecteurs
-   excluent volontairement les avatars, logos et images de couverture. */
+/* Illustrations et médias des cartes publiques avec un radius propre et net. */
 .lb-public-layout :where(.visual, .roleVisual, .emptyVisual, .emptyStateImage),
 .lb-public-layout .lb-editorial-card__media {
-  border-radius: 57% 43% 49% 51% / 46% 58% 42% 54%;
+  border-radius: var(--radius-xl, 18px);
   overflow: hidden;
 }
 

@@ -238,10 +238,10 @@ export default function AgentPaymentsClient() {
     setLoadError(false)
     try {
       const [payoutsRes, refundsRes, pointsRes, alertsRes] = await Promise.all([
-        fetch('/api/agent/payments/payouts'),
-        fetch('/api/agent/payments/refunds'),
-        fetch('/api/agent/refund-points'),
-        fetch('/api/agent/payments/alerts'),
+        fetch('/api/admin/payments/payouts'),
+        fetch('/api/admin/payments/refunds'),
+        fetch('/api/admin/refund-points'),
+        fetch('/api/admin/payments/alerts'),
       ])
       const [payoutsData, refundsData, pointsData, alertsData] = await Promise.all([payoutsRes.json(), refundsRes.json(), pointsRes.json(), alertsRes.json()])
       if (!payoutsRes.ok || !payoutsData.ok || !refundsRes.ok || !refundsData.ok || !pointsRes.ok || !pointsData.ok || !alertsRes.ok || !alertsData.ok) throw new Error('load_failed')
@@ -270,10 +270,10 @@ export default function AgentPaymentsClient() {
       setLoadError(false)
       try {
           const [payoutsRes, refundsRes, pointsRes, alertsRes] = await Promise.all([
-            fetch('/api/agent/payments/payouts'),
-            fetch('/api/agent/payments/refunds'),
-            fetch('/api/agent/refund-points'),
-            fetch('/api/agent/payments/alerts'),
+            fetch('/api/admin/payments/payouts'),
+            fetch('/api/admin/payments/refunds'),
+            fetch('/api/admin/refund-points'),
+            fetch('/api/admin/payments/alerts'),
           ])
           const [payoutsData, refundsData, pointsData, alertsData] = await Promise.all([payoutsRes.json(), refundsRes.json(), pointsRes.json(), alertsRes.json()])
           if (!payoutsRes.ok || !payoutsData.ok || !refundsRes.ok || !refundsData.ok || !pointsRes.ok || !pointsData.ok || !alertsRes.ok || !alertsData.ok) throw new Error('load_failed')
@@ -307,7 +307,7 @@ export default function AgentPaymentsClient() {
     setBusy(true)
     try {
       if (confirm.type === 'markPayoutPaid') {
-        const res = await fetch('/api/agent/payments/payouts/mark-paid', {
+        const res = await fetch('/api/admin/payments/payouts/mark-paid', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ eventId: confirm.eventId }),
@@ -321,7 +321,7 @@ export default function AgentPaymentsClient() {
           showToast(`Versement de ${fmtXOF(data.paid)} marqué payé`, 'success')
         }
       } else if (confirm.type === 'closeRequest') {
-        const res = await fetch('/api/agent/payments/payouts/settle', {
+        const res = await fetch('/api/admin/payments/payouts/settle', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sellerUid: payoutRequests.find((r) => r.requestId === confirm.requestId)?.sellerUid, amount: 0, currency: 'XOF', requestId: confirm.requestId }),
@@ -334,7 +334,7 @@ export default function AgentPaymentsClient() {
           showToast('Demande close (solde déjà à zéro)', 'success')
         }
       } else if (confirm.type === 'completeRefund') {
-        const res = await fetch(`/api/agent/payments/refunds/${confirm.refundId}/complete`, {
+        const res = await fetch(`/api/admin/payments/refunds/${confirm.refundId}/complete`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(refundInput ?? {}),
@@ -349,7 +349,7 @@ export default function AgentPaymentsClient() {
           setConfirm(null)
         }
       } else if (confirm.type === 'resolveAlert') {
-        const res = await fetch(`/api/agent/payments/alerts/${confirm.alertId}/resolve`, { method: 'POST' })
+        const res = await fetch(`/api/admin/payments/alerts/${confirm.alertId}/resolve`, { method: 'POST' })
         const data = await res.json()
         if (!res.ok || !data.ok) {
           showToast("Impossible de clôturer l'alerte. Réessaie.", 'error')
@@ -690,7 +690,7 @@ function RefundsSection({
   async function processQueuedCancellations() {
     setProcessing(true)
     try {
-      const res = await fetch('/api/agent/refunds/process-cancellations', {
+      const res = await fetch('/api/admin/refunds/process-cancellations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ batchSize: 50, eventLimit: 10 }),
@@ -783,7 +783,7 @@ function RefundPointsSection({
     }
     setBusy(true)
     try {
-      const res = await fetch(point ? `/api/agent/refund-points/${point.id}` : '/api/agent/refund-points', {
+      const res = await fetch(point ? `/api/admin/refund-points/${point.id}` : '/api/admin/refund-points', {
         method: point ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -956,7 +956,7 @@ function ConfirmModal({ action, busy, onCancel, onConfirm }: { action: ConfirmAc
       setOperationId(stored.operationId)
       setPrepareBusy(true)
       setPrepareError('')
-      fetch(`/api/agent/payments/refunds/${action.refundId}/prepare`, {
+      fetch(`/api/admin/payments/refunds/${action.refundId}/prepare`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(stored),
@@ -984,7 +984,7 @@ function ConfirmModal({ action, busy, onCancel, onConfirm }: { action: ConfirmAc
     setPrepareBusy(true)
     setPrepareError('')
     try {
-      const res = await fetch(`/api/agent/payments/refunds/${action.refundId}/prepare`, {
+      const res = await fetch(`/api/admin/payments/refunds/${action.refundId}/prepare`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: refundCode, operationId: nextOperationId }),
@@ -1007,7 +1007,7 @@ function ConfirmModal({ action, busy, onCancel, onConfirm }: { action: ConfirmAc
       setReleaseBusy(true)
       setPrepareError('')
       try {
-        const res = await fetch(`/api/agent/payments/refunds/${action.refundId}/release`, {
+        const res = await fetch(`/api/admin/payments/refunds/${action.refundId}/release`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ operationId, noCashHanded: true }),

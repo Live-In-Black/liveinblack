@@ -48,7 +48,7 @@ interface ToastState {
 
 const sectionTitleStyle: React.CSSProperties = { fontSize: 'var(--font-size-body-sm)', fontWeight: 400, textTransform: 'uppercase', letterSpacing: '3.2px', color: 'var(--primary)', fontFamily: 'var(--font-display), sans-serif', margin: '0 0 10px' }
 
-const ROLE_LABEL: Record<string, string> = { organisateur: 'Organisateur', prestataire: 'Prestataire', client: 'Client', agent: 'Agent' }
+const ROLE_LABEL: Record<string, string> = { organisateur: 'Organisateur', prestataire: 'Prestataire', client: 'Client', agent: 'Admin' }
 
 function fmtDateTime(iso: string): string {
   const d = new Date(iso)
@@ -88,7 +88,7 @@ export default function AgentDeletionClient() {
     setListLoading(true)
     setListError(false)
     try {
-      const res = await fetch('/api/agent/deletion-requests')
+      const res = await fetch('/api/admin/deletion-requests')
       const data = await res.json()
       if (!res.ok || !data.ok) throw new Error('load_failed')
       setRequests(data.requests)
@@ -105,7 +105,7 @@ export default function AgentDeletionClient() {
       setListLoading(true)
       setListError(false)
       try {
-        const res = await fetch('/api/agent/deletion-requests')
+        const res = await fetch('/api/admin/deletion-requests')
         const data = await res.json()
         if (!res.ok || !data.ok) throw new Error('load_failed')
         if (!cancelled) setRequests(data.requests)
@@ -128,7 +128,7 @@ export default function AgentDeletionClient() {
       setDetailLoading(true)
       setDetailError(false)
       try {
-        const res = await fetch(`/api/agent/deletion-requests/${selectedId}`)
+        const res = await fetch(`/api/admin/deletion-requests/${selectedId}`)
         const data = await res.json()
         if (!res.ok || !data.ok) throw new Error('load_failed')
         if (!cancelled) setDetail(data.request)
@@ -172,7 +172,7 @@ export default function AgentDeletionClient() {
     if (!detail) return
     setActionBusy(true)
     try {
-      const res = await fetch(`/api/agent/deletion-requests/${detail.id}/approve`, {
+      const res = await fetch(`/api/admin/deletion-requests/${detail.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
@@ -195,7 +195,7 @@ export default function AgentDeletionClient() {
     if (!detail) return
     setRejecting(true)
     try {
-      const res = await fetch(`/api/agent/deletion-requests/${detail.id}/reject`, {
+      const res = await fetch(`/api/admin/deletion-requests/${detail.id}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ note: rejectNote }),

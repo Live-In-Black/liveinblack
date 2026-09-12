@@ -10,7 +10,7 @@
 export const DASHBOARD_BY_ROLE: Record<string, { href: string; label: string }> = {
   organisateur: { href: '/organizer-studio', label: 'Espace organisateur' },
   prestataire: { href: '/offer-services', label: 'Espace prestataire' },
-  agent: { href: '/agent', label: 'Espace agent' },
+  agent: { href: '/admin', label: 'Espace admin' },
 }
 
 export const CLIENT_DASHBOARD_HREF = '/profile'
