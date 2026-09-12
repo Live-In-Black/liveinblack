@@ -259,17 +259,34 @@
 
   --background: var(--obsidian);
   --foreground: var(--text);
+
+  /* Navigation bar tokens */
+  --nav-bg: rgba(22, 22, 26, 0.82);
+  --nav-border: rgba(255, 255, 255, 0.10);
+  --nav-shadow: 0 16px 48px rgba(0, 0, 0, 0.42);
 }
 
 :root[data-theme='light'] {
-  --obsidian-rgb: 247, 247, 250;
+  /* Background layers */
+  --obsidian-rgb: 242, 242, 246;
   --surface-rgb: 255, 255, 255;
-  --surface-2-rgb: 241, 241, 245;
+  --surface-2-rgb: 235, 235, 240;
+  --night-rgb: 230, 230, 236;
+  --canvas-rgb: 218, 218, 224;
+  --black-rgb: 17, 17, 20;
+  --media-black-rgb: 17, 17, 20;
+
+  /* Brand */
   --primary-rgb: 176, 24, 96;
   --primary-strong-rgb: 143, 17, 77;
   --primary-ink-rgb: 255, 255, 255;
+  --primary-deep-rgb: 255, 240, 248;
+
+  /* Text */
   --text-rgb: 17, 17, 20;
   --text-soft-rgb: 17, 17, 20;
+
+  /* Semantic palette (repurposed for light) */
   --success-rgb: 40, 40, 44;
   --warning-rgb: 72, 72, 76;
   --info-rgb: 98, 98, 102;
@@ -278,10 +295,14 @@
   --soft-violet-rgb: 128, 128, 132;
   --gold-rgb: 94, 94, 98;
   --yellow-rgb: 72, 72, 76;
-  --danger-rgb: 72, 72, 76;
-  --danger-soft-rgb: 88, 88, 92;
-  --danger-muted-rgb: 104, 104, 108;
+  --danger-rgb: 180, 28, 28;
+  --danger-soft-rgb: 200, 48, 48;
+  --danger-muted-rgb: 220, 80, 80;
   --pink-rgb: 176, 24, 96;
+  --neutral-rgb: 110, 110, 118;
+  --muted-rgb: 130, 130, 138;
+
+  /* Named tokens */
   --obsidian: rgb(var(--obsidian-rgb));
   --surface: rgb(var(--surface-rgb));
   --surface-2: rgb(var(--surface-2-rgb));
@@ -298,11 +319,77 @@
   --danger-text: var(--text-muted);
   --danger-text-strong: var(--text);
   --danger-ink: rgb(var(--primary-ink-rgb));
-  --danger-fill: rgba(var(--danger-rgb), 0.10);
-  --danger-fill-strong: rgba(var(--danger-rgb), 0.16);
-  --danger-border: rgba(var(--danger-rgb), 0.30);
-  --overlay: rgba(var(--text-rgb), .34);
+  --danger-fill: rgba(var(--danger-rgb), 0.08);
+  --danger-fill-strong: rgba(var(--danger-rgb), 0.14);
+  --danger-border: rgba(var(--danger-rgb), 0.28);
+  --warning: rgb(var(--warning-rgb));
+  --warning-text: var(--text-muted);
+  --warning-fill: rgba(var(--warning-rgb), 0.07);
+  --warning-fill-strong: rgba(var(--warning-rgb), 0.12);
+  --warning-border: rgba(var(--warning-rgb), 0.28);
+  --success: rgb(var(--success-rgb));
+  --success-fill: rgba(var(--success-rgb), 0.10);
+  --success-border: rgba(var(--success-rgb), 0.28);
+  --info: rgb(var(--info-rgb));
+  --info-fill: rgba(var(--info-rgb), 0.08);
+  --info-border: rgba(var(--info-rgb), 0.28);
+  --sky: rgb(var(--sky-rgb));
+  --violet-text: rgb(var(--soft-violet-rgb));
+  --violet-fill: rgba(var(--violet-rgb), 0.10);
+  --violet-fill-strong: rgba(var(--violet-rgb), 0.16);
+  --violet-border: rgba(var(--violet-rgb), 0.28);
+  --gold-text: var(--text-muted);
+  --gold-fill: rgba(var(--text-rgb), 0.06);
+  --gold-border: rgba(var(--text-rgb), 0.16);
+  --yellow: rgb(var(--yellow-rgb));
+  --pink-strong: rgb(var(--pink-rgb));
+  --pink-fill: rgba(var(--pink-rgb), .08);
+  --pink-border: rgba(var(--pink-rgb), .28);
+  --muted-chip: rgb(var(--muted-rgb));
+  --muted-chip-fill: rgba(var(--muted-rgb), 0.10);
+  --muted-chip-border: rgba(var(--muted-rgb), 0.28);
+  --neutral-fill: rgba(var(--neutral-rgb), 0.06);
+  --neutral-fill-2: rgba(var(--neutral-rgb), 0.08);
+  --neutral-fill-3: rgba(var(--neutral-rgb), 0.10);
+  --neutral-fill-4: rgba(var(--neutral-rgb), 0.12);
+  --neutral-fill-5: rgba(var(--neutral-rgb), 0.16);
+  --neutral-fill-6: rgba(var(--neutral-rgb), 0.22);
+
+  /* Overlays & scrims */
+  --overlay: rgba(var(--black-rgb), .28);
+  --scrim-soft: rgba(var(--black-rgb), .06);
+  --scrim-mid: rgba(var(--black-rgb), .12);
+  --scrim-strong: rgba(var(--black-rgb), .22);
+  --scrim-modal: rgba(var(--black-rgb), .36);
+  --scrim-page: rgba(var(--black-rgb), .42);
+  --media-scrim: rgba(var(--media-black-rgb), .55);
+  --media-scrim-strong: rgba(var(--media-black-rgb), .68);
+  --media-chip-bg: rgba(var(--black-rgb), .28);
+  --media-chip-bg-strong: rgba(var(--black-rgb), .38);
+  --media-canvas: rgb(var(--canvas-rgb));
+  --media-canvas-soft: rgb(225, 220, 215);
+  --media-panel: rgba(var(--night-rgb), .88);
+  --media-panel-strong: rgba(var(--night-rgb), .94);
+  --media-panel-soft: rgba(var(--night-rgb), .65);
+  --media-panel-deep: rgba(var(--night-rgb), .97);
+
+  /* Surfaces */
   --modal-surface: rgb(var(--surface-rgb));
+
+  /* Shadows (lighter for light theme) */
+  --shadow-subtle: 0 1px 4px rgba(var(--black-rgb), .08);
+  --shadow-control: 0 4px 12px rgba(var(--black-rgb), .10);
+  --shadow-button: 0 6px 20px var(--primary-a16);
+  --shadow-auth-button: 0 8px 22px rgba(var(--black-rgb), .10);
+  --shadow-card-soft: 0 4px 16px rgba(var(--black-rgb), .06);
+  --shadow-card: 0 4px 16px rgba(var(--black-rgb), .10);
+  --shadow-card-strong: 0 6px 20px rgba(var(--black-rgb), .14);
+  --shadow-panel: 0 8px 28px rgba(var(--black-rgb), .08);
+  --shadow-panel-lg: 0 12px 36px rgba(var(--black-rgb), .10);
+  --shadow-panel-strong: 0 16px 44px rgba(var(--black-rgb), .16);
+  --shadow-floating: 0 20px 56px rgba(var(--black-rgb), .18);
+
+  /* Design tokens */
   --violet-cta: linear-gradient(180deg, var(--primary), var(--primary-strong));
   --border: rgba(var(--text-rgb), 0.12);
   --border-strong: rgba(var(--text-rgb), 0.22);
@@ -313,9 +400,13 @@
   --image-text-muted: rgba(255, 255, 255, 0.76);
   --image-text-faint: rgba(255, 255, 255, 0.58);
   --image-border: rgba(255, 255, 255, 0.18);
+
+  /* Text tokens */
   --text: rgb(var(--text-rgb));
-  --text-muted: rgba(var(--text-soft-rgb), 0.72);
-  --text-faint: rgba(var(--text-soft-rgb), 0.58);
+  --text-muted: rgba(var(--text-soft-rgb), 0.62);
+  --text-faint: rgba(var(--text-soft-rgb), 0.46);
+
+  /* Primary alpha tokens */
   --primary-a04: rgba(var(--primary-rgb), 0.04);
   --primary-a05: rgba(var(--primary-rgb), 0.05);
   --primary-a06: rgba(var(--primary-rgb), 0.06);
@@ -341,13 +432,25 @@
   --primary-a65: rgba(var(--primary-rgb), 0.65);
   --primary-a75: rgba(var(--primary-rgb), 0.75);
   --primary-a85: rgba(var(--primary-rgb), 0.85);
-  --focus-ring-color: rgba(var(--text-rgb), 0.28);
-  --page-overlay: linear-gradient(180deg, rgba(var(--obsidian-rgb), .84) 0%, rgba(var(--obsidian-rgb), .92) 52%, rgba(var(--obsidian-rgb), .96) 100%);
-  --card-bg: rgba(var(--surface-rgb), 0.9);
-  --card-border: rgba(var(--text-rgb), 0.12);
+  --focus-ring-color: rgba(var(--primary-rgb), 0.32);
+  --focus-ring: 0 0 0 3px var(--focus-ring-color);
+
+  /* Page overlay (hero background tint) */
+  --page-overlay: linear-gradient(180deg, rgba(var(--obsidian-rgb), .78) 0%, rgba(var(--obsidian-rgb), .88) 52%, rgba(var(--obsidian-rgb), .94) 100%);
+
+  /* Card tokens */
+  --card-bg: rgb(var(--surface-rgb));
+  --card-border: rgba(var(--text-rgb), 0.10);
+
+  /* Top-level */
   --background: var(--obsidian);
   --foreground: var(--text);
   color-scheme: light;
+
+  /* Navigation bar tokens (light overrides) */
+  --nav-bg: rgba(255, 255, 255, 0.86);
+  --nav-border: rgba(17, 17, 20, 0.10);
+  --nav-shadow: 0 8px 32px rgba(17, 17, 20, 0.12);
 }
 
 

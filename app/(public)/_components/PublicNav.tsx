@@ -595,12 +595,12 @@ export default function PublicNav({ dashboardLinks }: { dashboardLinks?: Dashboa
           align-items: center;
           justify-content: space-between;
           gap: clamp(8px, 1.2vw, 14px);
-          border: 1px solid rgba(255, 255, 255, 0.10);
+          border: 1px solid var(--nav-border);
           border-radius: 20px;
-          background: rgba(22, 22, 26, 0.82);
+          background: var(--nav-bg);
           -webkit-backdrop-filter: blur(32px) saturate(180%);
           backdrop-filter: blur(32px) saturate(180%);
-          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.42);
+          box-shadow: var(--nav-shadow);
           font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
         }
         .lb-public-nav__brand {
@@ -721,6 +721,10 @@ export default function PublicNav({ dashboardLinks }: { dashboardLinks?: Dashboa
         }
         @media (prefers-reduced-transparency: reduce) {
           .lb-public-nav__inner { background: var(--modal-surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
+        }
+        /* Light mode: invert the logo so white logo becomes dark */
+        :root[data-theme='light'] .lb-public-nav__brand-logo {
+          filter: invert(1) brightness(0.15);
         }
       `}</style>
     </header>
