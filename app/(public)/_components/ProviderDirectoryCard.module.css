@@ -10,7 +10,7 @@
   color: var(--text);
   text-decoration: none;
   transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
-  aspect-ratio: 1;
+  aspect-ratio: 0.76;
 }
 
 .card:hover {
@@ -23,7 +23,7 @@
 
 .visual {
   position: relative;
-  flex: 0 0 53%;
+  flex: 0 0 46%;
   min-height: 0;
   border-radius: 0;
   overflow: hidden;
@@ -79,7 +79,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 11px 13px 13px;
+  padding: 12px 14px 14px;
   overflow: hidden;
 }
 
@@ -108,8 +108,8 @@
 .meta {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: 7px;
+  gap: 6px;
+  margin-top: 10px;
   color: var(--text-muted);
   font-size: var(--font-size-footnote-lg);
   line-height: 1.4;
@@ -119,12 +119,12 @@
 .meta svg { flex: 0 0 auto; color: var(--primary); }
 
 .footer {
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   margin-top: auto;
-  padding-top: 7px;
+  padding-top: 10px;
   border-top: 1px solid var(--fill-secondary);
   color: var(--text-muted);
   font-size: var(--font-size-footnote);
@@ -159,13 +159,15 @@
 .card:hover .discover { color: var(--primary); }
 
 @media (max-width: 680px) {
-  .visual { flex-basis: 60%; }
+  .card { aspect-ratio: 0.82; }
+  .visual { flex-basis: 52%; }
   .categoryBadge { min-height: 24px; padding-inline: 7px; font-size: var(--font-size-caption-2); }
   .identity { left: 8px; bottom: 7px; width: 34px; height: 34px; border-radius: 9px; font-size: var(--font-size-body); }
   .content { padding: 9px 10px 10px; }
   .category { font-size: var(--font-size-caption-2); }
   .content h3 { margin-top: 3px; font-size: 15px; }
-  .meta, .footer { display: none; }
+  .meta { display: none; }
+  .footer { display: none; }
 }
 
 @media (max-width: 430px) {

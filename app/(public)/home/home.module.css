@@ -356,7 +356,7 @@
 .compactSquareCard {
   width: 100% !important;
   max-width: 250px !important;
-  aspect-ratio: 1;
+  aspect-ratio: 0.76;
   min-height: 0;
 }
 
