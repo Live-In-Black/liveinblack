@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   alternates: { canonical: '/legal-notice' },
 }
 
-// Port de src/pages/MentionsLegalesPage.jsx — obligatoires en France : LCEN
-// art. 6.III + Code de la consommation L221-1 et suivants.
+// Mentions legales adaptees au lancement Benin ; les identifiants seront
+// completes apres immatriculation de la structure.
 export default function MentionsLegalesPage() {
   const sections: LegalSection[] = [
     {
@@ -18,9 +18,9 @@ export default function MentionsLegalesPage() {
       body: `${LEGAL_DISPLAY.companyDisplay}
 ${LEGAL.legalForm ? `Forme juridique : ${LEGAL.legalForm}` : 'Forme juridique : en cours de constitution'}
 ${LEGAL.capital ? `Capital social : ${LEGAL.capital}` : ''}
-${LEGAL_DISPLAY.sirenDisplay !== "SIREN en cours d'attribution" ? `SIREN : ${LEGAL.siren}` : "Numéro SIREN : en cours d'attribution"}
+${LEGAL.registrationNumber ? `RCCM/IFU : ${LEGAL.registrationNumber}` : LEGAL_DISPLAY.registrationDisplay}
 ${LEGAL.rcs || ''}
-${LEGAL.vatNumber ? `N° TVA intracommunautaire : ${LEGAL.vatNumber}` : ''}
+${LEGAL.vatNumber ? `Numéro fiscal : ${LEGAL.vatNumber}` : ''}
 
 ${LEGAL.address.street || LEGAL.address.city ? `Adresse : ${LEGAL_DISPLAY.addressDisplay}\n` : ''}
 ${LEGAL.director.role} : ${LEGAL.director.name}
@@ -62,7 +62,7 @@ L'éditeur se réserve le droit de modifier sans préavis le contenu du site, ai
     {
       n: '06',
       title: 'Données personnelles',
-      body: `Conformément au Règlement (UE) 2016/679 (RGPD) et à la loi Informatique et Libertés modifiée, vous disposez d'un droit d'accès, de rectification, de suppression, de portabilité, d'opposition et de limitation concernant vos données personnelles.
+      body: `Conformément à la réglementation applicable à la protection des données, et au RGPD lorsqu'il s'applique, vous disposez d'un droit d'accès, de rectification, de suppression, de portabilité, d'opposition et de limitation concernant vos données personnelles.
 
 Pour en savoir plus, consultez notre Politique de confidentialité.
 

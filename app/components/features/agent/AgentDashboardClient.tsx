@@ -111,7 +111,7 @@ export default function AgentDashboardClient() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {error && (
           <Card accent="var(--danger-border)" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <p style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', margin: 0 }}>Lecture impossible. Recharge la page ; si ça persiste, reconnecte-toi (droits agent).</p>
+            <p style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', margin: 0 }}>Lecture impossible. Recharge la page ; si ça persiste, reconnecte-toi (droits admin).</p>
             <Button variant="secondary" onClick={load} style={{ fontSize: 'var(--font-size-footnote-lg)' }}>
               Recharger
             </Button>
@@ -128,22 +128,22 @@ export default function AgentDashboardClient() {
                 <p>Les accès les plus utiles pour votre prochain geste.</p>
               </div>
               <div className={styles.actionGrid}>
-                <Link href="/agent/dossiers" className={`${styles.action} ${styles.actionPrimary}`}>
+                <Link href="/admin/dossiers" className={`${styles.action} ${styles.actionPrimary}`}>
                   <span className={styles.actionIcon}><FileCheck2 size={22} aria-hidden="true" /></span>
                   <span className={styles.actionBody}><strong>{stats.community.pendingDossiers}</strong><span>Dossiers en attente</span><small>Vérifier les profils et statuer</small></span>
                   <ArrowUpRight size={19} aria-hidden="true" />
                 </Link>
-                <Link href="/agent/signalements" className={styles.action}>
+                <Link href="/admin/signalements" className={styles.action}>
                   <span className={styles.actionIcon}><ShieldAlert size={22} aria-hidden="true" /></span>
                   <span className={styles.actionBody}><strong>Confiance</strong><span>File de modération</span><small>Qualifier les alertes ouvertes</small></span>
                   <ArrowUpRight size={19} aria-hidden="true" />
                 </Link>
-                <Link href="/agent/paiements" className={styles.action}>
+                <Link href="/admin/paiements" className={styles.action}>
                   <span className={styles.actionIcon}><WalletCards size={22} aria-hidden="true" /></span>
                   <span className={styles.actionBody}><strong>{fmtMoney(stats.revenue.platformRevenueXOF, 'XOF')}</strong><span>Contrôle financier</span><small>Suivre les flux et les commissions</small></span>
                   <ArrowUpRight size={19} aria-hidden="true" />
                 </Link>
-                <Link href="/agent/evenements" className={styles.action}>
+                <Link href="/admin/evenements" className={styles.action}>
                   <span className={styles.actionIcon}><CalendarCheck2 size={22} aria-hidden="true" /></span>
                   <span className={styles.actionBody}><strong>{stats.events.upcoming}</strong><span>Événements à venir</span><small>Superviser le catalogue publié</small></span>
                   <ArrowUpRight size={19} aria-hidden="true" />

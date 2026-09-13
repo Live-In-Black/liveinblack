@@ -80,15 +80,15 @@ async function seedEvent(overrides: Record<string, unknown> = {}) {
 
 describeIntegration('agentPayments (intégration, vraie base) — #9 phase agent/admin', () => {
   describe('listPendingPayoutsForAgent', () => {
-    it('sépare versements XOF en échec, demandes de virement EUR et soldes sans demande', async () => {
+    it('sépare versements XOF en échec, demandes XOF et soldes XOF sans demande', async () => {
       const seller1 = await seedUser()
       const seller2 = await seedUser()
       const event = await seedEvent()
 
       await EventPayout.create({ eventId: String(event._id), sellerUid: seller1, amountDueXOF: 15000, status: 'failed', failReason: 'numéro manquant' })
-      await SellerBalance.create({ sellerUid: seller1, amountDueCents: 5000 })
-      await PayoutRequest.create({ sellerUid: seller1, amountDueCents: 5000, status: 'pending' })
-      await SellerBalance.create({ sellerUid: seller2, amountDueCents: 2000 })
+      await SellerBalance.create({ sellerUid: seller1, amountDueXOF: 5000 })
+      await PayoutRequest.create({ sellerUid: seller1, amountDueXOF: 5000, status: 'pending' })
+      await SellerBalance.create({ sellerUid: seller2, amountDueXOF: 2000 })
 
       const queue = await listPendingPayoutsForAgent()
       expect(queue.failedPayouts).toHaveLength(1)
@@ -109,10 +109,10 @@ describeIntegration('agentPayments (intégration, vraie base) — #9 phase agent
       expect(queue.failedPayouts.every((p) => p.eventCancelled)).toBe(true)
     })
 
-    it('plafonne payCents au solde réel quand le montant demandé le dépasse', async () => {
+    it('plafonne le règlement XOF au solde réel quand le montant demandé le dépasse', async () => {
       const seller = await seedUser()
-      await SellerBalance.create({ sellerUid: seller, amountDueCents: 1000 })
-      await PayoutRequest.create({ sellerUid: seller, amountDueCents: 9999, status: 'pending' })
+      await SellerBalance.create({ sellerUid: seller, amountDueXOF: 1000 })
+      await PayoutRequest.create({ sellerUid: seller, amountDueXOF: 9999, status: 'pending' })
 
       const queue = await listPendingPayoutsForAgent()
       expect(queue.payoutRequests[0].payCents).toBe(1000)
@@ -191,16 +191,16 @@ describeIntegration('agentPayments (intégration, vraie base) — #9 phase agent
   describe('markSellerBalancePaid', () => {
     it('plafonne le règlement au solde réel du ledger et clôture la demande', async () => {
       const seller = await seedUser()
-      await SellerBalance.create({ sellerUid: seller, amountDueCents: 1000 })
-      const request = await PayoutRequest.create({ sellerUid: seller, amountDueCents: 9999, status: 'pending' })
+      await SellerBalance.create({ sellerUid: seller, amountDueXOF: 1000 })
+      const request = await PayoutRequest.create({ sellerUid: seller, amountDueXOF: 9999, status: 'pending' })
 
-      const result = await markSellerBalancePaid(AGENT, { sellerUid: seller, amount: 9999, currency: 'EUR', requestId: String(request._id) })
+      const result = await markSellerBalancePaid(AGENT, { sellerUid: seller, amount: 9999, currency: 'XOF', requestId: String(request._id) })
       expect(result.ok).toBe(true)
       if (!result.ok) return
       expect(result.paid).toBe(1000)
 
       const balance = await SellerBalance.findOne({ sellerUid: seller }).lean()
-      expect(balance?.amountDueCents).toBe(0)
+      expect(balance?.amountDueXOF).toBe(0)
 
       const freshRequest = await PayoutRequest.findById(request._id).lean()
       expect(freshRequest?.status).toBe('paid')
@@ -209,9 +209,9 @@ describeIntegration('agentPayments (intégration, vraie base) — #9 phase agent
 
     it('clôture une demande à solde déjà nul sans toucher au ledger', async () => {
       const seller = await seedUser()
-      const request = await PayoutRequest.create({ sellerUid: seller, amountDueCents: 500, status: 'pending' })
+      const request = await PayoutRequest.create({ sellerUid: seller, amountDueXOF: 500, status: 'pending' })
 
-      const result = await markSellerBalancePaid(AGENT, { sellerUid: seller, amount: 0, currency: 'EUR', requestId: String(request._id) })
+      const result = await markSellerBalancePaid(AGENT, { sellerUid: seller, amount: 0, currency: 'XOF', requestId: String(request._id) })
       expect(result.ok).toBe(true)
       if (!result.ok) return
       expect(result.paid).toBe(0)

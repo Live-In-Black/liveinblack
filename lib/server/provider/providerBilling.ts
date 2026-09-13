@@ -28,6 +28,11 @@ export async function getProviderBillingContext(caller: { id: string }): Promise
   if (!billingRegionId) {
     billingRegionId = await deriveDefaultBillingRegion(caller.id)
     await User.updateOne({ _id: caller.id }, { $set: { providerBillingRegionId: billingRegionId } })
+  } else if (billingRegionId !== 'benin') {
+    // V1 Benin : les anciennes valeurs restent normalisables pour lecture,
+    // mais le contexte actif et la valeur persistée doivent revenir au Bénin.
+    billingRegionId = 'benin'
+    await User.updateOne({ _id: caller.id }, { $set: { providerBillingRegionId: billingRegionId } })
   }
 
   return buildProviderBillingContext({

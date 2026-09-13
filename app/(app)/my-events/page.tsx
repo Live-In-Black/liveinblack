@@ -86,7 +86,7 @@ export default async function MesEvenementsPage() {
   return (
     <MesEvenementsClient
       initialEvents={eventsResult.events}
-      initialStripeChargesEnabled={payoutStatusResult.ok ? payoutStatusResult.view.chargesEnabled : false}
+      initialLegacyCardPayoutReady={payoutStatusResult.ok ? payoutStatusResult.view.chargesEnabled : false}
       initialMomos={momosResult.ok ? momosResult.momos : {}}
       initialRegion={initialRegion}
     />

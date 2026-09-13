@@ -14,7 +14,7 @@
   * **Web :** Next.js (SSR, React, TypeScript), CSS Vanilla moderne, déployé sur Vercel.
   * **Mobile :** React Native avec Expo Router (iOS & Android).
   * **Base de données & Auth :** PostgreSQL / Supabase, API routes sécurisées.
-  * **Paiement :** Passerelle **FedaPay** Marketplace (Mobile Money MTN / Moov Bénin + Cartes bancaires).
+  * **Paiement :** Passerelle **FedaPay** Marketplace, prioritairement Mobile Money MTN / Moov Bénin. Les cartes ne sont acceptables que comme moyen FedaPay disponible, sans rail Stripe ni devise EUR.
 
 ---
 
@@ -87,7 +87,7 @@
     * Mission **Vendeur Guichet** (droits d'encaissement sur place).
 * **Gestion Financière & SAV :**
   * Traitement des demandes de remboursement des clients (validation ou refus motivé).
-  * Historique des transactions et coordonnées bancaires / FedaPay.
+  * Historique des transactions et coordonnées Mobile Money / FedaPay Marketplace.
 
 ---
 
@@ -178,18 +178,18 @@
 | `/organizer-studio`| `app/spaces/organizer.tsx`| Dashboard organisateur (ventes, stats, gestion) |
 | `/my-events` | `app/spaces/organizer.tsx`| Liste des événements créés |
 | `/scanner/[eventId]`| `app/scanner.tsx` | Scanner caméra pour contrôle d'accès |
-| `/on-site-sales/[eventId]`| `app/agent-sales/[eventId].tsx`| Guichet de vente de billets sur place |
+| `/on-site-sales/[eventId]`| `app/admin-sales/[eventId].tsx`| Guichet de vente de billets sur place |
 | `/offer-services` | `app/spaces/provider.tsx` | Espace de gestion du prestataire |
 | `/my-shifts` | `app/my-shifts.tsx` | Planning des missions assignées au staff |
 
 ### Routes Back-Office (Administration LIB - Web uniquement)
 * `/agent` : Dashboard général de supervision
 * `/agent/comptes` : Gestion des utilisateurs et modération
-* `/agent/dossiers` : Validation des dossiers organisateurs et prestataires
-* `/agent/evenements` : Contrôle et modération des événements publiés
-* `/agent/paiements` : Suivi des transactions et webhooks FedaPay
-* `/agent/signalements` : Traitement des signalements d'abus ou litiges
-* `/agent/blog` : Rédaction et publication des articles
+* `/admin/dossiers` : Validation des dossiers organisateurs et prestataires
+* `/admin/evenements` : Contrôle et modération des événements publiés
+* `/admin/paiements` : Suivi des transactions et webhooks FedaPay
+* `/admin/signalements` : Traitement des signalements d'abus ou litiges
+* `/admin/blog` : Rédaction et publication des articles
 
 ---
 

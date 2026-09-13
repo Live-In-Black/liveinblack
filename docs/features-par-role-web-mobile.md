@@ -17,17 +17,17 @@ LIVE IN BLACK fonctionne autour de plusieurs profils :
 - **Organisateur** : personne ou structure qui cree et gere des evenements.
 - **Prestataire** : professionnel qui propose des services aux organisateurs.
 - **Staff evenement** : membre d'equipe ajoute a un evenement, par exemple scan, vente, service ou gestion.
-- **Agent / administrateur LIVE IN BLACK** : equipe interne qui pilote, modere et controle la plateforme.
+- **Administrateur LIVE IN BLACK** : equipe interne qui pilote, modere et controle la plateforme.
 
 ## Vue d'ensemble par plateforme
 
 ### Web
 
-Le web couvre l'ensemble du produit : site public, compte utilisateur, billetterie, messagerie, tableaux de bord, espaces organisateur/prestataire, staff evenement, back-office agent, SEO, blog, emails et administration.
+Le web couvre l'ensemble du produit : site public, compte utilisateur, billetterie, messagerie, tableaux de bord, espaces organisateur/prestataire, staff evenement, back-office admin, SEO, blog, emails et administration.
 
 ### Mobile
 
-Le mobile couvre les parcours essentiels en mobilite : decouverte, recherche, billets, messages, profil, espaces role, creation/gestion d'evenements, prestataire, agent, scan, playlist, commandes sur place et gestion des tickets.
+Le mobile couvre les parcours essentiels en mobilite : decouverte, recherche, billets, messages, profil, espaces role, creation/gestion d'evenements, prestataire, admin, scan, playlist, commandes sur place et gestion des tickets.
 
 Le mobile reprend une grande partie des fonctions web, avec une approche plus compacte et orientee usage terrain.
 
@@ -103,7 +103,7 @@ Le mobile reprend une grande partie des fonctions web, avec une approche plus co
 - Annulation d'une demande de changement d'e-mail.
 - Changement de mot de passe.
 - Demande de reinitialisation de mot de passe.
-- Suppression de compte ou demande de suppression avec revue agent selon le statut du compte.
+- Suppression de compte ou demande de suppression avec revue admin selon le statut du compte.
 - Deconnexion.
 - Aide et FAQ.
 
@@ -122,12 +122,12 @@ Le mobile reprend une grande partie des fonctions web, avec une approche plus co
 
 - Achat de billets.
 - Achat de billets gratuits.
-- Paiement via Stripe ou FedaPay selon le contexte.
+- Paiement V1 via FedaPay en FCFA/XOF ; les anciens rails Stripe/EUR restent historiques et refusés.
 - Utilisation de codes promo.
 - Achat de places simples ou de tables.
 - Reservation temporaire de places avec acompte.
 - Paiement du solde d'une place bloquee.
-- Consultation du wallet de billets.
+- Consultation de l'espace billets.
 - Classement des billets a venir, passes ou annules.
 - Affichage du QR code billet.
 - Acces a une page billet publique securisee par token.
@@ -137,9 +137,9 @@ Le mobile reprend une grande partie des fonctions web, avec une approche plus co
 - Reprise d'une place invitee.
 - Acceptation ou refus d'une invitation recue.
 - Sortie d'une place partagee.
-- Revente d'un billet.
-- Retrait d'un billet du marche de revente.
-- Achat d'un billet en revente.
+- Revente d'un billet : hors V1 Benin, aucune action exposee.
+- Retrait d'un billet du marche de revente : hors V1 Benin, historique uniquement.
+- Achat d'un billet en revente : hors V1 Benin, checkout ferme.
 - Demande de remboursement.
 - Demande de remboursement via lien de billet.
 - Acces a la playlist d'un evenement depuis le billet.
@@ -196,7 +196,7 @@ Le mobile reprend une grande partie des fonctions web, avec une approche plus co
 
 - Onglet Accueil avec evenements personnalises et categorises.
 - Onglet Explorer avec recherche globale.
-- Onglet Billets avec wallet mobile.
+- Onglet Billets avec QR et remboursements.
 - Onglet Messages avec compteur de non lus.
 - Onglet Profil.
 - Consultation des billets.
@@ -209,8 +209,7 @@ Le mobile reprend une grande partie des fonctions web, avec une approche plus co
 - Reprise d'une place.
 - QR code et partage du billet.
 - Commande au bar depuis un billet.
-- Mise en revente d'un billet.
-- Retrait d'une revente.
+- Aucune action de revente en V1 Benin ; les anciens liens doivent etre refuses.
 - Demande de remboursement.
 - Messagerie mobile.
 - Filtres de conversations.
@@ -351,7 +350,7 @@ Le mobile reprend une grande partie des fonctions web, avec une approche plus co
 - Visibilite des medias.
 - Suppression de medias.
 - Reorganisation de galerie.
-- Connexion Stripe Connect lorsque disponible.
+- Stripe Connect historique ferme en V1 Benin.
 - Gestion des numeros Mobile Money.
 - Demande de versement.
 - Consultation du statut de versement.
@@ -392,7 +391,7 @@ Le mobile reprend une grande partie des fonctions web, avec une approche plus co
 - Avatar, couverture, galerie et medias.
 - Identite publique et reseaux sociaux.
 - Gestion des paiements organisateur.
-- Stripe Connect.
+- Stripe Connect historique ferme en V1 Benin.
 - Numeros Mobile Money.
 - Demande de virement.
 - Affichage des statuts de paiement.
@@ -634,10 +633,10 @@ Le staff evenement correspond aux personnes ajoutees par un organisateur sur un 
 - Validation des formulaires.
 - Nettoyage des saisies.
 - Rate limiting sur certaines actions sensibles.
-- Support multi-region / multi-pays.
-- Support Mobile Money pour certaines regions.
-- Support Stripe lorsque disponible.
-- Support FedaPay pour les paiements XOF.
+- Support multi-region / multi-pays hors parcours de lancement.
+- Support Mobile Money pour les parcours XOF.
+- Support Stripe historique ferme en V1 Benin.
+- Support FedaPay pour les paiements XOF actifs.
 
 ### Web principalement
 
@@ -670,7 +669,7 @@ Le staff evenement correspond aux personnes ajoutees par un organisateur sur un 
 
 ### Client
 
-- **Web** : tres complet pour compte, wallet, billets, revente, remboursement, notifications et messagerie.
+- **Web** : tres complet pour compte, wallet de billets, remboursement, notifications et messagerie. Revente hors V1 Benin.
 - **Mobile** : tres complet pour billets, messages, decouverte, profil, favoris et actions terrain.
 
 ### Organisateur
@@ -703,4 +702,3 @@ Principales sources utilisees pour l'inventaire :
 - Mobile roles : `app/spaces/organizer`, `app/spaces/provider.tsx`, `app/spaces/provider`, `app/spaces/agent`.
 - Mobile parcours client : `app/(tabs)`, `app/event/[id].tsx`, `app/provider/[id].tsx`, `app/organizer/[slug].tsx`, `app/checkout`, `app/scanner.tsx`, `app/playlist/[eventId].tsx`, `app/order/[eventId]/[ticketCode].tsx`.
 - Mobile services : `lib/events.ts`, `lib/tickets.ts`, `lib/messaging.ts`, `lib/organizerEvents.ts`, `lib/providerProfile.ts`, `lib/agentApplications.ts`, `lib/agentUsers.ts`, `lib/agentPayouts.ts`, `lib/reviews.ts`, `lib/playlist.ts`.
-

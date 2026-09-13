@@ -26,6 +26,11 @@ function requireIncludes(root, relative, needle, message) {
   if (!text.includes(needle)) failures.push(message)
 }
 
+function requireNotMatches(root, relative, pattern, message) {
+  const text = read(root, relative)
+  if (pattern.test(text)) failures.push(message)
+}
+
 function walk(root, directory) {
   const absolute = path.join(root, directory)
   if (!fs.existsSync(absolute)) return []
@@ -68,6 +73,21 @@ requireIncludes(webRoot, 'lib/shared/refundPolicy.ts', 'POSTPONEMENT_REFUND_WIND
 requireIncludes(webRoot, 'lib/server/refunds/refundCases.ts', 'auditContextFromRequest', 'Les actions remboursement doivent auditer le contexte technique HTTP.')
 requireIncludes(webRoot, 'app/api/agent/payments/refunds/[id]/complete/route.ts', 'signatureUpload', 'La validation agent doit accepter une signature téléversée et vérifiée.')
 requireIncludes(webRoot, 'app/api/organizer-refunds/[refundCaseId]/declare/route.ts', 'proofUpload', 'La déclaration organisateur doit accepter une preuve téléversée et vérifiée.')
+requireIncludes(webRoot, 'scripts/generate-email-preview.ts', '/admin/dossiers', 'Les aperçus e-mail admin doivent pointer vers /admin/dossiers.')
+requireNotMatches(webRoot, 'scripts/generate-email-preview.ts', /\/agent\/(?:dossiers|signalements|suppressions|paiements|evenements|avis|actualite|blog|vercel)/, 'Les aperçus e-mail ne doivent plus générer de liens plateforme /agent/*.')
+requireNotMatches(webRoot, 'scripts/generate-email-preview.ts', /(?:Nouvelle candidature|Signalement|Suppression) agent/, 'Les libellés des aperçus e-mail doivent parler admin, pas agent.')
+requireNotMatches(webRoot, 'docs/design/emails-preview.html', /\/agent\/(?:dossiers|signalements|suppressions|paiements|evenements|avis|actualite|blog|vercel)/, 'Les previews HTML e-mail ne doivent plus afficher de liens plateforme /agent/*.')
+requireNotMatches(webRoot, 'docs/design/emails-preview.html', /(?:Nouvelle candidature|Signalement|Suppression) agent/, 'Les titres des previews HTML e-mail doivent parler admin, pas agent.')
+requireNotMatches(webRoot, 'docs/design/EMAIL_CATALOG.md', /(?:Nouvelle candidature|Signalement|Suppression) agent/, 'Le catalogue e-mail doit parler admin, pas agent.')
+requireNotMatches(webRoot, 'app/components/features/agent/AgentPaymentsClient.tsx', /Remboursement carte historique/, 'Les alertes paiement admin ne doivent pas mettre la carte bancaire historique en avant.')
+requireNotMatches(webRoot, 'app/api/admin/vercel/ops-config/route.ts', /flags maintenance, checkout, revente, recherche et cache/, 'Le dashboard admin Vercel ne doit plus presenter la revente comme flag actif.')
+requireNotMatches(webRoot, 'app/api/agent/vercel/ops-config/route.ts', /flags maintenance, checkout, revente, recherche et cache/, 'L’alias historique Vercel ne doit plus presenter la revente comme flag actif.')
+requireIncludes(webRoot, 'app/api/checkout/route.ts', "if (sessionId) return NextResponse.json({ error: 'stripe_checkout_disabled_v1' }, { status: 410 })", 'Le retour public session_id Stripe doit être refusé en V1.')
+requireNotMatches(webRoot, 'app/components/features/account/PaymentSuccessClient.tsx', /checkLegacyStripe|legacy_stripe|\/api\/checkout\?session_id=/, 'La page succès paiement ne doit plus relire un retour Stripe historique.')
+requireIncludes(webRoot, 'lib/shared/applicationValidation.ts', 'sanitizeApplicationFormData', 'Le serveur doit disposer d’un nettoyage défensif des anciens champs candidature.')
+requireNotMatches(webRoot, 'app/api/applications/prestataire/register/route.ts', /tarifMin|tarifMax|tarifType|tarifDevis/, 'La route register prestataire ne doit plus accepter les anciens champs tarif.')
+requireNotMatches(webRoot, 'app/api/applications/prestataire/submit/route.ts', /tarifMin|tarifMax|tarifType|tarifDevis/, 'La route submit prestataire ne doit plus accepter les anciens champs tarif.')
+requireNotMatches(webRoot, 'app/components/features/provider/PrestataireOnboardingWizard.tsx', /tarifMin|tarifMax|tarifType|tarifDevis|SIRET|SIREN|RCCM|IFU/, 'Le wizard prestataire web ne doit plus porter les anciens champs tarif/identifiant entreprise.')
 
 for (const file of ['app', 'lib'].flatMap((dir) => walk(webRoot, dir))) {
   const text = read(webRoot, file)
@@ -84,7 +104,7 @@ for (const file of ['app', 'lib'].flatMap((dir) => walk(webRoot, dir))) {
 
 if (exists(mobileRoot, 'package.json')) {
   requireFile(mobileRoot, 'lib/refundCases.ts', 'LIB_Mobile/lib/refundCases.ts')
-  requireIncludes(mobileRoot, 'app/(tabs)/tickets.tsx', 'fetchMyRefundCases', 'Le wallet mobile doit afficher les dossiers de remboursement.')
+  requireIncludes(mobileRoot, 'app/(tabs)/tickets.tsx', 'fetchMyRefundCases', 'L’écran billets mobile doit afficher les dossiers de remboursement.')
   requireIncludes(mobileRoot, 'app/(tabs)/tickets.tsx', 'switchRefundToIndividual', 'Le mobile doit permettre la bascule irréversible vers remboursement individuel.')
   requireIncludes(mobileRoot, 'app/spaces/agent/payments.tsx', 'code unique', 'Le module agent mobile doit demander le code unique.')
   requireIncludes(mobileRoot, 'lib/agentPayments.ts', 'signatureUpload', 'Le module agent mobile doit joindre une signature/preuve privee.')

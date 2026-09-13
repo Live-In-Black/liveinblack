@@ -106,7 +106,7 @@ export function seatHoldExpiredEmail(eventName: string, retryUrl: string, site: 
   const evName = escapeHtml(eventName)
   const inner = `
     ${heading('Ta place a été libérée')}
-    ${paragraph(`Le blocage de ta place pour <strong style="color:inherit;">${evName}</strong> a expiré sans paiement — elle a été remise en vente.`)}
+    ${paragraph(`Le blocage de ta place pour <strong style="color:inherit;">${evName}</strong> a expiré sans paiement — elle est de nouveau disponible.`)}
     ${button(retryUrl, 'Retenter ma réservation', 'outline')}
   `
   return {

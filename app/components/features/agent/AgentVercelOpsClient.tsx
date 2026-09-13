@@ -407,8 +407,8 @@ export default function AgentVercelOpsClient() {
       done: Boolean(config),
     },
     {
-      label: 'Pilotage agent',
-      detail: configWritable ? 'Les agents peuvent changer les flags avec confirmation' : 'Lecture seule: écriture Vercel non configurée',
+      label: 'Pilotage admin',
+      detail: configWritable ? 'Les admins peuvent changer les flags avec confirmation' : 'Lecture seule: écriture Vercel non configurée',
       done: configWritable,
     },
     {
@@ -713,7 +713,7 @@ export default function AgentVercelOpsClient() {
                   body: 'Le site public reprend son fonctionnement standard V1 : maintenance coupée et achats FedaPay autorisés. La revente reste exclue du lancement au Bénin.',
                   confirmLabel: 'Activer le mode normal',
                   confirmVariant: 'primary',
-                  patch: { maintenanceMode: false, checkoutEnabled: true, ticketResaleEnabled: false },
+                  patch: { maintenanceMode: false, checkoutEnabled: true },
                   savingKey: 'preset-normal',
                 })}
               />
@@ -728,7 +728,7 @@ export default function AgentVercelOpsClient() {
                   body: 'Cette action met le site en maintenance et suspend immédiatement les achats de billets. À utiliser en cas d’anomalie grave ou de maintenance programmée.',
                   confirmLabel: 'Activer l’urgence',
                   confirmVariant: 'danger',
-                  patch: { maintenanceMode: true, checkoutEnabled: false, ticketResaleEnabled: false },
+                  patch: { maintenanceMode: true, checkoutEnabled: false },
                   savingKey: 'preset-emergency',
                 })}
               />
@@ -788,14 +788,6 @@ export default function AgentVercelOpsClient() {
                     patch: { checkoutEnabled: !config.checkoutEnabled },
                     savingKey: 'checkoutEnabled',
                   })}
-                />
-
-                <FlagControl
-                  label="Revente de billets"
-                  description="⛔ Exclue de la V1 Bénin : ce contrôle reste verrouillé"
-                  active={false}
-                  disabled
-                  onToggle={() => undefined}
                 />
               </div>
             )}

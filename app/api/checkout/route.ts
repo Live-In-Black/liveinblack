@@ -10,8 +10,8 @@ import Event from '@/lib/models/Event'
 import { getVercelOpsConfig } from '@/lib/server/vercelEdgeConfig'
 
 // Route historique Stripe/EUR. V1 Bénin : le checkout actif est
-// /api/checkout/fedapay ; cette route reste uniquement pour relire un ancien
-// retour Stripe/free et refuser explicitement toute nouvelle création.
+// /api/checkout/fedapay ; cette route ne sert plus qu'au rail gratuit et refuse
+// explicitement toute création ou relecture Stripe.
 
 const preorderItemSchema = z.object({
   name: z.string().trim().min(1).max(160),
@@ -58,6 +58,8 @@ export async function GET(req: Request) {
 
     const url = new URL(req.url)
     const sessionId = url.searchParams.get('session_id')
+    if (sessionId) return NextResponse.json({ error: 'stripe_checkout_disabled_v1' }, { status: 410 })
+
     // order_id : retour de app/api/checkout/free/route.ts (rail 'free', billet
     // déjà émis SYNCHRONE — jamais de session Stripe à relire pour ce cas).
     const orderId = url.searchParams.get('order_id')
@@ -65,28 +67,16 @@ export async function GET(req: Request) {
 
     await getDb()
 
-    let order
-    let paid: boolean
-    let paymentStatus: string
-    let amountTotal: number | null = null
-    let currency: string | null = null
+    const amountTotal: number | null = null
+    const currency: string | null = null
 
-    if (sessionId) {
-      order = await Order.findOne({ stripeSessionId: sessionId }).lean()
-      if (!order) return NextResponse.json({ error: 'not_found' }, { status: 404 })
-      paid = order.status === 'paid'
-      paymentStatus = order.status
-      amountTotal = null
-      currency = order.currency
-    } else {
-      order = await Order.findById(orderId).lean()
-      // order_id n'est un identifiant valide que pour une commande rail='free'
-      // — jamais un moyen détourné de relire une commande Stripe/FedaPay sans
-      // passer par leur vérification respective.
-      if (order && order.rail !== 'free') return NextResponse.json({ error: 'not_found' }, { status: 404 })
-      paid = order?.status === 'paid'
-      paymentStatus = paid ? 'paid' : order?.status || 'unknown'
-    }
+    const order = await Order.findById(orderId).lean()
+    // order_id n'est un identifiant valide que pour une commande rail='free'
+    // — jamais un moyen détourné de relire une commande Stripe/FedaPay sans
+    // passer par leur vérification respective.
+    if (order && order.rail !== 'free') return NextResponse.json({ error: 'not_found' }, { status: 404 })
+    const paid = order?.status === 'paid'
+    const paymentStatus = paid ? 'paid' : order?.status || 'unknown'
 
     if (!order || order.userId !== session.user.id) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
 

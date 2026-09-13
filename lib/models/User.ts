@@ -78,7 +78,7 @@ const userSchema = new Schema(
     disabled: { type: Boolean, default: false },
 
     // Bumped whenever `disabled` is set to true or the account is anonymisé
-    // (auto-suppression cliente, suppression validée par un agent) — auth.ts
+    // (auto-suppression cliente, suppression validée par l'admin) — auth.ts
     // compare cette valeur à celle gravée dans le JWT pour révoquer une
     // session déjà émise (une stratégie JWT ne revalide sinon jamais le
     // compte en base entre deux connexions, cf. audit pré-bascule).

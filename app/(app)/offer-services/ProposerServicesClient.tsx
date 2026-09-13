@@ -15,7 +15,6 @@ import { useQueryParamState } from '@/lib/client/useQueryParamState'
 import { Button, Input, Textarea, Select, Label, Card, Modal } from '@/app/components/ui'
 import SubscriptionPanel from './SubscriptionPanel'
 import {
-  applyPrimaryRegionChange,
   catalogCategoriesForProviderTypes,
   comparableProviderProfile,
   toggleProviderCategorySelection,
@@ -293,8 +292,8 @@ export default function ProposerServicesClient({
   // à jour uniquement après une sauvegarde réussie (« Enregistrer ma page »)
   // ou un upload avatar/couverture (déjà persisté serveur), jamais à chaque frappe.
   const [savedProfile, setSavedProfile] = useState(initialProfile)
-  const [subscription, setSubscription] = useState(initialSubscription)
-  const [tab, setTab] = useQueryParamState<'profil' | 'catalogue' | 'avis' | 'abonnement'>('tab', 'profil')
+  const [subscription] = useState(initialSubscription)
+  const [tab] = useQueryParamState<'profil' | 'catalogue' | 'avis' | 'abonnement'>('tab', 'profil')
   const [message, setMessage] = useState('')
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState<'avatar' | 'cover' | ''>('')
@@ -363,13 +362,6 @@ export default function ProposerServicesClient({
     })
   }
 
-  function handlePrimaryRegionChange(regionId: string) {
-    setProfile((current) => {
-      const zones = applyPrimaryRegionChange(current.zonesIntervention, current.regionId, regionId)
-      return { ...current, regionId, zonesIntervention: zones.length ? zones : [regionId] }
-    })
-  }
-
   async function handleImage(field: 'photoUrl' | 'coverUrl', file: File | undefined) {
     if (!file) return
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) return notify('Utilise une image JPG, PNG ou WEBP.')
@@ -429,25 +421,6 @@ export default function ProposerServicesClient({
       notify('Enregistrement impossible — vérifie ta connexion.')
     }
     setSaving(false)
-  }
-
-  // ── Abonnement ──
-  async function handleBillingRegionChange(regionId: string) {
-    try {
-      const res = await fetch('/api/providers/me/billing-region', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ billingRegionId: regionId }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.ok) {
-        notify('Changement impossible — réessaie.')
-        return
-      }
-      setSubscription((s) => ({ ...s, billingRegionId: data.billingRegionId, currency: data.currency, canChangeBilling: data.canChange }))
-    } catch {
-      notify('Changement impossible — vérifie ta connexion.')
-    }
   }
 
   // ── Catalogue ──
@@ -904,15 +877,11 @@ export default function ProposerServicesClient({
                 <Field label="Site principal">
                   <Input value={profile.socialLinks.website || profile.website || ''} onChange={(e) => update({ website: e.target.value, socialLinks: { ...profile.socialLinks, website: e.target.value } })} placeholder="https://tonsite.com" />
                 </Field>
-                <Field label="Pays de base" helper="Un seul pays de référence, affiché avec ta ville (pas d'option « International » ici). Il ne modifie jamais ta facturation.">
-                  <Select
-                    value={profile.regionId}
-                    onChange={handlePrimaryRegionChange}
-                    options={regions.map((r) => ({ value: r.id, label: `${r.flag} ${r.name}` }))}
-                  />
+                <Field label="Pays de base" helper="Le lancement prestataire est limité au Bénin. Cette information sert à afficher ta ville et tes zones.">
+                  <Input value="Bénin" readOnly aria-readonly="true" />
                 </Field>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <Field label="Pays / régions d'intervention" helper="Sélectionne tous les pays où tu peux te déplacer ou fournir ta prestation.">
+                  <Field label="Zone d'intervention V1" helper="Sélectionne les zones du lancement Bénin où tu peux te déplacer ou fournir ta prestation.">
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {regions.map((r) => {
                         const selected = profile.zonesIntervention.includes(r.id)
@@ -1434,21 +1403,11 @@ export default function ProposerServicesClient({
           <section>
             <SubscriptionPanel profile={profile} subscription={subscription} />
             <Card style={{ boxShadow: CARD_SHADOW, padding: 20, marginTop: 16 }}>
-              <h2 style={{ margin: 0, fontSize: 'var(--font-size-title-4)', color: 'var(--text)' }}>Pays de facturation</h2>
+              <h2 style={{ margin: 0, fontSize: 'var(--font-size-title-4)', color: 'var(--text)' }}>Facturation V1 Bénin</h2>
               <p style={{ margin: '7px 0 14px', color: 'var(--text-muted)', fontSize: 'var(--font-size-body)', lineHeight: 1.55 }}>
-                {billingRegion ? `${billingRegion.flag} ${billingRegion.name}` : 'Choisis ton pays pour afficher le bon tarif et le bon moyen de paiement.'}
+                {billingRegion ? `${billingRegion.flag} ${billingRegion.name} · abonnement en FCFA via FedaPay` : 'Bénin · abonnement en FCFA via FedaPay'}
               </p>
-              {subscription.canChangeBilling ? (
-                <Select
-                  aria-label="Pays de facturation"
-                  value={subscription.billingRegionId}
-                  onChange={handleBillingRegionChange}
-                  options={regions.map((region) => ({ value: region.id, label: `${region.flag} ${region.name}` }))}
-                  style={{ maxWidth: 420 }}
-                />
-              ) : (
-                <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 'var(--font-size-callout)' }}>Termine ou annule ton abonnement actuel pour changer de pays.</p>
-              )}
+              <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 'var(--font-size-callout)' }}>Les anciens pays et rails de facturation ne sont pas proposés pendant le lancement.</p>
             </Card>
           </section>
         )}

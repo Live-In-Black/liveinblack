@@ -79,7 +79,7 @@ L'audit recense 59 expériences ou états modaux : 50 cartes centrées, 6 pannea
 | Supprimer son avis prestataire | Centrée | `app/components/ProviderReviewsClient.tsx` |
 | Signaler un profil public | Centrée | `app/components/PublicProfileActions.tsx` |
 
-### Espace agent — 11
+### Espace admin — 11
 
 | Expérience | Présentation | Source |
 | --- | --- | --- |

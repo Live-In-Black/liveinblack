@@ -47,7 +47,7 @@ export function organizerCurrency(profile: { regionId?: string; country?: string
 }
 
 export function payRailLabel(currency: string = 'XOF'): string {
-  return String(currency).toUpperCase() === 'EUR' ? 'Rail historique indisponible en V1' : 'Mobile Money / carte (FedaPay)'
+  return String(currency).toUpperCase() === 'EUR' ? 'Rail historique indisponible en V1' : 'FedaPay / Mobile Money'
 }
 
 export function fmtMoney(amount: unknown, currency: string = 'XOF'): string {

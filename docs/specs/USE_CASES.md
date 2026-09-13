@@ -2,7 +2,7 @@
 
 > Marketplace événementielle / nightlife (billetterie, organisateurs d'événements, prestataires de services). Document généré à partir de l'état réel du code (`app/`, `lib/server/`) — pas une spec théorique.
 >
-> Modèle de comptes : **multi-rôle**. Un même compte peut porter plusieurs rôles (`roles[]`) mais n'en a qu'un **actif** à la fois (`activeRole`) : `client`, `organisateur`, `prestataire`, `agent`. Les interfaces sont strictement séparées par rôle actif.
+> Modèle de comptes V1 : **comptes séparés**. Client, organisateur et prestataire utilisent des comptes distincts et des emails distincts. `activeRole` indique l'interface fixe du compte courant ; l'ancien modèle multi-rôle n'est conservé que pour compatibilité de données historiques et ne doit plus être présenté comme un parcours produit.
 
 ---
 
@@ -25,7 +25,7 @@
 ## 2. Compte Client
 
 ### 2.1 Découverte & billetterie
-- Réserver une ou plusieurs places sur un événement (paiement Stripe pour l'EUR, FedaPay Mobile Money pour le XOF)
+- Réserver une ou plusieurs places sur un événement (FedaPay Mobile Money / XOF pour la V1 Benin)
 - Acheter en groupe (table/groupe de places liées à un hôte)
 - **Bloquer une place avec un acompte (seat-hold)** : 5 %/24h ou 10 %/72h du prix, prix figé, solde à payer avant expiration sinon la place repart en vente
 - **Souscrire une protection annulation** au moment de l'achat (+10 % du prix du billet) — ouvre droit à un remboursement automatique en cas de report/modification majeure de l'événement
@@ -35,9 +35,9 @@
 ### 2.2 Portefeuille & billets
 - Consulter son portefeuille de billets (groupés par événement)
 - Afficher le QR code d'un billet pour le scan à l'entrée
-- **Revendre un billet** sur la bourse de revente officielle (prix ≤ prix d'origine, commission plafonnée, ancien QR invalidé automatiquement)
-- Retirer une annonce de revente (nouveau QR réémis pour le vendeur)
-- **Acheter un billet en revente** d'un autre utilisateur (billet garanti, aucune identité vendeur/acheteur exposée)
+- **Revendre un billet** : hors V1 Benin, aucun bouton actif.
+- Retirer une annonce de revente : hors V1 Benin, donnees historiques seulement.
+- **Acheter un billet en revente** : hors V1 Benin, routes fermees.
 - **Demander un remboursement** (événement reporté, modification majeure déclarée, ou protection annulation souscrite) — automatique, sans revue manuelle
 - Recevoir un lien de remboursement sécurisé même sans compte (acheteur invité)
 
@@ -48,7 +48,7 @@
 - Gérer sa confidentialité (visibilité en ligne, avatar visible, accusés de lecture, recommandations personnalisées)
 - Exporter ses données personnelles (RGPD)
 - Supprimer son compte
-- Cumuler des points de fidélité
+- Points de fidélité : hors V1 Benin.
 
 ### 2.4 Organisateurs & événements suivis
 - Suivre un organisateur (partage de son email pour recevoir ses actualités)
@@ -170,8 +170,8 @@
 
 | Rail | Devise | Usage |
 |---|---|---|
-| Stripe | EUR | Billetterie, boosts, abonnements prestataire |
-| FedaPay (Mobile Money) | XOF | Billetterie, seat-hold, revente, boosts |
+| Stripe | EUR | Historique ferme V1, pas de nouveau checkout actif |
+| FedaPay (Mobile Money) | XOF | Billetterie, seat-hold, boosts, abonnement prestataire |
 
 - Frais plateforme calculés via une formule commune (`fees.ts` : pourcentage + plancher/plafond)
 - Remboursements idempotents (`EventRefund` unique par `{eventId, paymentRef}`)
@@ -181,7 +181,7 @@
 
 ## 8. Notes d'architecture pertinentes aux use cases
 
-- **`activeRole`, jamais `roles[]` directement** pilote tous les guards d'accès — un compte multi-rôle voit toujours une seule interface à la fois.
+- **`activeRole`, jamais `roles[]` directement** pilote tous les guards d'accès — un compte V1 voit une seule interface fixe, sans bascule métier.
 - **Temps réel = polling uniquement** (messagerie, présence) — aucune fonctionnalité ne dépend de WebSocket.
 - **`proxy.ts`** filtre par préfixe de route côté UX ; la véritable frontière de sécurité est revérifiée dans chaque route API (`lib/server/*`).
 - **Fidélité stricte au legacy** : ce document reflète une réécriture Next.js/MongoDB d'une app Vite/Firebase antérieure — les comportements ci-dessus (y compris certaines limites, ex. hôte de groupe agent sans droit de révocation) sont des décisions produit assumées, pas des oublis.

@@ -359,7 +359,7 @@ async function processSale(agentCaller: AgentSaleCaller, eventId: string, input:
       { upsert: true }
     )
     if (!alreadyAlerted) {
-      await notifyUserById(agentCaller.id, () => cashSalesBlockedEmail(pendingCount, `${SITE}/agent`, SITE))
+      await notifyUserById(agentCaller.id, () => cashSalesBlockedEmail(pendingCount, `${SITE}/admin`, SITE))
     }
     return { ok: false, status: 409, error: 'too_many_unpaid_cash_sales' }
   }
@@ -601,7 +601,7 @@ export async function sendPendingCashSaleReminders(): Promise<{ reminded: number
         event?.name || 'cet événement',
         fmtMoney(settlement.amountTotalMinor / (settlement.currency === 'XOF' ? 1 : 100), settlement.currency),
         daysOverdue,
-        `${SITE}/agent`,
+        `${SITE}/admin`,
         SITE
       )
     )

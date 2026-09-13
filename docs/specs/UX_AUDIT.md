@@ -89,13 +89,13 @@ Seuils utilisés : cible interactive recommandée de 44 × 44 px, corps de texte
 |---|---|---|
 | `/agent` | Tableau de bord | État de chargement trop nu, cartes métriques petites |
 | `/agent/comptes` | Gestion des comptes | Forte densité, nombreuses métadonnées 10–12 px, contrôles compacts |
-| `/agent/evenements` | Modération événements | Même enjeu de densité et filtres |
-| `/agent/dossiers` | Validation des dossiers | Bonne largeur ; cartes d'état et lignes claires, cibles encore sous 44 px |
-| `/agent/paiements` | Paiements et reversements | Plusieurs sous-sections dans un même écran, à garder comme fusion structurée |
-| `/agent/suppressions` | Suppressions | État vide/chargement à enrichir |
-| `/agent/signalements` | Signalements | État vide/chargement à enrichir |
-| `/agent/avis` | Modération des avis | Lignes et actions trop compactes |
-| `/agent/actualite` | Configuration accueil | Titre absent pendant le premier rendu, éditeur en petites cartes |
+| `/admin/evenements` | Modération événements | Même enjeu de densité et filtres |
+| `/admin/dossiers` | Validation des dossiers | Bonne largeur ; cartes d'état et lignes claires, cibles encore sous 44 px |
+| `/admin/paiements` | Paiements et reversements | Plusieurs sous-sections dans un même écran, à garder comme fusion structurée |
+| `/admin/suppressions` | Suppressions | État vide/chargement à enrichir |
+| `/admin/signalements` | Signalements | État vide/chargement à enrichir |
+| `/admin/avis` | Modération des avis | Lignes et actions trop compactes |
+| `/admin/actualite` | Configuration accueil | Titre absent pendant le premier rendu, éditeur en petites cartes |
 
 ## Inventaire et diagnostic — organisateur, prestataire et flux immersifs
 
@@ -122,7 +122,7 @@ Les anciennes URL restent prises en charge par `next.config.ts`, sans conserver 
 | `/onboarding-provider` | `/provider-signup` |
 | `/payment-cancelled` | `/payment-success?cancelled=1` |
 | `/profile/aide` | `/help` |
-| `/agent/boosts` | `/agent/paiements?section=boosts` |
+| `/agent/boosts` | `/admin/paiements?section=boosts` |
 | `/agent-sales/[eventId]` | `/on-site-sales/[eventId]` |
 | `/scanner` | `/my-shifts` |
 | `/my-subscription` | `/offer-services?tab=abonnement` |

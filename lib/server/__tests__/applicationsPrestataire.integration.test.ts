@@ -35,7 +35,6 @@ function baseForm(overrides: Partial<PrestataireFormData> = {}): PrestataireForm
     pays: 'Togo',
     nomCommercial: '',
     nomScene: '',
-    siret: '',
     zonesIntervention: [],
     description: '',
     specialitesLibre: '',
@@ -60,10 +59,6 @@ function baseForm(overrides: Partial<PrestataireFormData> = {}): PrestataireForm
     menuBase: '',
     alcoolFood: false,
     alcoolFoodAtteste: false,
-    tarifMin: null,
-    tarifMax: null,
-    tarifType: '',
-    tarifDevis: false,
     ...overrides,
   }
 }

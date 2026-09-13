@@ -54,18 +54,18 @@ sont pas inclus dans cet inventaire.
 - `/playlist/[eventId]`
 - `/scanner/[eventId]`
 
-## Espace agent
+## Espace admin
 
 - `/agent`
-- `/agent/actualite`
-- `/agent/avis`
-- `/agent/blog`
+- `/admin/actualite`
+- `/admin/avis`
+- `/admin/blog`
 - `/agent/comptes`
-- `/agent/dossiers`
-- `/agent/evenements`
-- `/agent/paiements`
-- `/agent/signalements`
-- `/agent/suppressions`
+- `/admin/dossiers`
+- `/admin/evenements`
+- `/admin/paiements`
+- `/admin/signalements`
+- `/admin/suppressions`
 
 ## Contrats à vérifier sur chaque écran
 

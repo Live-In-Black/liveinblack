@@ -40,10 +40,6 @@ const prestataireFormSchema = z.object({
   menuBase: z.string().trim().default(''),
   alcoolFood: z.boolean().default(false),
   alcoolFoodAtteste: z.boolean().default(false),
-  tarifMin: z.number().nullable().default(null),
-  tarifMax: z.number().nullable().default(null),
-  tarifType: z.string().trim().default(''),
-  tarifDevis: z.boolean().default(false),
 })
 
 const bodySchema = z.object({

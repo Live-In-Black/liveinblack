@@ -163,7 +163,7 @@ export default function AgentEventsClient() {
 
         {listError && (
           <Card accent="var(--danger-border)" className={styles.error} role="alert">
-            <div className={styles.errorCopy}><AlertTriangle size={20} aria-hidden="true" /><div><strong>Impossible de charger les événements</strong><p>Vérifie ta connexion ou reconnecte-toi si tes droits agent ont changé.</p></div></div>
+            <div className={styles.errorCopy}><AlertTriangle size={20} aria-hidden="true" /><div><strong>Impossible de charger les événements</strong><p>Vérifie ta connexion ou reconnecte-toi si tes droits admin ont changé.</p></div></div>
             <Button variant="secondary" onClick={triggerReload}>Réessayer</Button>
           </Card>
         )}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getRequiredDocs, isValidPhone, validateOrganizerFormData, validatePrestataireStep0 } from '../applicationValidation'
+import { getRequiredDocs, isValidPhone, sanitizeApplicationFormData, validateOrganizerFormData, validatePrestataireStep0 } from '../applicationValidation'
 
 describe('application validation', () => {
   it('accepts current Benin phone formats', () => {
@@ -24,8 +24,12 @@ describe('application validation', () => {
     expect(validateOrganizerFormData(organizer)).toEqual({ ok: true })
   })
 
-  it('does not block historical drafts on a removed identifier', () => {
-    expect(validateOrganizerFormData({ ...organizer, siret: 'ancien-dossier' })).toEqual({ ok: true })
+  it('filters historical enterprise identifiers before persistence', () => {
+    const clean = sanitizeApplicationFormData('organisateur', { ...organizer, siret: 'ancien-dossier', rccm: 'old', ifu: 'old' })
+    expect(clean).not.toHaveProperty('siret')
+    expect(clean).not.toHaveProperty('rccm')
+    expect(clean).not.toHaveProperty('ifu')
+    expect(validateOrganizerFormData(clean)).toEqual({ ok: true })
   })
 
   it('still validates the identity and activity fields', () => {
@@ -43,6 +47,10 @@ describe('application validation', () => {
   })
 
   it('does not ask providers for an enterprise identifier', () => {
-    expect(validatePrestataireStep0({ prenom: 'A', nom: 'B', pays: 'Bénin', telephoneCode: '+229', telephone: '0196123456', siret: 'ancien-dossier' })).toEqual({ ok: true })
+    const clean = sanitizeApplicationFormData('prestataire', { prenom: 'A', nom: 'B', pays: 'Bénin', telephoneCode: '+229', telephone: '0196123456', siret: 'ancien-dossier', tarifMin: 1000, tarifType: 'heure' })
+    expect(clean).not.toHaveProperty('siret')
+    expect(clean).not.toHaveProperty('tarifMin')
+    expect(clean).not.toHaveProperty('tarifType')
+    expect(validatePrestataireStep0(clean)).toEqual({ ok: true })
   })
 })

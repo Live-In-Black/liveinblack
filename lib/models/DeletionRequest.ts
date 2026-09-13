@@ -1,7 +1,7 @@
 import { Schema, model, models, type InferSchemaType, type Model } from 'mongoose'
 
 // Remplace `deletion_requests/{id}` (Firestore, src/utils/accountDeletion.js)
-// — demande de suppression de compte nécessitant une revue agent avant purge
+// — demande de suppression de compte nécessitant une revue admin avant purge
 // (#9 phase agent/admin, tâche #104). N'existe QUE pour le flux qui a
 // réellement besoin d'une approbation humaine : un organisateur/prestataire
 // dont le dossier est `approved` (MonDossierPage.jsx légataire — un compte

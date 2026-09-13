@@ -19,7 +19,7 @@ import ReviewReport from '@/lib/models/ReviewReport'
 // Purge PII partagée entre les DEUX chemins de suppression de compte :
 // lib/server/profile.ts:deleteAccount (auto-suppression — client, agent, ou
 // organisateur/prestataire dont orgStatus/prestStatus n'est pas encore
-// 'active') ET lib/server/agentDeletion.ts:approveDeletion (revue agent d'un
+// 'active') ET lib/server/agentDeletion.ts:approveDeletion (revue admin d'un
 // organisateur/prestataire APPROUVÉ). Extrait de l'ancienne implémentation
 // monolithique d'approveDeletion (seul chemin à avoir jamais fait cette purge
 // en cascade) — deleteAccount n'anonymisait auparavant QUE le document User

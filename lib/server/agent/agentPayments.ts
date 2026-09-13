@@ -27,10 +27,9 @@ import { fmtMoney } from '@/lib/shared/money'
 // PaymentAlert. Ce module ne fait QUE lire ces sources de vérité existantes
 // et écrire les quelques transitions de statut qu'un agent humain doit
 // déclencher à la main : versement XOF auto en échec (filet, exact pendant
-// de api/admin-accounts.js:mark_payout_paid), reversement EUR/ledger hors
-// Stripe Connect (organizerPayouts.ts:requestManualPayout n'a pas d'équivalent
-// de règlement côté agent — comblé ici), remboursement FedaPay manuel, clôture
-// d'alerte de paiement.
+// de api/admin-accounts.js:mark_payout_paid), soldes/demandes XOF FedaPay,
+// remboursement manuel, clôture d'alerte de paiement. Les anciens soldes EUR
+// restent consultables en base mais ne sont plus une file actionnable V1.
 //
 // Contrôle « appelant == agent » fait à la couche route (requireAgent,
 // lib/server/agentGuard.ts) — ces fonctions font confiance à `agent`, comme
@@ -84,10 +83,10 @@ export interface AgentPayoutRequestView {
   sellerName: string
   sellerEmail: string
   requestedAt: string
-  amountDueCents: number // solde RÉEL du ledger (source de vérité), pas le montant demandé
+  amountDueCents: number // historique EUR non actionnable V1
   amountDueXOF: number
-  payCents: number // montant qui sera effectivement réglé si l'agent confirme
-  mismatch: boolean // le montant demandé dépasse le solde réel
+  payCents: number // nom legacy conservé côté client ; contient le montant XOF à régler
+  mismatch: boolean // le montant XOF demandé dépasse le solde XOF réel
 }
 
 export interface AgentSellerBalanceView {
@@ -109,8 +108,8 @@ export async function listPendingPayoutsForAgent(): Promise<AgentPayoutsQueueVie
 
   const [failed, requests, balances] = await Promise.all([
     EventPayout.find({ status: 'failed' }).sort({ updatedAt: -1 }).lean(),
-    PayoutRequest.find({ status: 'pending' }).sort({ createdAt: 1 }).lean(),
-    SellerBalance.find({ $or: [{ amountDueCents: { $gt: 0 } }, { amountDueXOF: { $gt: 0 } }] }).lean(),
+    PayoutRequest.find({ status: 'pending', amountDueXOF: { $gt: 0 } }).sort({ createdAt: 1 }).lean(),
+    SellerBalance.find({ amountDueXOF: { $gt: 0 } }).lean(),
   ])
 
   const sellerUids = [...new Set([...failed.map((f) => f.sellerUid), ...requests.map((r) => r.sellerUid), ...balances.map((b) => b.sellerUid)])]
@@ -148,7 +147,7 @@ export async function listPendingPayoutsForAgent(): Promise<AgentPayoutsQueueVie
     const ledger = balanceBySeller.get(r.sellerUid)
     const dueCents = Math.max(0, Number(ledger?.amountDueCents || 0))
     const dueXOF = Math.max(0, Number(ledger?.amountDueXOF || 0))
-    const requestedCents = Math.max(0, Number(r.amountDueCents || 0))
+    const requestedXOF = Math.max(0, Number(r.amountDueXOF || 0))
     const who = names.get(r.sellerUid)
     return {
       requestId: String(r._id),
@@ -158,8 +157,8 @@ export async function listPendingPayoutsForAgent(): Promise<AgentPayoutsQueueVie
       requestedAt: new Date(r.createdAt as unknown as string).toISOString(),
       amountDueCents: dueCents,
       amountDueXOF: dueXOF,
-      payCents: Math.min(requestedCents || dueCents, dueCents),
-      mismatch: requestedCents > dueCents,
+      payCents: Math.min(requestedXOF || dueXOF, dueXOF),
+      mismatch: requestedXOF > dueXOF,
     }
   })
 
@@ -238,24 +237,21 @@ export async function markPayoutPaid(agent: AgentCaller, eventId: string): Promi
   return result
 }
 
-// ── Régler à la main un solde vendeur EUR/ledger (hors Stripe Connect) ──────
-// organizerPayouts.ts:requestManualPayout crée la demande côté vendeur, mais
-// aucun flux ne la RÈGLE — comblé ici, pendant serveur de handleMarkPaid
-// (legacy AgentPage.jsx) : montant plafonné au solde RÉEL du ledger (une
-// demande est écrite par le vendeur, jamais fiable seule), clôture la
-// PayoutRequest associée si fournie.
+// ── Régler à la main un solde vendeur XOF/FedaPay ──────────────────────────
+// V1 Benin : seul le ledger XOF est actionnable. Les anciens soldes EUR restent
+// consultables pour audit/migration, mais ne doivent plus être réglés par API.
 export type MarkSellerBalancePaidResult = ErrResult | { ok: true; paid: number }
 
 export async function markSellerBalancePaid(
   agent: AgentCaller,
-  input: { sellerUid: string; amount: number; currency: 'EUR' | 'XOF'; requestId?: string | null }
+  input: { sellerUid: string; amount: number; currency: 'XOF'; requestId?: string | null }
 ): Promise<MarkSellerBalancePaidResult> {
   await getDb()
 
   const sellerUid = input.sellerUid?.trim()
   if (!sellerUid) return { ok: false, status: 400, error: 'missing_seller' }
   const amt = Math.abs(Math.round(Number(input.amount) || 0))
-  const field = input.currency === 'XOF' ? 'amountDueXOF' : 'amountDueCents'
+  const field = 'amountDueXOF'
 
   // Demande au solde déjà nul : on clôt la demande sans toucher au ledger.
   if (amt <= 0) {
@@ -294,7 +290,7 @@ export async function markSellerBalancePaid(
   // Voir le commentaire équivalent dans markPayoutPaid : recast explicite
   // après réassignation de `outcome` depuis la closure withTransaction.
   const result = outcome as MarkSellerBalancePaidResult
-  if (result.ok) console.log(`[agentPayments] ${agent.name} a réglé ${result.paid} (${input.currency}) à ${sellerUid}`)
+  if (result.ok) console.log(`[agentPayments] ${agent.name} a réglé ${result.paid} XOF à ${sellerUid}`)
   return result
 }
 

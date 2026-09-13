@@ -42,25 +42,25 @@ async function seedUser(overrides: Record<string, unknown> = {}) {
 }
 
 describeIntegration('getProviderBillingContext', () => {
-  it("défaut à 'france'/EUR si aucun pays de facturation ni dossier prestataire", async () => {
+  it("défaut à 'benin'/XOF si aucun pays de facturation ni dossier prestataire", async () => {
     const user = await seedUser()
     const context = await getProviderBillingContext({ id: user.id })
-    expect(context).toEqual({ billingRegionId: 'france', currency: 'EUR', canChange: true })
+    expect(context).toEqual({ billingRegionId: 'benin', currency: 'XOF', canChange: true })
 
     const fresh = await User.findById(user.id).lean()
-    expect(fresh?.providerBillingRegionId).toBe('france')
+    expect(fresh?.providerBillingRegionId).toBe('benin')
   })
 
-  it('dérive le pays de facturation depuis le dernier dossier prestataire si présent', async () => {
+  it('ignore les anciens pays du dossier prestataire et force Benin/XOF', async () => {
     const user = await seedUser()
     await Application.create({ userId: user.id, type: 'prestataire', status: 'submitted', formData: { pays: 'Togo' } })
 
     const context = await getProviderBillingContext({ id: user.id })
-    expect(context.billingRegionId).toBe('togo')
+    expect(context.billingRegionId).toBe('benin')
     expect(context.currency).toBe('XOF')
   })
 
-  it('prend les données les plus récentes du dossier prestataire unique après resoumission', async () => {
+  it('reste Benin/XOF après resoumission même si le dossier mentionne un ancien pays', async () => {
     const user = await seedUser()
     const application = await Application.create({ userId: user.id, type: 'prestataire', status: 'submitted', formData: { pays: 'France' } })
     await Application.updateOne(
@@ -75,27 +75,30 @@ describeIntegration('getProviderBillingContext', () => {
     )
 
     const context = await getProviderBillingContext({ id: user.id })
-    expect(context.billingRegionId).toBe('togo')
+    expect(context.billingRegionId).toBe('benin')
     expect(context.currency).toBe('XOF')
   })
 
-  it('respecte un pays de facturation déjà posé sans le re-dériver', async () => {
+  it('migre un ancien pays de facturation déjà posé vers Benin/XOF', async () => {
     const user = await seedUser({ providerBillingRegionId: 'senegal' })
     await Application.create({ userId: user.id, type: 'prestataire', status: 'submitted', formData: { pays: 'Togo' } })
 
     const context = await getProviderBillingContext({ id: user.id })
-    expect(context.billingRegionId).toBe('senegal')
+    expect(context.billingRegionId).toBe('benin')
+
+    const fresh = await User.findById(user.id).lean()
+    expect(fresh?.providerBillingRegionId).toBe('benin')
   })
 
-  it('re-dérive et persiste un défaut sain si la valeur stockée est invalide', async () => {
+  it('persiste Benin si la valeur stockée est invalide', async () => {
     const user = await seedUser({ providerBillingRegionId: 'atlantide' })
     await Application.create({ userId: user.id, type: 'prestataire', status: 'submitted', formData: { pays: 'Sénégal' } })
 
     const context = await getProviderBillingContext({ id: user.id })
-    expect(context).toEqual({ billingRegionId: 'senegal', currency: 'XOF', canChange: true })
+    expect(context).toEqual({ billingRegionId: 'benin', currency: 'XOF', canChange: true })
 
     const fresh = await User.findById(user.id).lean()
-    expect(fresh?.providerBillingRegionId).toBe('senegal')
+    expect(fresh?.providerBillingRegionId).toBe('benin')
   })
 
   it('canChange=false si un abonnement prestataire est actif', async () => {
@@ -108,24 +111,24 @@ describeIntegration('getProviderBillingContext', () => {
 describeIntegration('setProviderBillingRegion', () => {
   it('change le pays de facturation quand aucun abonnement actif', async () => {
     const user = await seedUser({ providerBillingRegionId: 'france' })
-    const result = await setProviderBillingRegion({ id: user.id }, 'togo')
+    const result = await setProviderBillingRegion({ id: user.id }, 'benin')
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.context).toEqual({ billingRegionId: 'togo', currency: 'XOF', canChange: true })
+    expect(result.context).toEqual({ billingRegionId: 'benin', currency: 'XOF', canChange: true })
 
     const fresh = await User.findById(user.id).lean()
-    expect(fresh?.providerBillingRegionId).toBe('togo')
+    expect(fresh?.providerBillingRegionId).toBe('benin')
   })
 
-  it('normalise la saisie du pays de facturation avant écriture', async () => {
+  it('normalise la saisie Benin avant écriture', async () => {
     const user = await seedUser({ providerBillingRegionId: 'france' })
-    const result = await setProviderBillingRegion({ id: user.id }, '  Sénégal ')
+    const result = await setProviderBillingRegion({ id: user.id }, '  Bénin ')
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.context).toEqual({ billingRegionId: 'senegal', currency: 'XOF', canChange: true })
+    expect(result.context).toEqual({ billingRegionId: 'benin', currency: 'XOF', canChange: true })
 
     const fresh = await User.findById(user.id).lean()
-    expect(fresh?.providerBillingRegionId).toBe('senegal')
+    expect(fresh?.providerBillingRegionId).toBe('benin')
   })
 
   it('refuse un pays de facturation invalide', async () => {
@@ -136,20 +139,23 @@ describeIntegration('setProviderBillingRegion', () => {
     expect(result.error).toBe('invalid_billing_region')
   })
 
-  it('refuse un changement de pays tant que l’abonnement est actif', async () => {
+  it('refuse un ancien pays hors Bénin même tant que l’abonnement est actif', async () => {
     const user = await seedUser({ providerBillingRegionId: 'france', prestataireSubActive: true })
     const result = await setProviderBillingRegion({ id: user.id }, 'togo')
     expect(result.ok).toBe(false)
     if (result.ok) return
-    expect(result.error).toBe('subscription_active')
+    expect(result.error).toBe('benin_launch_region_required')
 
     const fresh = await User.findById(user.id).lean()
     expect(fresh?.providerBillingRegionId).toBe('france')
   })
 
-  it('autorise de re-poser le MÊME pays même abonnement actif (aucun changement réel)', async () => {
+  it('autorise de re-poser Benin même abonnement actif', async () => {
     const user = await seedUser({ providerBillingRegionId: 'france', prestataireSubActive: true })
-    const result = await setProviderBillingRegion({ id: user.id }, 'france')
+    const result = await setProviderBillingRegion({ id: user.id }, 'benin')
     expect(result.ok).toBe(true)
+
+    const fresh = await User.findById(user.id).lean()
+    expect(fresh?.providerBillingRegionId).toBe('benin')
   })
 })

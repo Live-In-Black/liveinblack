@@ -49,7 +49,7 @@ for (const item of items) {
 }
 
 console.log('')
-console.log('Rituel recommande: ouvrir Vercel Usage chaque semaine, comparer ces signaux, puis reporter les anomalies dans /agent/vercel.')
+console.log('Rituel recommande: ouvrir Vercel Usage chaque semaine, comparer ces signaux, puis reporter les anomalies dans /admin/vercel.')
 
 if (!ready) {
   process.exitCode = 1

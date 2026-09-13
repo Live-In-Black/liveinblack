@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { INTERNATIONAL_REGION_ID } from '@/lib/shared/locations'
 import {
   applyPrimaryRegionChange,
   catalogCategoriesForProviderTypes,
@@ -41,16 +40,15 @@ describe('providerProfileUtils', () => {
     expect(toggleProviderCategorySelection(['dj', 'photo'], 'photo')).toEqual(['dj'])
   })
 
-  it('gère correctement les zones d’intervention et le mode international', () => {
-    expect(toggleProviderZoneSelection(['idf'], INTERNATIONAL_REGION_ID, 'idf')).toEqual([INTERNATIONAL_REGION_ID])
-    expect(toggleProviderZoneSelection([INTERNATIONAL_REGION_ID], INTERNATIONAL_REGION_ID, 'idf')).toEqual(['idf'])
-    expect(toggleProviderZoneSelection(['idf'], 'naq', 'idf')).toEqual(['idf', 'naq'])
-    expect(toggleProviderZoneSelection(['idf'], 'idf', 'idf')).toEqual(['idf'])
+  it('gère correctement les zones d’intervention V1 Bénin', () => {
+    expect(toggleProviderZoneSelection(['benin'], 'benin', 'benin')).toEqual(['benin'])
+    expect(toggleProviderZoneSelection(['international'], 'benin', 'benin')).toEqual(['benin'])
+    expect(toggleProviderZoneSelection([], 'benin', 'benin')).toEqual(['benin'])
   })
 
   it('déplace la région principale sans perdre les zones locales', () => {
     expect(applyPrimaryRegionChange(['idf', 'naq'], 'idf', 'ara')).toEqual(['ara', 'naq'])
-    expect(applyPrimaryRegionChange([INTERNATIONAL_REGION_ID], 'idf', 'ara')).toEqual([INTERNATIONAL_REGION_ID])
+    expect(applyPrimaryRegionChange(['international'], 'idf', 'ara')).toEqual(['ara'])
   })
 
   it('déduit les catégories catalogue sans doublons', () => {

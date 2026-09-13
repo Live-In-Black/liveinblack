@@ -26,7 +26,7 @@ const ROLE_BACKGROUNDS: Record<Exclude<Role, 'agent'>, string> = {
 // Suppressions de la sidebar agent — vivaient auparavant dans la barre
 // d'onglets interne d'AgentShell.tsx (#107), déplacés ici avec la nav
 // elle-même (voir dashboardNav.ts, ROLE_NAV.agent). Clé = href réel exact
-// du lien (/agent/dossiers, etc.) pour ne pas dépendre d'une correspondance
+// du lien (/admin/dossiers, etc.) pour ne pas dépendre d'une correspondance
 // texte fragile.
 function useAgentBadges(activeRole: Role): Partial<Record<string, number>> {
   const [pendingDossiers, setPendingDossiers] = useState(0)

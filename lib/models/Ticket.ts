@@ -30,7 +30,7 @@ const ticketSchema = new Schema(
     place: { type: String, default: '' },
     placePrice: { type: Number, default: 0 },
     totalPrice: { type: Number, default: 0 },
-    currency: { type: String, default: 'EUR' },
+    currency: { type: String, default: 'XOF' },
     preorders: { type: [preorderLineSchema], default: [] },
     userId: { type: String, required: true, index: true },
     // hostUid : acheteur d'une place de groupe (table). Absent sur un billet solo.
@@ -50,16 +50,12 @@ const ticketSchema = new Schema(
     paid: { type: Boolean, default: false },
     consumptionRevision: { type: Number, default: 0 },
     source: { type: String, default: 'paid' }, // 'paid' | 'free' | 'guestlist'
-    // Revente officielle (lib/server/resale.ts) : non-null tant qu'une mise en
-    // vente est active pour ce billet — le QR du détenteur devient inutilisable
-    // dès la mise en vente (même mécanisme que seatVersion/entryNonce), donc ce
-    // champ sert surtout à bloquer une seconde mise en vente concurrente et à
-    // afficher l'état "en vente" côté portefeuille.
+    // Revente historique hors V1 Benin : conserve un ancien lien d'annonce
+    // pour audit/migration. Les parcours produit actifs ne doivent jamais
+    // exposer de mise en vente ni de retrait depuis ce champ.
     resaleListingId: { type: String, default: null },
-    // Nombre de fois où cette admission a déjà changé de main via la bourse
-    // de revente — plafonné (lib/server/resale.ts) pour limiter le risque de
-    // fraude/spéculation, conformément à la recommandation de lancement de la
-    // spec ("deux ou trois changements de propriétaire max").
+    // Compteur historique de changements de main via l'ancien module de
+    // revente. Gardé pour compatibilité des données, pas comme capacité V1.
     resaleCount: { type: Number, default: 0 },
     stripeSessionId: { type: String, default: null, index: true },
     fedapayTransactionId: { type: String, default: null },

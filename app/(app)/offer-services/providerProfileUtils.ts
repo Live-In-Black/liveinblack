@@ -1,4 +1,3 @@
-import { INTERNATIONAL_REGION_ID } from '@/lib/shared/locations'
 import { CATALOG_CATEGORIES } from '@/lib/shared/providerCategories'
 import type { SocialNetworkKey } from '@/lib/shared/social'
 
@@ -56,17 +55,13 @@ export function toggleProviderCategorySelection(selected: string[], categoryId: 
 }
 
 export function toggleProviderZoneSelection(selected: string[], zoneId: string, regionId: string): string[] {
-  if (zoneId === INTERNATIONAL_REGION_ID) {
-    return selected.includes(zoneId) ? [regionId] : [INTERNATIONAL_REGION_ID]
-  }
-  const withoutIntl = selected.filter((v) => v !== INTERNATIONAL_REGION_ID)
-  const zonesIntervention = withoutIntl.includes(zoneId) ? withoutIntl.filter((v) => v !== zoneId) : [...withoutIntl, zoneId]
+  const beninZones = selected.filter((v) => v === regionId || v === zoneId)
+  const zonesIntervention = beninZones.includes(zoneId) ? beninZones.filter((v) => v !== zoneId) : [...beninZones, zoneId]
   return zonesIntervention.length ? zonesIntervention : [regionId]
 }
 
 export function applyPrimaryRegionChange(currentZones: string[], currentRegionId: string, nextRegionId: string): string[] {
-  if (currentZones.includes(INTERNATIONAL_REGION_ID)) return currentZones
-  const zones = [...new Set([nextRegionId, ...currentZones.filter((v) => v !== currentRegionId)])]
+  const zones = [...new Set([nextRegionId, ...currentZones.filter((v) => v !== currentRegionId && v !== 'international')])]
   return zones.length ? zones : [nextRegionId]
 }
 

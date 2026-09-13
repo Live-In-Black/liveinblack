@@ -675,7 +675,7 @@ Migration des anciens comptes multi-profils sans perte, arbitrages cash/OTP/acom
 - Le compteur de l'onglet reversements ne compte plus les demandes/soldes EUR historiques ; il compte les echecs de versement XOF et les soldes XOF sans demande.
 - Les cartes "Soldes dus sans demande" deviennent "Soldes XOF dus sans demande" et n'affichent plus de ligne "Solde EUR".
 - La branche de confirmation `settle` et le formatteur `fmtEUR` sont retires du composant client. La fermeture a zero d'une demande utilise un payload XOF neutre au lieu de forcer `currency:'EUR'`.
-- Les alertes paiement ne demandent plus de verifier "Stripe ou FedaPay" ; les textes visibles parlent de FedaPay ou dossier de preuve. Le libelle `stripe_refund_failed` est reformule en "Remboursement carte historique a verifier".
+- Les alertes paiement ne demandent plus de verifier "Stripe ou FedaPay" ; les textes visibles parlent de FedaPay ou dossier de preuve. Le libelle `stripe_refund_failed` est reformule en "Remboursement historique a verifier".
 - Tests et controles : recherche ciblee propre sur `EUR`, `Stripe`, `€`, `fmtEUR`, `payCents`, `type === 'settle'` et `currency:'EUR'` dans `AgentPaymentsClient` ; TypeScript web passe ; suite unitaire complete web 764 tests / 141 fichiers passe ; build Next 16.3.3 webpack passe avec 187 pages statiques.
 - Limites : la route serveur historique `/api/agent/payments/payouts/settle` et le service `markSellerBalancePaid` restent presents pour compatibilite/audit. Ce lot retire l'exposition agent V1, pas la migration physique des anciens soldes ledger.
 

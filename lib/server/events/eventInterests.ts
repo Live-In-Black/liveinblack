@@ -95,7 +95,7 @@ function toInterestedEventView(ev: {
     imageUrl: ev.imageUrl ?? null,
     color: ev.color ?? '#2a2a2f',
     cancelled: Boolean(ev.cancelled),
-    currency: ev.currency ?? 'EUR',
+    currency: ev.currency === 'EUR' ? 'EUR' : 'XOF',
     minPrice: prices.length ? Math.min(...prices) : null,
   }
 }

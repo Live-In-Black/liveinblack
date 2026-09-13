@@ -7,7 +7,7 @@ import { markSellerBalancePaid } from '@/lib/server/agent/agentPayments'
 const bodySchema = z.object({
   sellerUid: z.string().trim().min(1),
   amount: z.number(),
-  currency: z.enum(['EUR', 'XOF']),
+  currency: z.literal('XOF'),
   requestId: z.string().trim().min(1).optional().nullable(),
 })
 

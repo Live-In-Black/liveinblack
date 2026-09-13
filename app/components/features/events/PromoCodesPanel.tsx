@@ -7,7 +7,7 @@
 // Divergence volontaire vs. legacy : le legacy calcule côté client le prix du
 // billet le moins cher (event.places) pour anticiper l'erreur "fixed_covers_
 // cheapest_ticket" AVANT soumission, avec le montant exact dans le message
-// (`La réduction (X €) couvre le prix du billet le moins cher (Y €)`). Ce
+// (`La réduction fixe couvre le prix du billet le moins cher`). Ce
 // composant ne reçoit que { id, name, currency } (pas le catalogue de places),
 // donc cette vérification ne peut être faite que côté serveur — l'erreur
 // 'fixed_covers_cheapest_ticket' est mappée après soumission, sans les

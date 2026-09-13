@@ -9,7 +9,7 @@ import { notifyAllAgents, notifyUserById } from '@/lib/server/emails/notify'
 import { sendPushToUser } from '@/lib/server/push'
 
 const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
-import { validateOrganizerFormData, type OrganizerFormData, validatePrestataireFormData, type PrestataireFormData, getRequiredDocs } from '@/lib/shared/applicationValidation'
+import { validateOrganizerFormData, type OrganizerFormData, validatePrestataireFormData, type PrestataireFormData, getRequiredDocs, sanitizeApplicationFormData } from '@/lib/shared/applicationValidation'
 import { applicationApprovedEmail, applicationRejectedEmail, applicationNeedsChangesEmail } from '@/lib/server/emails'
 import { isPasswordPolicyCompliant } from '@/lib/shared/passwordPolicy'
 import { normalizeContactPhoneParts } from '@/lib/shared/contactPhone'
@@ -75,12 +75,9 @@ export interface ApplicationView {
   updatedAt: string
 }
 
-// Organisateur : seule la pièce d'identité est réellement exigée côté dossier.
-// En V1 Bénin, l'encaissement/payout organisateur passe ensuite par le
-// sous-compte FedaPay Marketplace configuré séparément.
-// Prestataire : exigences DYNAMIQUES selon les catégories choisies, voir
-// getRequiredDocs (lib/shared/applicationValidation.ts, port de
-// src/utils/applications.js) — jamais un simple ['identity'] fixe.
+// V1 Bénin : seule la pièce d'identité est réellement exigée côté dossier.
+// L'encaissement/payout organisateur passe ensuite par le sous-compte FedaPay
+// Marketplace configuré séparément.
 
 function toApplicationView(app: ApplicationDoc & { _id: unknown }): ApplicationView {
   const documents: Record<string, ApplicationDocumentView[]> = {}
@@ -148,7 +145,7 @@ export async function saveApplicationDraft(caller: ApplicationCaller, type: 'org
 
   await Application.findOneAndUpdate(
     { userId: caller.id, type },
-    { $set: { formData }, $setOnInsert: { userId: caller.id, type, status: 'draft' } },
+    { $set: { formData: sanitizeApplicationFormData(type, formData) }, $setOnInsert: { userId: caller.id, type, status: 'draft' } },
     { upsert: true }
   )
   return { ok: true }
@@ -227,7 +224,8 @@ export async function submitOrganizerApplication(caller: ApplicationCaller, inpu
   const missing = missingRequiredDocs('organisateur', input.documents)
   if (missing.length > 0) return { ok: false, status: 400, error: 'missing_required_documents' }
 
-  const validation = validateOrganizerFormData(input.formData)
+  const formData = sanitizeApplicationFormData('organisateur', input.formData as unknown as Record<string, unknown>) as unknown as OrganizerFormData
+  const validation = validateOrganizerFormData(formData)
   if (!validation.ok) return { ok: false, status: 400, error: validation.error }
 
   const user = await User.findById(caller.id)
@@ -243,7 +241,7 @@ export async function submitOrganizerApplication(caller: ApplicationCaller, inpu
   const docsResult = await uploadApplicationDocuments(caller.id, String(app._id), input.documents, applicationUploadOwner(caller.id))
   if (!docsResult.ok) return docsResult
 
-  app.formData = input.formData
+  app.formData = formData
   app.documents = new Map(Object.entries(docsResult.documents)) as typeof app.documents
   app.candidateNote = input.candidateNote ?? ''
   app.status = wasCorrection ? 'resubmitted' : 'submitted'
@@ -263,7 +261,7 @@ export async function submitOrganizerApplication(caller: ApplicationCaller, inpu
   await user.save()
 
   await notifyUserById(String(user._id), () => applicationReceivedEmail(user.email, undefined, 'organisateur'))
-  await notifyAllAgents(() => newApplicationToReviewEmail([user.firstName, user.lastName].filter(Boolean).join(' ') || user.email, 'organisateur', `${SITE}/agent/dossiers`, SITE))
+  await notifyAllAgents(() => newApplicationToReviewEmail([user.firstName, user.lastName].filter(Boolean).join(' ') || user.email, 'organisateur', `${SITE}/admin/dossiers`, SITE))
 
   return { ok: true, application: toApplicationView(app.toObject()) }
 }
@@ -289,9 +287,10 @@ export async function registerAndSubmitOrganizerApplication(input: RegisterAndSu
   const missing = missingRequiredDocs('organisateur', input.documents)
   if (missing.length > 0) return { ok: false, status: 400, error: 'missing_required_documents' }
 
-  const validation = validateOrganizerFormData(input.formData)
+  const formData = sanitizeApplicationFormData('organisateur', input.formData as unknown as Record<string, unknown>) as unknown as OrganizerFormData
+  const validation = validateOrganizerFormData(formData)
   if (!validation.ok) return { ok: false, status: 400, error: validation.error }
-  const contactPhone = normalizeContactPhoneParts(input.formData.telephoneProCode, input.formData.telephonePro)
+  const contactPhone = normalizeContactPhoneParts(formData.telephoneProCode, formData.telephonePro)
   if (!contactPhone) return { ok: false, status: 400, error: 'Numéro de téléphone professionnel invalide.' }
 
   const existing = await User.findOne({ email }).lean()
@@ -303,7 +302,7 @@ export async function registerAndSubmitOrganizerApplication(input: RegisterAndSu
     user = await User.create({
       email,
       passwordHash,
-      firstName: input.formData.nomCommercial || '',
+      firstName: formData.nomCommercial || '',
       lastName: '',
       phone: contactPhone,
       roles: ['organisateur'],
@@ -325,16 +324,16 @@ export async function registerAndSubmitOrganizerApplication(input: RegisterAndSu
     return docsResult
   }
 
-  app.formData = input.formData
+  app.formData = formData
   app.documents = new Map(Object.entries(docsResult.documents)) as typeof app.documents
   app.candidateNote = input.candidateNote ?? ''
   app.status = 'submitted'
   app.submittedAt = new Date()
-  app.auditLog.push({ action: 'submitted', by: String(user._id), byName: input.formData.nomCommercial || '', at: new Date(), note: input.candidateNote ?? '' })
+  app.auditLog.push({ action: 'submitted', by: String(user._id), byName: formData.nomCommercial || '', at: new Date(), note: input.candidateNote ?? '' })
   await app.save()
 
   await notifyUserById(String(user._id), () => applicationReceivedEmail(email, undefined, 'organisateur'))
-  await notifyAllAgents(() => newApplicationToReviewEmail(input.formData.nomCommercial || email, 'organisateur', `${SITE}/agent/dossiers`, SITE))
+  await notifyAllAgents(() => newApplicationToReviewEmail(formData.nomCommercial || email, 'organisateur', `${SITE}/admin/dossiers`, SITE))
 
   return { ok: true, application: toApplicationView(app.toObject()), userId: String(user._id) }
 }
@@ -359,10 +358,11 @@ export type PrestataireSubmitResult = ErrResult | { ok: true; application: Appli
 export async function submitPrestataireApplication(caller: ApplicationCaller, input: PrestataireSubmitInput): Promise<PrestataireSubmitResult> {
   await getDb()
 
-  const missing = missingRequiredDocs('prestataire', input.documents, input.formData.prestataireTypes)
+  const formData = sanitizeApplicationFormData('prestataire', input.formData as unknown as Record<string, unknown>) as unknown as PrestataireFormData
+  const missing = missingRequiredDocs('prestataire', input.documents, formData.prestataireTypes)
   if (missing.length > 0) return { ok: false, status: 400, error: 'missing_required_documents' }
 
-  const validation = validatePrestataireFormData(input.formData)
+  const validation = validatePrestataireFormData(formData)
   if (!validation.ok) return { ok: false, status: 400, error: validation.error }
 
   const user = await User.findById(caller.id)
@@ -378,7 +378,7 @@ export async function submitPrestataireApplication(caller: ApplicationCaller, in
   const docsResult = await uploadApplicationDocuments(caller.id, String(app._id), input.documents, applicationUploadOwner(caller.id))
   if (!docsResult.ok) return docsResult
 
-  app.formData = input.formData
+  app.formData = formData
   app.documents = new Map(Object.entries(docsResult.documents)) as typeof app.documents
   app.candidateNote = input.candidateNote ?? ''
   app.status = wasCorrection ? 'resubmitted' : 'submitted'
@@ -398,7 +398,7 @@ export async function submitPrestataireApplication(caller: ApplicationCaller, in
   await user.save()
 
   await notifyUserById(String(user._id), () => applicationReceivedEmail(user.email, undefined, 'prestataire'))
-  await notifyAllAgents(() => newApplicationToReviewEmail([user.firstName, user.lastName].filter(Boolean).join(' ') || user.email, 'prestataire', `${SITE}/agent/dossiers`, SITE))
+  await notifyAllAgents(() => newApplicationToReviewEmail([user.firstName, user.lastName].filter(Boolean).join(' ') || user.email, 'prestataire', `${SITE}/admin/dossiers`, SITE))
 
   return { ok: true, application: toApplicationView(app.toObject()) }
 }
@@ -419,12 +419,13 @@ export async function registerAndSubmitPrestataireApplication(input: RegisterAnd
   if (!email || !email.includes('@')) return { ok: false, status: 400, error: 'invalid_email' }
   if (!isPasswordPolicyCompliant(input.password || '')) return { ok: false, status: 400, error: 'password_too_short' }
 
-  const missing = missingRequiredDocs('prestataire', input.documents, input.formData.prestataireTypes)
+  const formData = sanitizeApplicationFormData('prestataire', input.formData as unknown as Record<string, unknown>) as unknown as PrestataireFormData
+  const missing = missingRequiredDocs('prestataire', input.documents, formData.prestataireTypes)
   if (missing.length > 0) return { ok: false, status: 400, error: 'missing_required_documents' }
 
-  const validation = validatePrestataireFormData(input.formData)
+  const validation = validatePrestataireFormData(formData)
   if (!validation.ok) return { ok: false, status: 400, error: validation.error }
-  const contactPhone = normalizeContactPhoneParts(input.formData.telephoneCode, input.formData.telephone)
+  const contactPhone = normalizeContactPhoneParts(formData.telephoneCode, formData.telephone)
   if (!contactPhone) return { ok: false, status: 400, error: 'Numéro de téléphone professionnel invalide.' }
 
   const existing = await User.findOne({ email }).lean()
@@ -436,8 +437,8 @@ export async function registerAndSubmitPrestataireApplication(input: RegisterAnd
     user = await User.create({
       email,
       passwordHash,
-      firstName: input.formData.prenom || '',
-      lastName: input.formData.nom || '',
+      firstName: formData.prenom || '',
+      lastName: formData.nom || '',
       phone: contactPhone,
       roles: ['prestataire'],
       activeRole: 'prestataire',
@@ -456,16 +457,16 @@ export async function registerAndSubmitPrestataireApplication(input: RegisterAnd
     return docsResult
   }
 
-  app.formData = input.formData
+  app.formData = formData
   app.documents = new Map(Object.entries(docsResult.documents)) as typeof app.documents
   app.candidateNote = input.candidateNote ?? ''
   app.status = 'submitted'
   app.submittedAt = new Date()
-  app.auditLog.push({ action: 'submitted', by: String(user._id), byName: [input.formData.prenom, input.formData.nom].filter(Boolean).join(' '), at: new Date(), note: input.candidateNote ?? '' })
+  app.auditLog.push({ action: 'submitted', by: String(user._id), byName: [formData.prenom, formData.nom].filter(Boolean).join(' '), at: new Date(), note: input.candidateNote ?? '' })
   await app.save()
 
   await notifyUserById(String(user._id), () => applicationReceivedEmail(email, undefined, 'prestataire'))
-  await notifyAllAgents(() => newApplicationToReviewEmail([input.formData.prenom, input.formData.nom].filter(Boolean).join(' ') || email, 'prestataire', `${SITE}/agent/dossiers`, SITE))
+  await notifyAllAgents(() => newApplicationToReviewEmail([formData.prenom, formData.nom].filter(Boolean).join(' ') || email, 'prestataire', `${SITE}/admin/dossiers`, SITE))
 
   return { ok: true, application: toApplicationView(app.toObject()), userId: String(user._id) }
 }

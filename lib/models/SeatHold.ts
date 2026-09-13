@@ -4,7 +4,7 @@ import { Schema, model, models, type InferSchemaType, type Model } from 'mongoos
 // 25/07/2026, extension de la Phase B) : un client bloque une place à son
 // prix COURANT en payant un acompte partiel (5%/24h ou 10%/72h, voir
 // lib/shared/fees.ts::SEAT_HOLD_SHORT/LONG), puis règle le solde via un
-// checkout NORMAL avant expiration — sinon la place est remise en vente
+// checkout NORMAL avant expiration — sinon la place redevient disponible
 // automatiquement et l'acompte n'est pas remboursé. L'argent transite
 // TOUJOURS par un Order (jamais un montant géré ici directement) : ce modèle
 // ne porte que l'état du blocage lui-même — voir lib/server/seatHolds.ts.

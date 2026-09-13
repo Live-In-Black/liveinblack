@@ -1,6 +1,6 @@
 # LIVEINBLACK — Plan de test QA complet
 
-> Document de test QA manuel couvrant l'intégralité des fonctionnalités de la plateforme LIVEINBLACK (LIB_Web), organisé par domaine fonctionnel. Chaque cas de test a été extrait de l'état réel du code (`app/`, `lib/server/`), croisé avec les 77 fichiers de tests automatisés existants (`lib/server/__tests__/`, `lib/shared/__tests__/`) pour éviter toute redondance — les cas ci-dessous couvrent en priorité **ce que les tests automatisés ne peuvent pas vérifier** : les vrais parcours UI de bout en bout, l'intégration réelle avec Stripe/FedaPay, le rendu visuel, la navigation, et les cas limites non encore couverts par la suite Vitest.
+> Document de test QA manuel couvrant l'intégralité des fonctionnalités de la plateforme LIVEINBLACK (LIB_Web), organisé par domaine fonctionnel. Chaque cas de test a été extrait de l'état réel du code (`app/`, `lib/server/`), croisé avec les 77 fichiers de tests automatisés existants (`lib/server/__tests__/`, `lib/shared/__tests__/`) pour éviter toute redondance — les cas ci-dessous couvrent en priorité **ce que les tests automatisés ne peuvent pas vérifier** : les vrais parcours UI de bout en bout, l'intégration réelle FedaPay/Mobile Money, le rendu visuel, la navigation, et les cas limites non encore couverts par la suite Vitest.
 >
 > **Convention des priorités** : Critique (bloquant business/sécurité/argent réel) · Haute · Moyenne · Basse.
 >
@@ -19,7 +19,7 @@
 
 > **Périmètre couvert** : nav publique et état de session (`PublicNav.tsx`, `AccountMenu.tsx`), authentification (`AuthForm.tsx`, `/verify-email`, `/reset-password`, `/confirmer-email`), annuaires publics (`/events`, `/search`, `/organizers`, `/providers`), code d'accès événement privé (`AccessCodeForm.tsx`, `UnlockForm.tsx`), onboarding organisateur/prestataire (`OrganizerOnboardingWizard.tsx`, `PrestataireOnboardingWizard.tsx`), pages légales, bandeau cookies (`CookieConsentBanner.tsx`), guards de route (`proxy.ts`, `lib/server/permissions.ts`).
 >
-> **Note de méthode** : `lib/server/__tests__/permissions.test.ts` couvre déjà exhaustivement la logique pure de `canBook`/`canCreateEvent`/`canProposeServices`/`canAdminister` (y compris les cas `orgStatus`/`prestStatus` prioritaires sur le statut de compte global, et le cas organisateur-rejeté-ou-suspendu). `applications.integration.test.ts` / `applicationsAgent.integration.test.ts` / `applicationsPrestataire.integration.test.ts` couvrent déjà la validation de formulaire (SIRET/Luhn, alcool, champs requis), l'autosave de brouillon, le refus sans document d'identité, l'anti-doublon email, et le workflow de resoumission après rejet (`needs_changes` → `resubmitted`) côté serveur. **Les cas de test ci-dessous ne re-testent PAS cette logique métier** (déjà verte en CI) — ils valident le **parcours UI de bout en bout** : rendu des bons champs/étapes, appels réseau déclenchés par les bons boutons, affichage correct des erreurs retournées par l'API, et comportement visuel (spinners, bannières, drawer mobile) qu'aucun test Vitest ne peut vérifier.
+> **Note de méthode** : `lib/server/__tests__/permissions.test.ts` couvre déjà exhaustivement la logique pure de `canBook`/`canCreateEvent`/`canProposeServices`/`canAdminister` (y compris les cas `orgStatus`/`prestStatus` prioritaires sur le statut de compte global, et le cas organisateur-rejeté-ou-suspendu). `applications.integration.test.ts` / `applicationsAgent.integration.test.ts` / `applicationsPrestataire.integration.test.ts` couvrent déjà la validation de formulaire V1, l'absence de champ SIRET/SIREN/IFU/RCCM obligatoire, l'autosave de brouillon, le refus sans document d'identité, l'anti-doublon email, et le workflow de resoumission après rejet (`needs_changes` → `resubmitted`) côté serveur. **Les cas de test ci-dessous ne re-testent PAS cette logique métier** (déjà verte en CI) — ils valident le **parcours UI de bout en bout** : rendu des bons champs/étapes, appels réseau déclenchés par les bons boutons, affichage correct des erreurs retournées par l'API, et comportement visuel (spinners, bannières, drawer mobile) qu'aucun test Vitest ne peut vérifier.
 
 ### 1.1 Navigation publique & état de session
 
@@ -74,7 +74,7 @@
 | **Priorité** | Haute |
 | **Préconditions** | Comptes de test avec `activeRole` = organisateur, prestataire, agent, et client |
 | **Étapes** | 1. Se connecter successivement avec un compte de chaque rôle actif. 2. Ouvrir le menu Compte. 3. Vérifier la présence/absence et le libellé du lien dashboard. |
-| **Résultat attendu** | `organisateur` → "Espace organisateur" (`/organizer-studio`) ; `prestataire` → "Espace prestataire" (`/offer-services`) ; `agent` → "Espace agent" (`/agent`) ; `client` → aucun lien dashboard supplémentaire (seulement Mon profil / Mes billets / Déconnexion). |
+| **Résultat attendu** | `organisateur` → "Espace organisateur" (`/organizer-studio`) ; `prestataire` → "Espace prestataire" (`/offer-services`) ; `agent` technique → "Espace Admin" (`/admin`, alias historique `/agent`) ; `client` → aucun lien dashboard supplémentaire (seulement Mon profil / Mes billets / Déconnexion). |
 | **Couverture auto existante** | Aucune (le routage vers ces pages est protégé côté serveur par `proxy.ts`, testé indirectement ; le rendu conditionnel du lien ne l'est pas). |
 
 | ID | PUB-007 |
@@ -432,16 +432,16 @@
 
 | ID | PREST-005 |
 |---|---|
-| **Titre** | Documents obligatoires dynamiques selon les catégories sélectionnées |
+| **Titre** | Document obligatoire V1 limité à la pièce d'identité |
 | **Priorité** | Critique |
-| **Résultat attendu** | Liste dynamique conforme à `getRequiredDocs`, bouton bloqué tant que documents manquants. |
-| **Couverture auto existante** | Aucune identifiée. |
+| **Résultat attendu** | `getRequiredDocs` renvoie uniquement `identity` pour organisateur et prestataire, quelle que soit la catégorie ; aucun Kbis, licence, assurance ou justificatif entreprise n'est demandé. |
+| **Couverture auto existante** | Scripts V1 signup web/mobile et garde-fous QA mobile. |
 
 | ID | PREST-006 |
 |---|---|
-| **Titre** | Étape "Finaliser" — prix d'abonnement affiché selon devise du pays (EUR vs XOF) |
+| **Titre** | Étape "Finaliser" — abonnement affiché et payé en XOF/FedaPay |
 | **Priorité** | Moyenne |
-| **Couverture auto existante** | Aucune pour ce rendu. |
+| **Couverture auto existante** | Tests/garde-fous provider billing V1. |
 
 | ID | PREST-007 |
 |---|---|
@@ -515,29 +515,33 @@
 
 ---
 
-# 2. Compte Client — Billetterie, Portefeuille, Seat-Hold, Protection Annulation, Revente, Remboursements
+# 2. Compte Client — Billetterie, Billets/QR, Seat-Hold, Protection Annulation, Remboursements
+
+> Note V1 Benin : les parcours actifs sont FedaPay/XOF. Les rails Stripe/EUR,
+> Stripe Connect et la revente sont historiques/fermés et doivent être testés
+> comme absents ou refusés, jamais comme scénarios heureux de lancement.
 
 ## 2.1 Réservation simple (place unique)
 
-### TICK-001 — Achat place simple par carte (Stripe/EUR), succès
+### TICK-001 — Achat place simple Mobile Money (FedaPay/XOF), succès
 **Priorité** : Critique
-**Préconditions** : Compte client connecté, événement public actif non complet, devise EUR, au moins une place disponible avec prix > 0.
+**Préconditions** : Compte client connecté, événement public actif non complet, devise XOF, au moins une place disponible avec prix > 0.
 **Étapes** :
 1. Ouvrir la page événement (`/events/[id]`), vérifier que le panneau de réservation (`EventCheckoutPanel`) s'affiche pour un utilisateur connecté.
 2. Sélectionner une place non-groupe avec quantité 1.
 3. Ajouter éventuellement un preorder (menu) proposé par l'organisateur.
-4. Lancer le paiement — vérifier le libellé "Sécurisé · Stripe".
-5. Compléter le paiement Stripe avec une carte de test valide.
-6. Être redirigé vers la page de succès (`success_url` contenant `session_id`/`order_id`).
-7. Ouvrir le portefeuille (`/profile` → wallet) et vérifier l'apparition du billet.
+4. Lancer le paiement — vérifier le libellé FedaPay/Mobile Money.
+5. Compléter le paiement FedaPay sandbox.
+6. Être redirigé vers la page de succès (`id` FedaPay ou `order_id` pour un billet gratuit ; jamais un identifiant du rail historique).
+7. Ouvrir les billets (`/profile/billets`) et vérifier l'apparition du billet.
 **Résultat attendu** : Commande passe à `paid`, un ticket est émis avec QR valide, le prix affiché = prix place + preorders + frais de service, l'assurance-annulation n'apparaît pas si non cochée.
-**Couverture auto existante** : `orders.integration.test.ts` couvre la création/atomicité de la commande, le calcul des frais et le fulfillment ; ne couvre PAS l'UI ni le vrai round-trip Stripe Checkout.
+**Couverture auto existante** : `orders.integration.test.ts` couvre la création/atomicité de la commande, le calcul des frais et le fulfillment ; le vrai round-trip FedaPay sandbox reste à couvrir manuellement/E2E.
 
-### TICK-002 — Paiement Stripe échoué / abandonné
+### TICK-002 — Paiement FedaPay échoué / abandonné
 **Priorité** : Haute
-**Étapes** : 1. Lancer une réservation et arriver sur Stripe Checkout. 2. Utiliser une carte de test refusée OU fermer l'onglet avant paiement. 3. Retourner via `cancel_url`. 4. Revérifier le stock et l'absence de ticket.
+**Étapes** : 1. Lancer une réservation et arriver sur FedaPay. 2. Simuler refus/annulation opérateur OU fermer l'onglet avant paiement. 3. Retourner via `cancel_url`. 4. Revérifier le stock et l'absence de ticket.
 **Résultat attendu** : La commande n'est jamais marquée `paid` ; le stock décrémenté est restitué après expiration du TTL panier (30 min) ; aucun ticket créé.
-**Couverture auto existante** : `orders.integration.test.ts` teste `releaseOrder` en logique ; le comportement réel Stripe non testé.
+**Couverture auto existante** : `orders.integration.test.ts` teste `releaseOrder` en logique ; le comportement réel FedaPay sandbox reste à tester.
 
 ### TICK-003 — Achat place simple par Mobile Money (FedaPay/XOF), succès
 **Priorité** : Critique
@@ -598,16 +602,16 @@
 
 ## 2.4 Seat-Hold (blocage temporaire de place avec acompte)
 
-### TICK-012 — Blocage court 24h (5%) en EUR — dépôt et complément
+### TICK-012 — Blocage court 24h (5%) en XOF — acompte et complément
 **Priorité** : Critique
-**Étapes** : 1. "Bloquer 24h · +5%" (bornes 2€/20€). 2. Payer l'acompte Stripe. 3. Vérifier état "bloquée" avec compte à rebours ~24h. 4. Payer le solde avant expiration. 5. Vérifier ticket final = prix figé.
+**Étapes** : 1. "Bloquer 24h · +5%" (bornes 200/2000 FCFA). 2. Payer l'acompte FedaPay. 3. Vérifier état "bloquée" avec compte à rebours ~24h. 4. Payer le solde avant expiration. 5. Vérifier ticket final = prix figé.
 **Résultat attendu** : Acompte non remboursable en cas d'échec ultérieur ; prix figé au moment du blocage ; solde correctement calculé.
 **Couverture auto existante** : `seatHolds.integration.test.ts` couvre le calcul exact du dépôt, activation, complétion, gel de prix.
 
-### TICK-013 — Blocage long 72h (10%) en EUR, plafond à 40€
+### TICK-013 — Blocage long 72h (10%) en XOF, plafond à 4000 FCFA
 **Priorité** : Haute
-**Étapes** : Sur une place à 500€, vérifier que le dépôt est plafonné à 40€ (pas 50€).
-**Résultat attendu** : Dépôt = 40€, fenêtre 72h démarrée à l'activation.
+**Étapes** : Sur une place à prix élevé, vérifier que le dépôt est plafonné à 4000 FCFA.
+**Résultat attendu** : Dépôt = 4000 FCFA, fenêtre 72h démarrée à l'activation.
 **Couverture auto existante** : `seatHolds.integration.test.ts`.
 
 ### TICK-014 — Blocage temporaire en XOF (FedaPay)
@@ -658,7 +662,7 @@
 **Priorité** : Basse
 **Couverture auto existante** : Couvert côté logique serveur.
 
-## 2.6 Portefeuille (wallet) — affichage et actions
+## 2.6 Billets et QR codes — affichage et actions
 
 ### TICK-023 — Affichage du QR code d'un billet standard
 **Priorité** : Critique
@@ -675,7 +679,7 @@
 **Résultat attendu** : Requête part immédiatement au clic sans modale de confirmation — point d'attention UX pour un parcours irréversible.
 **Couverture auto existante** : Aucune.
 
-### TICK-026 — Messages d'erreur de remboursement affichés dans le wallet
+### TICK-026 — Messages d'erreur de remboursement affichés dans l'espace billets
 **Priorité** : Haute
 **Résultat attendu** : Chaque code d'erreur (`refund_window_closed`, `ticket_already_checked_in`, `already_requested`, `not_eligible`) a un message localisé cohérent.
 **Couverture auto existante** : Logique testée ; mapping copy UI non testé.
@@ -690,69 +694,25 @@
 **Résultat attendu** : Image de partage sans QR (anti-fraude).
 **Couverture auto existante** : Aucune.
 
-## 2.7 Revente de billets
+## 2.7 Revente de billets — fermée en V1 Bénin
 
-### TICK-029 — Mise en vente d'un billet payé (dans le plafond de prix)
+### TICK-029 — Aucune action "Revendre" visible
 **Priorité** : Critique
-**Étapes** : 1. Saisir un prix ≤ prix d'achat. 2. Confirmer. 3. Vérifier invalidation immédiate de l'ancien QR. 4. Vérifier listing public sans identité vendeur.
-**Résultat attendu** : QR invalidé instantanément à la mise en vente ; listing ne révèle jamais l'identité vendeur.
-**Couverture auto existante** : `resale.integration.test.ts`.
+**Étapes** : 1. Ouvrir l'espace billets avec un billet payé, gratuit, invité, agent terrain, table/groupe et billet scanné. 2. Vérifier les actions disponibles.
+**Résultat attendu** : Aucun bouton, formulaire, listing public ou prix de revente n'est affiché. La V1 Bénin conserve seulement les actions de billet, invitation/assignation et remboursement autorisé.
+**Couverture auto existante** : `test-v1-resale` / gardes d'absence de parcours V1.
 
-### TICK-030 — Tentative de revente au-dessus du prix original (plafond)
-**Priorité** : Haute
-**Résultat attendu** : Rejet `price_above_original` (400), QR original reste valide.
-**Couverture auto existante** : `resale.integration.test.ts`.
-
-### TICK-031 — Tentative de revente d'un billet gratuit/guestlist/agent
-**Priorité** : Haute
-**Résultat attendu** : Bouton absent, ou rejet `not_resellable_source` (409) si tenté via API.
-**Couverture auto existante** : `resale.integration.test.ts`.
-
-### TICK-032 — Tentative de revente d'un billet déjà scanné
-**Priorité** : Haute
-**Couverture auto existante** : `resale.integration.test.ts`.
-
-### TICK-033 — Revente au-delà de la limite de 2 reventes (resaleCount)
-**Priorité** : Moyenne
-**Résultat attendu** : Rejet `resale_limit_reached` (409).
-**Couverture auto existante** : `resale.integration.test.ts`.
-
-### TICK-034 — Fenêtre de revente fermée (moins de 2h avant les portes)
-**Priorité** : Haute
-**Résultat attendu** : Rejet `resale_window_closed`.
-**Couverture auto existante** : `resale.integration.test.ts`.
-
-### TICK-035 — Retrait d'une annonce de revente
-**Priorité** : Haute
-**Étapes** : 1. Retirer une annonce active. 2. Vérifier émission instantanée d'un nouveau QR. 3. Vérifier que l'ancien QR reste définitivement invalide.
-**Résultat attendu** : Rotation de QR au retrait, ancien QR jamais réactivé.
-**Couverture auto existante** : `resale.integration.test.ts`.
-
-### TICK-036 — Retrait par un tiers (non-vendeur)
-**Priorité** : Moyenne
-**Résultat attendu** : Rejet, seul le vendeur peut retirer son annonce.
-**Couverture auto existante** : `resale.integration.test.ts`.
-
-### TICK-037 — Achat d'un billet revendu par un autre utilisateur
+### TICK-030 — Anciennes routes/API de revente refusées
 **Priorité** : Critique
-**Étapes** : 1. Consulter les annonces (aucune identité vendeur affichée). 2. Acheter (Stripe/FedaPay selon devise). 3. Vérifier le billet dans le portefeuille acheteur. 4. Vérifier commande d'origine du vendeur = `superseded`. 5. Check-in avec le nouveau QR.
-**Résultat attendu** : Aucune fuite d'identité vendeur ; réattribution du ticket (pas de nouveau ticket créé) ; QR tourné pour l'acheteur.
-**Couverture auto existante** : `resale.integration.test.ts`.
+**Étapes** : 1. Appeler les anciens endpoints ou liens profonds de création, retrait et achat de revente. 2. Vérifier les logs de paiement.
+**Résultat attendu** : Refus `resale_disabled_v1` ou redirection billets ; aucune transaction de paiement créée, aucun transfert de ticket et aucun QR réémis pour une revente.
+**Couverture auto existante** : `test-v1-resale` / gardes de fermeture revente.
 
-### TICK-038 — Tentative d'achat de sa propre annonce de revente
-**Priorité** : Basse
-**Résultat attendu** : Rejet `cannot_buy_own_listing` (409).
-**Couverture auto existante** : `resale.integration.test.ts`.
-
-### TICK-039 — Revente de table/groupe (tous les sièges détenus par l'hôte)
-**Priorité** : Moyenne
-**Résultat attendu** : Revente atomique de tous les sièges ensemble.
-**Couverture auto existante** : `resale.integration.test.ts`.
-
-### TICK-040 — Revente de table refusée si un siège est déjà attribué à un invité
-**Priorité** : Moyenne
-**Résultat attendu** : Rejet `group_not_fully_held_by_host` (409).
-**Couverture auto existante** : `resale.integration.test.ts`.
+### TICK-031 — Données historiques de revente non exposées publiquement
+**Priorité** : Haute
+**Étapes** : 1. Charger une base contenant d'anciennes annonces de revente. 2. Ouvrir fiches événements, billets/QR, stats organisateur et liens profonds historiques.
+**Résultat attendu** : Les anciennes données ne créent aucun parcours achetable ni CTA de revente ; elles peuvent seulement servir d'audit historique interne si nécessaire.
+**Couverture auto existante** : scripts V1 de fermeture revente et tests historiques qualifiés comme hors V1.
 
 ## 2.8 Remboursements
 
@@ -881,7 +841,7 @@ Convention des IDs : `PRF-xxx` (profil/identité), `PRV-xxx` (préférences), `S
 **Priorité** : Haute
 **Préconditions** : Compte client, `regions` chargé (`lib/shared/regions`).
 **Étapes** :
-1. Dans « Informations personnelles », choisir un indicatif (ex. +228 Togo).
+1. Dans « Informations personnelles », choisir l'indicatif Bénin (+229).
 2. Saisir un numéro invalide pour ce pays (trop court / caractères non numériques).
 3. Cliquer « Enregistrer le téléphone ».
 4. Recommencer avec un numéro valide.
@@ -1563,9 +1523,9 @@ Convention des IDs : `PRF-xxx` (profil/identité), `PRV-xxx` (préférences), `S
 
 **ORG-027** — Type de média incompatible avec le rôle (vidéo en avatar/bannière) → `invalid_media_type`. Priorité Moyenne. Couverture auto : à vérifier.
 
-**ORG-028** — Connexion Stripe Connect (pays éligible), réutilisation du compte existant. Priorité Haute. Couverture auto : `organizerPayouts.integration.test.ts`.
+**ORG-028** — Ancien Stripe Connect organisateur fermé en V1, aucune action visible. Priorité Haute. Couverture auto : `organizerPayouts.integration.test.ts`.
 
-**ORG-029** — Connexion Stripe — pays non éligible bascule en mode manuel, jamais d'écriture `chargesEnabled` hors webhook. Priorité Haute. Couverture auto : `organizerPayouts.integration.test.ts`.
+**ORG-029** — Ancien parcours Stripe Connect refusé, y compris pour un compte historique. Priorité Haute. Couverture auto : `organizerPayouts.integration.test.ts`.
 
 **ORG-030** — Demande de virement manuel — rien à verser (`nothing_due`). Priorité Moyenne. Couverture auto : `organizerPayouts.integration.test.ts`.
 
@@ -1717,7 +1677,7 @@ Convention des IDs : `PRF-xxx` (profil/identité), `PRV-xxx` (préférences), `S
 
 **ORG-097** — Boost sur événement annulé refusé (`event_cancelled`). Priorité Moyenne. Couverture auto : aucune trouvée.
 
-**ORG-098** — Prix de boost toujours affiché en EUR quel que soit la devise de l'événement (rail Stripe uniquement). Priorité Basse. Couverture auto : aucune.
+**ORG-098** — Prix de boost affiché en FCFA et payé via le rail V1 FedaPay, sans fallback EUR visible. Priorité Basse. Couverture auto : aucune.
 
 **ORG-099** — Réservation de slot expirée automatiquement libérée si jamais confirmée, uniquement si toujours `'pending'` avec le bon boostId (protection anti-race) — **gap possible** : `releaseBoostSlotIfPending` non couvert explicitement dans les 3 tests listés de `boostSlots.integration.test.ts`. Priorité Moyenne. Couverture auto : gap à signaler.
 
@@ -1802,7 +1762,7 @@ Préconditions : Aucun compte existant avec l'email utilisé ; accès à `/inscr
 4. Étape « Fonctionnement » : lire, Continuer.
 5. Étape « Documents » : uploader tous les documents requis retournés par `getRequiredDocs('prestataire', prestataireTypes)` pour la/les catégorie(s) choisie(s) (ex. pour « artiste » seul : `identity` + `billing_proof`). Continuer.
 6. Étape « Finaliser » : vérifier le message « Tous les documents obligatoires sont fournis » ; saisir une note optionnelle ; cliquer « Envoyer ma demande ».
-Résultat attendu : POST `/api/applications/prestataire/register` avec `{email, password, formData, documents, candidateNote}` ; écran de confirmation « Demande envoyée » affichant l'email ; aucun compte n'existait avant cette soumission finale (pas de compte fantôme créé à l'étape « Compte », conformément au commentaire de tête du wizard). Le prix affiché à l'étape 5 dépend du pays (XOF via `PROVIDER_SUB` vs « 9,99 € / mois ») mais n'active **aucun** abonnement.
+Résultat attendu : POST `/api/applications/prestataire/register` avec `{email, password, formData, documents, candidateNote}` ; écran de confirmation « Demande envoyée » affichant l'email ; aucun compte n'existait avant cette soumission finale (pas de compte fantôme créé à l'étape « Compte », conformément au commentaire de tête du wizard). Le prix affiché à l'étape 5 est en FCFA/XOF via FedaPay, mais n'active **aucun** abonnement avant paiement.
 Couverture auto existante : `lib/server/__tests__/applicationsPrestataire.integration.test.ts` → `registerAndSubmitPrestataireApplication` (« crée le compte ET la candidature en un seul appel »).
 
 **PROV-002 — Candidature bloquée : documents obligatoires manquants**
@@ -1851,12 +1811,12 @@ Priorité : Critique
 Résultat attendu : POST `/api/applications/prestataire/submit` ; redirection vers `/my-application` ; côté serveur, le rôle actif bascule et `prestStatus` passe à `pending`.
 Couverture auto existante : `applicationsPrestataire.integration.test.ts` → « soumet avec succès : bascule le rôle actif et pose prestStatus=pending ».
 
-**PROV-009 — Candidature prestataire d'un organisateur déjà actif (garde-fou multi-rôle)**
+**PROV-009 — Candidature prestataire depuis un compte organisateur refusée**
 Priorité : Critique
 Préconditions : Compte avec `activeRole=organisateur`, `orgStatus=active`, qui soumet une candidature prestataire.
 Étapes : Depuis un compte organisateur actif, compléter et soumettre le dossier prestataire.
-Résultat attendu : `orgStatus` reste `active` (l'interface organisateur reste accessible) pendant que `prestStatus` passe à `pending` — jamais de régression sur l'interface déjà validée. Confirme la garantie documentée dans `CLAUDE.md` (« un organisateur déjà actif qui candidate en plus comme prestataire ne doit pas se retrouver bloqué de ses deux interfaces »).
-Couverture auto existante : `applicationsPrestataire.integration.test.ts` → « un organisateur déjà actif qui candidate en prestataire ne perd pas orgStatus=active ».
+Résultat attendu : refus `separate_account_required`. La personne doit créer un compte prestataire avec un autre email ; le compte organisateur existant reste inchangé.
+Couverture auto existante : garde-fous `hasDedicatedAccount` dans `lib/server/provider/applications.ts`.
 
 **PROV-010 — Rejet puis resoumission (`needs_changes` → `resubmitted`)**
 Priorité : Haute
@@ -2004,27 +1964,27 @@ Couverture auto existante : aucune (rendu conditionnel simple, à vérifier visu
 
 ---
 
-### 5.4 Abonnement prestataire (visibilité, EUR/Stripe vs XOF/FedaPay)
+### 5.4 Abonnement prestataire (visibilité XOF/FedaPay)
 
-**PROV-030 — Achat abonnement rail EUR (Stripe) : checkout puis activation**
+**PROV-030 — Achat abonnement XOF/FedaPay : checkout puis activation**
 Priorité : Critique
-Préconditions : `providerBillingRegionId` dérivant une devise EUR, aucun abonnement actif.
-Étapes : Depuis `/offer-services?tab=abonnement`, cliquer « Activer mon abonnement ». Compléter le paiement Stripe test.
-Résultat attendu : `createStripeSubscriptionCheckout` crée une session Stripe (`mode:'subscription'`, `plan=SUBSCRIPTION.PRESTATAIRE`) ; `prestataireSubActive` reste `false` tant que le paiement n'est pas confirmé (ni au moment de la création de session) ; au retour réussi, `confirmStripeSubscriptionCheckout` ou le webhook `checkout.session.completed` active immédiatement (`mirrorStripeStatus` avec `active:true`) et rend le profil visible dans l'annuaire (`subscriptionActive:true` sur `ProviderProfile`).
-Couverture auto existante : `providerSubscriptions.integration.test.ts` → « crée une session Checkout et ne mute pas prestataireSubActive avant paiement », « webhook Stripe — checkout.session.completed — active immédiatement au retour de checkout, avant customer.subscription.* ».
+Préconditions : compte prestataire V1 Benin/XOF, aucun abonnement actif.
+Étapes : Depuis `/offer-services?tab=abonnement`, cliquer « Activer mon abonnement ». Compléter le paiement FedaPay test.
+Résultat attendu : le paiement FedaPay crée une transaction XOF ; `prestataireSubActive` reste `false` tant que le webhook n'est pas confirmé ; au webhook réussi, le profil devient visible dans l'annuaire (`subscriptionActive:true` sur `ProviderProfile`).
+Couverture auto existante : `providerSubscriptions.integration.test.ts` couvre le rail FedaPay et la neutralisation du rail historique.
 
-**PROV-031 — Rail EUR : refus si le pays de facturation est XOF, et inversement**
+**PROV-031 — Ancien rail EUR : refus en V1**
 Priorité : Haute
-Étapes : (a) Compte facturant en XOF appelant l'endpoint Stripe. (b) Compte facturant en EUR appelant l'endpoint FedaPay.
-Résultat attendu : (a) `wrong_rail_use_fedapay` (409). (b) `wrong_rail_use_stripe` (409). Les deux rails sont strictement cloisonnés, jamais mélangés.
-Couverture auto existante : `providerSubscriptions.integration.test.ts` → « refuse si le pays de facturation est XOF » (Stripe) et « refuse si le pays de facturation est EUR » (FedaPay).
+Étapes : Forcer un appel à l'ancien endpoint Stripe depuis un compte V1.
+Résultat attendu : refus clair du rail historique ; aucun abonnement ne s'active via Stripe/EUR en V1.
+Couverture auto existante : `providerSubscriptions.integration.test.ts`.
 
 **PROV-032 — Achat déjà actif : `alreadyActive`**
 Priorité : Moyenne
-Préconditions : Abonnement Stripe déjà actif.
+Préconditions : Abonnement FedaPay/XOF déjà actif.
 Étapes : Cliquer à nouveau sur « Activer mon abonnement » (ou double-clic rapide).
-Résultat attendu : Réponse `{ok:true, alreadyActive:true, status}` sans créer de deuxième session Checkout ; message côté UI « Ton abonnement est déjà actif. » ; le verrou anti-double-clic (`CronLock` 25s, `sub_checkout_<uid>`) empêche une double session concurrente même si l'utilisateur re-clique très vite avant la réponse.
-Couverture auto existante : `providerSubscriptions.integration.test.ts` → « renvoie alreadyActive si déjà abonné », « mirror actif si un stripeSubscriptionId existant est toujours actif côté Stripe ».
+Résultat attendu : Réponse `{ok:true, alreadyActive:true, status}` sans créer de deuxième transaction ; message côté UI « Ton abonnement est déjà actif. » ; le verrou anti-double-clic (`CronLock` 25s, `sub_checkout_<uid>`) empêche une double transaction concurrente même si l'utilisateur re-clique très vite avant la réponse.
+Couverture auto existante : `providerSubscriptions.integration.test.ts` → « renvoie alreadyActive si déjà abonné ».
 
 **PROV-033 — Achat abonnement rail XOF (FedaPay) et renouvellement manuel**
 Priorité : Critique
@@ -2036,16 +1996,16 @@ Couverture auto existante : `providerSubscriptions.integration.test.ts` → « c
 **PROV-034 (P0 sécurité/produit) — Effet de l'abonnement sur la visibilité annuaire (activation)**
 Priorité : Critique
 Préconditions : Profil prestataire complet (non-fantôme) mais `subscriptionActive:false`.
-Étapes : 1) Vérifier que le profil n'apparaît pas dans `/providers` ni n'est trouvable en recherche/annuaire. 2) Vérifier que le propriétaire peut néanmoins consulter sa propre page publique (`isProviderVisible` : `viewer.id === ownerUserId`). 3) Activer l'abonnement (Stripe ou FedaPay selon le pays). 4) Revérifier l'annuaire.
+Étapes : 1) Vérifier que le profil n'apparaît pas dans `/providers` ni n'est trouvable en recherche/annuaire. 2) Vérifier que le propriétaire peut néanmoins consulter sa propre page publique (`isProviderVisible` : `viewer.id === ownerUserId`). 3) Activer l'abonnement FedaPay/XOF. 4) Revérifier l'annuaire.
 Résultat attendu : Avant activation : invisible pour tout visiteur tiers (client/organisateur), visible pour le propriétaire et pour un `activeRole==='agent'` (`isProviderVisible`). Après activation réussie : apparaît dans `listPublicProviders()` (triée par `updatedAt` décroissant — pas de « ranking » qualitatif au-delà de la fraîcheur de mise à jour, à documenter si le produit attend un tri différent). `listPublicProviders` filtre en base sur `subscriptionActive:true` — impossible pour un profil non abonné d'apparaître même en modifiant le tri/la recherche côté client.
 Couverture auto existante : logique pure `isProviderVisible`/`isNonGhost` non testée en unitaire dans les fichiers fournis (pas de `providers.test.ts` identifié) — gap à combler ; le côté « mise à jour de `subscriptionActive`» est bien couvert par les tests d'intégration ci-dessus, mais pas le filtrage de l'annuaire lui-même.
 
-**PROV-035 — Résiliation Stripe et effet immédiat sur la visibilité**
+**PROV-035 — Résiliation historique et effet immédiat sur la visibilité**
 Priorité : Haute
-Préconditions : Abonnement Stripe actif et visible dans l'annuaire.
-Étapes : Simuler un webhook `customer.subscription.deleted`.
-Résultat attendu : `handleStripeSubscriptionEvent(sub, deleted=true)` → `active:false`, `status:'canceled'` ; mirroring sur `User` ET sur `ProviderProfile` (si celui-ci existe) → `subscriptionActive:false`, `subscriptionStatus:'expired'` ; le profil disparaît immédiatement de l'annuaire au prochain chargement (pas besoin d'attendre le cron).
-Couverture auto existante : `providerSubscriptions.integration.test.ts` → « customer.subscription.deleted désactive et mirrore ProviderProfile si présent ».
+Préconditions : Compte prestataire historique avec abonnement externe déjà stocké.
+Étapes : Simuler l'événement historique de résiliation.
+Résultat attendu : mirroring sur `User` ET sur `ProviderProfile` (si celui-ci existe) → `subscriptionActive:false`, `subscriptionStatus:'expired'` ; le profil disparaît immédiatement de l'annuaire au prochain chargement. Aucun nouvel achat V1 ne passe par ce rail.
+Couverture auto existante : `providerSubscriptions.integration.test.ts`.
 
 **PROV-036 — Cron de rappels XOF : expiration automatique et non-double-envoi**
 Priorité : Haute
@@ -2057,22 +2017,22 @@ Couverture auto existante : `providerSubscriptions.integration.test.ts` → « e
 **PROV-037 — Changement de pays de facturation : interdit une fois abonné**
 Priorité : Haute
 Préconditions : Abonnement actif (`prestataireSubActive:true`).
-Étapes : Tenter de changer le pays de facturation vers une région d'une autre devise (ex. France → Togo) via l'endpoint dédié.
-Résultat attendu : `setProviderBillingRegion` renvoie `subscription_active` (409) si le nouveau `regionId` diffère de l'actuel et que `canChange` est faux (`user.prestataireSubActive === true`) — protège contre un changement de rail de paiement à abonnement actif (incohérence Stripe récurrent ↔ FedaPay ponctuel). Un changement vers la **même** devise mais un pays différent au sein d'une devise identique... (vérifier si `canChange` bloque même les régions de même devise — actuellement le check est sur `nextRegionId !== current.billingRegionId`, indépendant de la devise : à tester explicitement, ex. passer de France à Belgique si les deux sont EUR, avec abonnement actif → devrait aussi être bloqué selon le code actuel, à confirmer).
+Étapes : Tenter de changer le pays de facturation hors du périmètre Bénin via l'endpoint dédié.
+Résultat attendu : `setProviderBillingRegion` renvoie `subscription_active` (409) si le nouveau `regionId` diffère de l'actuel et que `canChange` est faux (`user.prestataireSubActive === true`) — protège contre un changement de rail de paiement à abonnement actif. Pour la V1, aucun parcours UI ne doit encourager une facturation active hors Bénin/XOF.
 Couverture auto existante : `lib/server/__tests__/providerBillingRegion.test.ts` (normalisation/devise) + `providerBilling.integration.test.ts` (contexte facturation) — le cas précis du blocage à abonnement actif à confirmer dans ces fichiers.
 
 **PROV-038 — Défaut de pays de facturation dérivé du dossier de candidature**
 Priorité : Basse
-Préconditions : Compte prestataire sans `providerBillingRegionId` explicite, ayant un dossier de candidature avec `pays` renseigné (ex. Togo).
+Préconditions : Compte prestataire sans `providerBillingRegionId` explicite, ayant un dossier de candidature avec `pays` renseigné au Bénin.
 Étapes : Premier accès à l'onglet `/offer-services?tab=abonnement`.
 Résultat attendu : `deriveDefaultBillingRegion` dérive le pays depuis le dernier dossier prestataire (`Application.findOne({type:'prestataire'}).sort({updatedAt:-1})`) plutôt que de forcer `'france'` par défaut ; la valeur est persistée sur `User.providerBillingRegionId` dès ce premier appel (pas seulement en mémoire).
 Couverture auto existante : `providerBillingRegion.test.ts` / `providerBilling.integration.test.ts` — à confirmer précisément.
 
 **PROV-039 — Historique des paiements affiché**
 Priorité : Basse
-Étapes : Sur `/offer-services?tab=abonnement`, consulter la section « Historique des paiements » après plusieurs cycles de paiement (Stripe et/ou FedaPay).
-Résultat attendu : Chaque paiement confirmé (`invoice.paid` Stripe ou webhook FedaPay approuvé) apparaît une seule fois (clé d'idempotence `${rail}:${externalId}` avec `$setOnInsert`) — un replay du même événement webhook ne duplique pas la ligne ; lien « Voir le reçu » présent pour Stripe (`invoice_pdf`/`hosted_invoice_url`) si disponible, badge « PAYÉ » sinon (cas FedaPay, pas de reçu hébergé).
-Couverture auto existante : `providerSubscriptions.integration.test.ts` → « historique Stripe — enregistre invoice.paid une seule fois et l'expose au propriétaire ».
+Étapes : Sur `/offer-services?tab=abonnement`, consulter la section « Historique des paiements » après plusieurs cycles FedaPay.
+Résultat attendu : Chaque paiement confirmé par webhook FedaPay apparaît une seule fois (clé d'idempotence `${rail}:${externalId}` avec `$setOnInsert`) — un replay du même événement webhook ne duplique pas la ligne ; badge « PAYÉ » affiché si aucun reçu hébergé n'est disponible.
+Couverture auto existante : `providerSubscriptions.integration.test.ts`.
 
 ---
 
@@ -2158,12 +2118,12 @@ Préconditions : Compte avec `roles` incluant `prestataire`, `prestStatus='pendi
 Résultat attendu (comportement produit visé, à confronter au code) : selon `canProposeServices`, un statut `pending` **n'est pas explicitement bloqué** (seul `'rejected'` l'est — `effective !== 'rejected'` laisse passer `'pending'` et `'none'`) ; combiné au fait que la route réelle `POST /api/providers/me/catalog` ne vérifie que `roles.includes('prestataire')` sans lire `prestStatus` du tout, il faut vérifier concrètement si un dossier encore en attente de validation permet déjà de publier un catalogue public. Si la page `/offer-services` (`page.tsx::requireProviderRole`) n'est elle non plus gardée que par `roles`, un compte `pending` accède intégralement à l'espace prestataire (édition profil + catalogue) avant toute validation par un agent — **à confirmer comme comportement voulu ou gap**, car cela contredirait l'esprit de « candidature en attente de validation ».
 Couverture auto existante : `lib/server/__tests__/permissions.test.ts` (fonction pure uniquement) — aucune couverture d'intégration bout-en-bout de ce branchement réel identifiée dans les fichiers listés.
 
-**PROV-051 — `prestStatus=rejected` ne bloque PAS une interface organisateur déjà active sur le même compte**
+**PROV-051 — Ancien compte multi-rôle : aucune bascule métier proposée**
 Priorité : Critique
-Préconditions : Compte multi-rôle avec `orgStatus='active'` et `prestStatus='rejected'` (candidature prestataire rejetée après coup).
-Étapes : Basculer `activeRole` vers `organisateur`, vérifier l'accès complet à `/organizer-studio`, création d'événement, etc. Puis basculer `activeRole` vers `prestataire`, vérifier le blocage attendu.
-Résultat attendu : Le rejet du dossier prestataire n'affecte en rien l'interface organisateur (`orgStatus` est un champ totalement distinct, lu séparément par `canCreateEvent`) — cohérent avec la garantie documentée dans `CLAUDE.md` et testée côté candidature (PROV-009). Côté interface prestataire, `canProposeServices` renvoie `false` (bloqué, car `'rejected'` est explicitement exclu).
-Couverture auto existante : `lib/server/__tests__/permissions.test.ts` pour la fonction pure ; la non-régression croisée orgStatus/prestStatus est testée côté candidature dans `applicationsPrestataire.integration.test.ts` (PROV-009) mais pas explicitement revérifiée du point de vue des gardes de PAGE (`requireProviderRole`/`requireOrganizerRole` réels) dans les fichiers fournis.
+Préconditions : Ancienne donnée avec plusieurs rôles sur le même utilisateur.
+Étapes : tenter `POST /api/account/active-role` vers un autre rôle métier.
+Résultat attendu : refus `account_type_fixed`, aucun changement `activeRole`, aucune UI de bascule visible. Les données historiques restent consultables selon le rôle déjà actif, mais ne recréent pas le parcours multi-rôle.
+Couverture auto existante : `activeRole.integration.test.ts`.
 
 **PROV-052 — Cohérence devise catalogue vs devise de facturation après changement de pays**
 Priorité : Moyenne
@@ -2348,7 +2308,7 @@ La vente sur place (`lib/server/agentSales.ts`) est le module le plus complexe d
 - Priorité : Haute
 - Préconditions : `user.prestataireSubActive === true`.
 - Étapes : ouvrir la demande (vérifier le warning "Abonnement actif — sera résilié automatiquement"), approuver.
-- Résultat attendu : `cancelProviderSubscriptionForDeletion` est appelée, l'abonnement (Stripe ou FedaPay selon `prestataireSubRail`) est résilié dans le même flux d'approbation.
+- Résultat attendu : `cancelProviderSubscriptionForDeletion` est appelée, l'abonnement actif est résilié dans le même flux d'approbation ; un ancien rail externe est seulement traité comme donnée historique à clôturer.
 - Couverture auto existante : `agentDeletion.integration.test.ts`.
 
 **AGT-034 — Rejet d'une demande de suppression**
@@ -2455,13 +2415,13 @@ La vente sur place (`lib/server/agentSales.ts`) est le module le plus complexe d
 **AGT-064 — Remboursement Mobile Money manuel (FedaPay, pas d'API refund)**
 - Priorité : Haute
 - Étapes : section Remboursements, exécuter le refund dans le dashboard FedaPay (hors app), puis "Marquer remboursé".
-- Résultat attendu : l'alerte de remboursement disparaît de la file après confirmation explicite ; aucun remboursement n'est déclenché automatiquement par l'app pour ce rail (contrairement à Stripe, remboursé automatiquement).
+- Résultat attendu : l'alerte de remboursement disparaît de la file après confirmation explicite ; aucun remboursement n'est déclenché automatiquement par l'app pour ce rail V1.
 - Couverture auto existante : `agentPayments.integration.test.ts` couvre `refunds/:id/complete`.
 
 **AGT-065 — Résoudre une alerte de paiement (anomalie)**
 - Priorité : Moyenne
 - Préconditions : `PaymentAlert` présente (ex. `amount_mismatch`, `boost_slot_lost`, `stripe_refund_failed`).
-- Étapes : vérifier le paiement dans Stripe/FedaPay (hors app), cliquer "Marquer comme examiné".
+- Étapes : vérifier le paiement hors app (FedaPay ou trace historique selon le type d'alerte), cliquer "Marquer comme examiné".
 - Résultat attendu : l'alerte est retirée de la liste après confirmation ; le libellé humain correspond bien à `ALERT_REASON_LABEL[reason]`, les détails bruts (`details`) sont lisibles (clé humanisée, valeur brute) même pour des clés inconnues.
 - Couverture auto existante : `agentPayments.integration.test.ts` couvre `alerts/:id/resolve`.
 
@@ -2687,8 +2647,8 @@ Préconditions : Compte organisateur/agent/staff avec accès à l'événement ; 
 1. Ouvrir `/scanner`, sélectionner l'événement du jour.
 2. Activer la caméra (ou saisir le code manuellement) et scanner le QR du billet (URL `https://liveinblack.com/ticket/{token}` — voir `resolveScanInput`/`TICKET_URL_TOKEN_RE`).
 3. Observer le résultat affiché.
-Résultat attendu : Statut 200, carte verte « Billet valide », `alreadyCheckedIn: false`. Si le billet est payé et a un `userId`, un point de fidélité est crédité (`pointAwarded: true`, message « Point de fidélité crédité au titulaire »). Le mode passe automatiquement en « Service sur place ».
-Couverture auto existante : `lib/server/__tests__/ticketCheckin.integration.test.ts` — « accorde le point de fidélité au titulaire courant pour un billet payé ».
+Résultat attendu : Statut 200, carte verte « Billet valide », `alreadyCheckedIn: false`. Aucun point de fidélité n'est crédité en V1 Bénin ; `pointAwarded` reste `false` pour compatibilité de réponse. Le mode passe automatiquement en « Service sur place ».
+Couverture auto existante : `lib/server/events/ticketCheckin.ts` garde `pointAwarded:false` ; ajouter/maintenir une vérification QA sur l'absence de message de fidélité.
 
 **SCAN-002 — Billet déjà scanné : refus/avertissement au second scan (idempotence)**
 Priorité : Critique
@@ -2696,8 +2656,8 @@ Préconditions : Billet SCAN-001 déjà check-iné une première fois.
 Étapes :
 1. Rescanner le même QR (ou ressaisir le même code) une seconde fois.
 2. Observer le résultat.
-Résultat attendu : Réponse `ok: true, alreadyCheckedIn: true` (pas une erreur HTTP — l'entrée est refusée visuellement via la carte dorée « Déjà entré », pas techniquement bloquée par un code d'erreur) ; **aucun** second point de fidélité crédité, `checkedInAt`/`checkedInBy` non réécrits (transaction Mongo lit avant d'écrire, cf. `ticketCheckin.ts` L109-142).
-Couverture auto existante : `ticketCheckin.integration.test.ts` — « est idempotent : un second check-in ne recrédite jamais de point ».
+Résultat attendu : Réponse `ok: true, alreadyCheckedIn: true` (pas une erreur HTTP — l'entrée est refusée visuellement via la carte dorée « Déjà entré », pas techniquement bloquée par un code d'erreur) ; aucun point de fidélité n'est crédité et `checkedInAt`/`checkedInBy` ne sont pas réécrits (transaction Mongo lit avant d'écrire, cf. `ticketCheckin.ts`).
+Couverture auto existante : logique d'idempotence dans `ticketCheckin`.
 
 **SCAN-003 — Billet non payé (place payante) refusé — `not_entitled`**
 Priorité : Critique
@@ -2707,21 +2667,21 @@ Préconditions : Billet avec `paid: false`, `source` ≠ `guestlist`, sur une pl
 Résultat attendu : 403, message « Ce billet n'ouvre pas droit à l'entrée. » (`not_entitled`). Aucun check-in enregistré.
 Couverture auto existante : `ticketCheckin.integration.test.ts` — « refuse un billet non payé pour une place payante (not_entitled) ».
 
-**SCAN-004 — Paiement en attente (session Stripe/FedaPay ouverte) — `payment_pending`**
+**SCAN-004 — Paiement en attente (transaction FedaPay ou trace historique ouverte) — `payment_pending`**
 Priorité : Haute
-Préconditions : Billet non payé mais avec `stripeSessionId` ou `fedapayTransactionId` renseigné (paiement initié, pas encore confirmé par webhook).
+Préconditions : Billet non payé mais avec `fedapayTransactionId` renseigné, ou ancien champ historique encore présent (paiement initié, pas encore confirmé par webhook).
 Étapes :
 1. Scanner ce billet avant confirmation du paiement.
 Résultat attendu : 403, message distinct « Paiement non confirmé — entrée refusée. » (`payment_pending`), différencié de `not_entitled` pour que le staff sache qu'un paiement est en cours plutôt que jamais initié.
 Couverture auto existante : `ticketCheckin.integration.test.ts` — « signale un paiement en attente distinctement (payment_pending) ».
 
-**SCAN-005 — Billet gratuit refusé sans crédit de point (anti-farming #75)**
+**SCAN-005 — Billet gratuit sans crédit de point (V1 sans fidélité)**
 Priorité : Haute
 Préconditions : Place à prix catalogue 0€, billet non marqué payé, `source` ≠ `guestlist`.
 Étapes :
 1. Scanner ce billet.
-Résultat attendu : Selon le prix réel de la place (`isFreePlace`), l'entrée est accordée SANS crédit de point de fidélité même si `paid` finit vrai — vérifier qu'un organisateur ne peut pas se rescanner à volonté sur un événement gratuit pour accumuler des points.
-Couverture auto existante : `ticketCheckin.integration.test.ts` — « refuse un billet gratuit (place à 0) sans crediter de point (anti-farming #75) ».
+Résultat attendu : Selon le prix réel de la place (`isFreePlace`), l'entrée peut être accordée, mais aucun point de fidélité n'est crédité dans tous les cas. Vérifier qu'aucun message ou compteur de fidélité n'apparaît.
+Couverture auto existante : `ticketCheckin` force `pointAwarded:false`.
 
 **SCAN-006 — Billet révoqué toujours refusé**
 Priorité : Critique
@@ -2793,32 +2753,36 @@ Couverture auto existante : non identifiée dans les tests d'intégration listé
 
 ---
 
-### 7.2 Paiements transverses (Stripe / FedaPay / frais / devises)
+### 7.2 Paiements transverses (FedaPay / frais / devises)
 
-Deux rails de paiement cohabitent : **Stripe** (EUR, carte bancaire, `lib/server/stripeClient.ts`, client construit paresseusement via `Proxy` pour ne jamais exiger `STRIPE_SECRET_KEY` sur un chemin qui ne l'utilise pas) et **FedaPay** (XOF, mobile money, `lib/server/fedapayClient.ts`, appels REST `fetch` bruts signés HMAC pour les webhooks). Les frais de service billet sont calculés **exclusivement côté serveur** (`lib/shared/fees.ts`), jamais reçus/fiés du client.
+La V1 Benin utilise **FedaPay** (XOF, mobile money, `lib/server/fedapayClient.ts`, appels REST `fetch` bruts signés HMAC pour les webhooks). Les anciens rails Stripe/EUR restent historiques/fermés et doivent être vérifiés comme refusés. Les frais de service billet sont calculés **exclusivement côté serveur** (`lib/shared/fees.ts`), jamais reçus/fiés du client.
 
-**PAY-001 — Checkout Stripe réussi → redirection succès**
+**PAY-001 — Checkout FedaPay réussi → redirection succès**
 Priorité : Critique
-Préconditions : Événement en EUR, place disponible, `STRIPE_SECRET_KEY` configurée.
+Préconditions : Événement en XOF, place disponible, clés FedaPay sandbox configurées.
 Étapes :
-1. Sélectionner une place payante sur un événement EUR, aller au paiement.
-2. Compléter le paiement avec une carte de test Stripe valide.
+1. Sélectionner une place payante sur un événement XOF, aller au paiement.
+2. Compléter le paiement avec le moyen FedaPay sandbox.
 3. Observer la redirection.
-Résultat attendu : Redirection vers `/payment-success` (ancienne route FR `/paiement-reussi` redirigée en 308 permanent — voir `next.config.ts`). Le billet passe `paid: true` après traitement du webhook/fulfillment (`fulfillOrder.ts`).
-Couverture auto existante : logique de frais couverte unitairement (`fees.test.ts`), mais le flux Stripe Checkout bout-en-bout (webhook, fulfillment) n'a pas de test d'intégration identifié dans le périmètre listé — à couvrir manuellement / E2E.
+Résultat attendu : Redirection vers `/payment-success`. Le billet passe `paid: true` après traitement du webhook/fulfillment (`fulfillOrder.ts`).
+Couverture auto existante : logique de frais couverte unitairement (`fees.test.ts`) ; le flux FedaPay sandbox bout-en-bout reste à couvrir manuellement / E2E.
 
-**PAY-002 — Checkout Stripe échoué (carte refusée)**
+**PAY-002 — Ancien checkout Stripe refusé**
+Priorité : Haute
+Résultat attendu : un événement EUR/Stripe historique ne peut pas être acheté en V1 ; l'API refuse avant création de paiement actif.
+
+**PAY-003 — Checkout FedaPay échoué / annulé**
 Priorité : Haute
 Étapes :
-1. Utiliser une carte de test Stripe « refusée » (ex. `4000000000000002`).
+1. Simuler une annulation ou un refus opérateur FedaPay sandbox.
 2. Observer le comportement.
-Résultat attendu : Aucun billet créé/marqué payé, message d'erreur Stripe affiché sur la page de paiement hébergée par Stripe, retour possible vers le panier sans perte de sélection de place.
+Résultat attendu : Aucun billet créé/marqué payé, message d'échec clair sur le retour paiement, retour possible vers le panier sans perte de sélection de place.
 Couverture auto existante : non identifiée — manuel.
 
-**PAY-003 — Checkout Stripe annulé par l'utilisateur → redirection annulation**
+**PAY-004 — FedaPay annulé par l'utilisateur → redirection annulation**
 Priorité : Haute
 Étapes :
-1. Démarrer un checkout Stripe puis cliquer « Retour » / fermer la page de paiement Stripe sans payer.
+1. Démarrer un checkout FedaPay puis cliquer « Retour » / fermer la page de paiement sans payer.
 Résultat attendu : Redirection vers `/payment-success?cancelled=1` ; les anciennes URL `/payment-cancelled` et `/paiement-annule` répondent par une redirection permanente vers cet état canonique. Aucune place ne reste bloquée durablement.
 Couverture auto existante : non identifiée — manuel.
 
@@ -2874,18 +2838,17 @@ Priorité : Critique
 Résultat attendu : Frais exacts, entiers, plafonnés à 1500 FCFA/billet.
 Couverture auto existante : `fees.test.ts` — « 5% + 300 FCFA par billet », « plafonne à 1500 FCFA/billet », « montants entiers (pas de décimales XOF) ».
 
-**PAY-010 — Formatage monétaire affiché : EUR vs XOF**
+**PAY-010 — Formatage monétaire affiché : XOF actif et EUR historique**
 Priorité : Haute
 Étapes :
-1. Afficher un prix EUR avec centimes non nuls (ex. 12,50 €) → vérifier séparateur français et 2 décimales.
-2. Afficher un prix EUR rond (ex. 20 €) → vérifier absence de décimales inutiles (`,00` non affiché).
-3. Afficher un prix XOF (ex. 5000) → vérifier suffixe « FCFA », séparateur de milliers `fr-FR`, aucune décimale même si le calcul interne produisait une valeur non entière.
+1. Afficher un prix XOF actif (ex. 5000) → vérifier suffixe « FCFA », séparateur de milliers `fr-FR`, aucune décimale même si le calcul interne produisait une valeur non entière.
+2. Charger une donnée EUR historique → vérifier qu'elle n'est pas présentée comme prix achetable V1.
 Résultat attendu : `fmtMoney()` respecte ces trois règles ; comportement identique partout où `fmtMoney` est utilisé (ScannerClient, tickets, order).
 Couverture auto existante : `lib/shared/__tests__/money.test.ts` — « XOF entier avec suffixe FCFA, EUR avec décimales seulement si utiles ».
 
 **PAY-011 — Devise résolue depuis `event.currency`, jamais déduite de la région**
 Priorité : Moyenne
-Préconditions : Événement historique créé au Togo/Bénin mais dont les prix ont été saisis en euros (cas documenté dans `money.ts`).
+Préconditions : Événement historique Bénin dont les prix ont été saisis en euros (cas documenté dans `money.ts`, à refuser/masquer comme historique).
 Étapes :
 1. Vérifier l'affichage des prix d'un tel événement.
 Résultat attendu : La devise affichée suit `event.currency` explicite, pas une déduction depuis la région de l'événement — sinon régression du cas documenté en commentaire (`lib/shared/money.ts` L4-6).
@@ -2909,11 +2872,11 @@ Préconditions : Commande payée par FedaPay (aucune API de remboursement automa
 Résultat attendu : Premier appel crée une entrée `EventRefund` `status: 'pending_manual'` et, si `order.settled`, décrémente le solde vendeur (clampé à 0, jamais négatif). Second appel : `existing` trouvé → retourne `{ ok: true }` sans recréer d'entrée ni re-décrémenter le solde vendeur une seconde fois.
 Couverture auto existante : non identifiée dans les tests listés — logique lisible dans `lib/server/fedapayRefunds.ts`, à couvrir par un test dédié (absent) ou manuellement.
 
-**PAY-014 — Éligibilité Stripe Connect par pays (payout organisateur)**
+**PAY-014 — Ancien Stripe Connect refusé / Mobile Money actionnable**
 Priorité : Moyenne
 Étapes :
-1. Vérifier qu'un organisateur basé en France (FR) est éligible Stripe Connect.
-2. Vérifier qu'un organisateur basé en zone UEMOA (ex. Togo, Bénin — hors liste blanche) est orienté vers le rail FedaPay au lieu de Stripe Connect.
+1. Vérifier qu'aucun organisateur V1 n'a de CTA Stripe Connect visible.
+2. Vérifier qu'un organisateur Bénin configure uniquement ses informations Mobile Money/FedaPay actionnables.
 3. Vérifier le cas d'une valeur pays vide/absente.
 Résultat attendu : `isStripeConnectCountry()` retourne vrai pour FR et les pays listés, faux pour les pays UEMOA hors liste et pour une valeur vide.
 Couverture auto existante : `fees.test.ts` — « accepte les pays Connect (France) », « refuse les pays UEMOA (hors Connect, route FedaPay) », « refuse une valeur vide ».

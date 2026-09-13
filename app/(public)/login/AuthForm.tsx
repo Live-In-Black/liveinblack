@@ -25,7 +25,6 @@ type Mode = 'login' | 'register'
 type RegRole = 'client' | 'organisateur' | 'prestataire'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const PHONE_RE = /^\d[\d\s-]{5,}$/
 
 function checkPasswordStrength(pwd: string) {
   // Score aligné uniquement sur les 3 critères visibles dans la checklist
@@ -172,8 +171,6 @@ export default function AuthForm() {
   const [regEmail, setRegEmail] = useState('')
   const [dialCode, setDialCode] = useState('+229')
   const [phone, setPhone] = useState('')
-  const [birthYear, setBirthYear] = useState('')
-  const [gender, setGender] = useState('')
   const [regPwd, setRegPwd] = useState('')
   const [regPwdConfirm, setRegPwdConfirm] = useState('')
   const [showRegPwd, setShowRegPwd] = useState(false)
@@ -344,8 +341,6 @@ export default function AuthForm() {
           firstName: cleanFirstName,
           lastName: cleanLastName,
           phone: cleanPhone ? (dialCode + cleanPhone).replace(/\s/g, '') : undefined,
-          birthYear: birthYear ? Number(birthYear) : null,
-          gender: gender || null,
         }),
       })
       if (res.status === 201) {
@@ -653,7 +648,7 @@ export default function AuthForm() {
 
               <div className="lb-register-field lb-register-field--full">
                 <Label className="lb-register-label" htmlFor="reg-email" style={{ fontSize: 'var(--font-size-footnote)' }}>Email</Label>
-                <Input id="reg-email" name="email" type="text" inputMode="email" autoComplete="email" placeholder="ton@email.com" disabled={regLoading} value={regEmail} onChange={(e) => setRegEmail(e.target.value)} invalid={regError === 'Adresse email invalide.'} style={{ minHeight: 38, padding: '6px 10px' }} />
+                <Input id="reg-email" name="lib_auth_register_email" type="text" inputMode="email" autoComplete="off" data-lpignore="true" data-1p-ignore="true" placeholder="ton@email.com" disabled={regLoading} value={regEmail} onChange={(e) => setRegEmail(e.target.value)} invalid={regError === 'Adresse email invalide.'} style={{ minHeight: 38, padding: '6px 10px' }} />
               </div>
 
               <div className="lb-register-field lb-register-field--full">
@@ -742,36 +737,6 @@ export default function AuthForm() {
                   </span>
                 </div>
               </div>
-
-              <div className="lb-register-field">
-                <Label className="lb-register-label" htmlFor="reg-birth-year" style={{ fontSize: 'var(--font-size-footnote)' }}>Année de naissance (opt.)</Label>
-                <Select
-                  id="reg-birth-year"
-                  value={birthYear}
-                  onChange={(value) => setBirthYear(value)}
-                  disabled={regLoading}
-                  placeholder="Année"
-                  options={Array.from({ length: 68 }, (_, index) => new Date().getFullYear() - 13 - index).map((year) => ({ value: String(year), label: String(year) }))}
-                  style={{ minHeight: 38, padding: '0 8px' }}
-                />
-              </div>
-
-              <div className="lb-register-field">
-                <Label className="lb-register-label" htmlFor="reg-gender" style={{ fontSize: 'var(--font-size-footnote)' }}>Genre (optionnel)</Label>
-                <Select
-                  id="reg-gender"
-                  value={gender}
-                  onChange={(value) => setGender(value)}
-                  disabled={regLoading}
-                  placeholder="Genre"
-                  options={[
-                    { value: 'femme', label: 'Femme' },
-                    { value: 'homme', label: 'Homme' },
-                    { value: 'autre', label: 'Autre' },
-                  ]}
-                  style={{ minHeight: 38, padding: '0 8px' }}
-                />
-              </div>
             </div>
 
             {regPwd.length > 0 && (
@@ -824,10 +789,12 @@ export default function AuthForm() {
                   <Input
                     ref={forgotEmailRef}
                     id="forgot-email"
-                    name="email"
+                    name="lib_auth_forgot_email"
                     type="email"
                     inputMode="email"
-                    autoComplete="email"
+                    autoComplete="off"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
                     placeholder="ton@email.com"
                     disabled={forgotLoading}
                     value={forgotEmail}

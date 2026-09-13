@@ -7,7 +7,8 @@ export type BillingContext = {
 }
 
 export function deriveDefaultBillingRegionFromApplication(country: unknown): string {
-  return normalizeProviderBillingRegion(country) || 'benin'
+  void country
+  return 'benin'
 }
 
 export function canChangeProviderBillingRegion(prestataireSubActive: boolean | null | undefined): boolean {

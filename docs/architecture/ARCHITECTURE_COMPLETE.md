@@ -115,14 +115,14 @@ flowchart TB
 5. **Modèle** : garantit les formes, index, unicités et relations stockées dans MongoDB.
 6. **Intégration externe** : ne reçoit que les opérations décidées par le domaine ; les webhooks confirment les résultats asynchrones.
 
-## 5. Authentification et compte multi-rôles
+## 5. Authentification et comptes séparés
 
 ### 5.1 Modèle du compte
 
-Un utilisateur possède :
+Un compte utilisateur possède :
 
-- `roles[]` : tous ses rôles autorisés parmi `client`, `organisateur`, `prestataire`, `agent` ;
-- `activeRole` : l'unique interface active à un instant donné ;
+- `roles[]` : le rôle métier du compte (`client`, `organisateur` ou `prestataire`) ; `agent` reste une permission plateforme historique/interne ;
+- `activeRole` : l'interface active fixe du compte. En V1 Bénin, on ne bascule pas entre client, organisateur et prestataire depuis une même connexion ;
 - `status` : état global `active`, `pending` ou `rejected` ;
 - `orgStatus` : état propre au rôle organisateur `none`, `pending`, `active`, `rejected` ;
 - `prestStatus` : même cycle pour le rôle prestataire ;
@@ -203,8 +203,8 @@ sequenceDiagram
 - Acheter en groupe et gérer les invitations/assignations de places.
 - Ajouter une protection annulation lors de l'achat.
 - Afficher le billet et son QR code.
-- Revendre un billet dans la bourse officielle et retirer l'annonce.
-- Acheter un billet revendu, avec invalidation/réémission du QR.
+- Constater l'absence de revente V1 : aucun bouton, listing ou checkout de revente.
+- Ouvrir un ancien lien de revente et obtenir un refus/redirection sans paiement.
 - Demander un remboursement selon les critères autorisés.
 - Suivre des organisateurs et gérer leurs alertes.
 - Marquer des événements comme intéressants.
@@ -487,7 +487,7 @@ Pour la liste exacte, la source de vérité est `app/api/**/route.ts`. Les clien
 - Messages, notifications, aide, candidatures et missions.
 - Espace organisateur : studio, événements, statistiques, scanner et ventes.
 - Espace prestataire : offre de services, catalogue, médias, abonnement et avis.
-- Espace agent : dashboard, comptes, dossiers, événements, paiements, signalements, suppressions, avis, actualité et configuration accueil.
+- Espace admin : dashboard, comptes, dossiers, événements, paiements, signalements, suppressions, avis, actualité et configuration accueil.
 
 Le dashboard authentifié a son propre shell ; la navigation publique n'y est pas montée.
 

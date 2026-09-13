@@ -68,10 +68,6 @@ const EMPTY_FORM: PrestataireFormData = {
   menuBase: '',
   alcoolFood: false,
   alcoolFoodAtteste: false,
-  tarifMin: null,
-  tarifMax: null,
-  tarifType: '',
-  tarifDevis: false,
 }
 
 const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', minHeight: 38, padding: '6px 10px', borderRadius: 10, border: '1px solid var(--border-strong)', background: 'var(--surface-2)', color: 'var(--text)', fontSize: 'var(--font-size-body-sm)', outline: 'none' }
@@ -162,13 +158,8 @@ export default function PrestataireOnboardingWizard({
 
   function toggleZone(zoneId: string) {
     setForm((f) => {
-      let next: string[]
-      if (zoneId === 'international') {
-        next = f.zonesIntervention.includes('international') ? [] : ['international']
-      } else {
-        const withoutIntl = f.zonesIntervention.filter((z) => z !== 'international')
-        next = withoutIntl.includes(zoneId) ? withoutIntl.filter((z) => z !== zoneId) : [...withoutIntl, zoneId]
-      }
+      const currentBeninZones = f.zonesIntervention.filter((z) => regions.some((r) => r.id === z))
+      const next = currentBeninZones.includes(zoneId) ? currentBeninZones.filter((z) => z !== zoneId) : [...currentBeninZones, zoneId]
       return { ...f, zonesIntervention: next }
     })
   }
@@ -398,12 +389,7 @@ export default function PrestataireOnboardingWizard({
                 </div>
                 <div>
                   <Label style={labelStyle}>Pays</Label>
-                  <Select
-                    aria-label="Pays"
-                    value={form.pays}
-                    onChange={(value) => set('pays', value)}
-                    options={regions.map((r) => ({ value: r.country, label: `${r.flag} ${r.country}` }))}
-                  />
+                  <Input aria-label="Pays" style={inputStyle} value="Bénin" readOnly />
                 </div>
               </div>
 
@@ -496,7 +482,7 @@ export default function PrestataireOnboardingWizard({
                 <Textarea style={{ ...inputStyle, minHeight: 80 }} value={form.description} onChange={(e) => set('description', e.target.value)} />
               </div>
               <div>
-                <Label style={labelStyle}>Zones d&apos;intervention</Label>
+                <Label style={labelStyle}>Zone d&apos;intervention V1</Label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {regions.map((r) => (
                     <Button key={r.id} variant="secondary" type="button" onClick={() => toggleZone(r.id)} style={chip(form.zonesIntervention.includes(r.id))}>

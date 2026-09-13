@@ -179,10 +179,10 @@ function RefundCasesPanel({ initialRefunds }: { initialRefunds: RefundCaseView[]
         >
           <div style={{ display: 'grid', gap: 10 }}>
             <select value={destinationType} onChange={(e) => setDestinationType(e.target.value as typeof destinationType)} style={{ minHeight: 42, borderRadius: 10, background: 'var(--surface-2)', color: 'var(--text)', border: '1px solid var(--border)', padding: '0 10px' }}>
-              <option value="bank_account">Compte bancaire / RIB</option>
+              <option value="bank_account">Compte bancaire local</option>
               <option value="verified_mobile_money">Mobile Money vérifié</option>
             </select>
-            <Textarea value={destinationDetails} onChange={(e) => setDestinationDetails(e.target.value)} placeholder="Nom du titulaire, banque/opérateur, IBAN/RIB ou numéro, justificatif si nécessaire…" rows={5} />
+            <Textarea value={destinationDetails} onChange={(e) => setDestinationDetails(e.target.value)} placeholder="Nom du titulaire, banque ou opérateur, numéro de compte local ou numéro Mobile Money, justificatif si nécessaire…" rows={5} />
           </div>
         </Modal>
       )}

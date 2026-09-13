@@ -195,7 +195,7 @@ function zonesLabel(ids: unknown): string {
   if (list.length === 0) return '—'
   return list
     .map((id) => {
-      if (id === 'international') return 'International'
+      if (id === 'international') return 'Hors V1 Bénin'
       const r = regions.find((r) => r.id === id)
       return r ? `${r.flag} ${r.name}` : id
     })
@@ -290,7 +290,7 @@ function prestataireFieldRows(f: Record<string, unknown>): { header: string | nu
     const rows: { label: string; value: string }[] = []
     if (f.typeActiviteFood) rows.push({ label: "Type d'activité", value: TYPE_FOOD_LABEL[str(f.typeActiviteFood)] || str(f.typeActiviteFood) })
     if (f.menuBase) rows.push({ label: 'Menu / Carte', value: str(f.menuBase) })
-    rows.push({ label: 'Alcool', value: f.alcoolFood ? (f.alcoolFoodAtteste ? 'Oui — attestation fournie' : 'Oui — vérifier la licence alcool') : 'Non' })
+    rows.push({ label: 'Alcool', value: f.alcoolFood ? (f.alcoolFoodAtteste ? 'Oui — attestation fournie' : 'Oui — conformité à confirmer') : 'Non' })
     blocks.push({ header: 'Food / Boissons', rows })
   }
 
@@ -498,7 +498,7 @@ export default function AgentDossiersClient() {
 
         {listError && (
           <Card accent="var(--danger-border)" className={styles.error} role="alert">
-            <div className={styles.errorCopy}><AlertTriangle size={20} aria-hidden="true" /><div><strong>Impossible de charger les dossiers</strong><p>Vérifie ta connexion ou reconnecte-toi si tes droits agent ont changé.</p></div></div>
+            <div className={styles.errorCopy}><AlertTriangle size={20} aria-hidden="true" /><div><strong>Impossible de charger les dossiers</strong><p>Vérifie ta connexion ou reconnecte-toi si tes droits admin ont changé.</p></div></div>
             <Button variant="secondary" onClick={loadList}>Réessayer</Button>
           </Card>
         )}

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { Ticket, User, LayoutDashboard, LogOut, Check, ChevronDown, House, Bell } from 'lucide-react'
+import { Ticket, LayoutDashboard, LogOut, Check, ChevronDown, House, Bell, MessageCircle, Settings } from 'lucide-react'
 import { Avatar, Button, ConfirmDialog } from '@/app/components/ui'
 import { DASHBOARD_BY_ROLE } from '@/lib/shared/dashboardRoutes'
 
@@ -171,14 +171,14 @@ export default function AccountMenu({
             {!dashboardMode ? (
               <>
                 <MenuLink href="/notifications" onClick={() => setAccountOpen(false)} icon={<Bell size={15} />} label="Notifications" badge={notifUnread} />
-                <MenuLink href="/profile" onClick={() => setAccountOpen(false)} icon={<User size={15} />} label="Mon profil" />
-                {(!user.activeRole || user.activeRole === 'client') && (
-                  <MenuLink href="/profile/billets" onClick={() => setAccountOpen(false)} icon={<Ticket size={15} />} label="Mes billets" />
-                )}
+                <MenuLink href="/profile/parametres" onClick={() => setAccountOpen(false)} icon={<Settings size={15} />} label="Paramètres" />
+                <MenuLink href="/profile/billets" onClick={() => setAccountOpen(false)} icon={<Ticket size={15} />} label="Mes billets" />
+                <MenuLink href="/home" onClick={() => setAccountOpen(false)} icon={<House size={15} />} label="Accueil" />
+                <MenuLink href="/messages" onClick={() => setAccountOpen(false)} icon={<MessageCircle size={15} />} label="Messages" />
               </>
             ) : null}
-            {dashboards.length > 0 && <div style={{ height: 1, background: 'var(--border)', margin: '6px 4px' }} />}
-            {dashboards.map((d) => (
+            {dashboardMode && dashboards.length > 0 && <div style={{ height: 1, background: 'var(--border)', margin: '6px 4px' }} />}
+            {dashboardMode && dashboards.map((d) => (
               <Button
                 key={d.role}
                 variant="ghost"
@@ -203,10 +203,6 @@ export default function AccountMenu({
                 {d.role === user.activeRole && <Check size={13} color="var(--primary)" />}
               </Button>
             ))}
-            {/* Point de sortie explicite vers le site public — la nav
-                publique (Accueil/Événements/Prestataires/Organisateurs) est
-                masquée dans le header une fois connecté (PublicNav.tsx),
-                confirmé en réunion live le 11/08/2026. */}
             <div style={{ height: 1, background: 'var(--border)', margin: '6px 4px' }} />
             <Button
               variant="ghost"

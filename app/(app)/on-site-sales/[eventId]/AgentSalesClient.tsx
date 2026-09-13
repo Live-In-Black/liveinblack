@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { fmtMoney } from '@/lib/shared/money'
-import { computeGroupTicketFeeXOF, computeTicketFeeXOF, computeTicketFeeCents } from '@/lib/shared/fees'
+import { computeGroupTicketFeeXOF, computeTicketFeeXOF } from '@/lib/shared/fees'
 import { Button, Input, Select, Label, Card, ConfirmDialog } from '@/app/components/ui'
 import { useQueryParamState } from '@/lib/client/useQueryParamState'
 
@@ -34,7 +34,7 @@ export default function AgentSalesClient({
 }: {
   eventId: string
   eventName: string
-  currency: 'EUR' | 'XOF'
+  currency: 'XOF'
   places: PlaceView[]
   initialDashboard: AgentSalesDashboardView
 }) {
@@ -47,7 +47,7 @@ export default function AgentSalesClient({
   const [method, setMethod] = useState<'cash' | 'momo'>('cash')
   const [settlementMode, setSettlementMode] = useState<'instant_debit' | 'agent_settles'>('agent_settles')
   const [momoNumber, setMomoNumber] = useState('')
-  const [momoCountry, setMomoCountry] = useState('TG')
+  const [momoCountry] = useState('BJ')
   const [momoMode, setMomoMode] = useState<'mtn' | 'moov'>('moov')
   const [busy, setBusy] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -59,9 +59,7 @@ export default function AgentSalesClient({
   const invalidGroup = isTable && (!Number.isSafeInteger(selectedPlace?.groupMax) || (selectedPlace?.groupMax ?? 0) < 2)
   const effectiveQty = mode === 'onsite' && !isTable ? qty : 1
   const facialAmount = selectedPlace ? selectedPlace.price * effectiveQty : 0
-  const serviceFee = !selectedPlace || invalidGroup ? 0 : currency === 'XOF'
-    ? isTable ? computeGroupTicketFeeXOF(Math.round(selectedPlace.price), selectedPlace.groupMax!) : computeTicketFeeXOF(selectedPlace.price, effectiveQty)
-    : computeTicketFeeCents(Math.round(selectedPlace.price * 100), effectiveQty) / 100
+  const serviceFee = !selectedPlace || invalidGroup ? 0 : isTable ? computeGroupTicketFeeXOF(Math.round(selectedPlace.price), selectedPlace.groupMax!) : computeTicketFeeXOF(selectedPlace.price, effectiveQty)
   const saleAmount = facialAmount + serviceFee
 
   async function refreshDashboard() {
@@ -266,7 +264,7 @@ export default function AgentSalesClient({
             </div>
             <div>
               <Label>Pays</Label>
-              <Input aria-label="Pays Mobile Money" value={momoCountry} onChange={(e) => setMomoCountry(e.target.value.toUpperCase())} placeholder="TG" maxLength={2} />
+              <Input aria-label="Pays Mobile Money" value="BJ" readOnly />
             </div>
             <div>
               <Label>Numéro Momo</Label>

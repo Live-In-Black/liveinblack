@@ -23,8 +23,8 @@ import { normalizeBudgetId } from '@/lib/shared/recommendations'
 // email, mot de passe, suppression de compte. Volontairement HORS PÉRIMÈTRE
 // ici (déférées aux phases organisateur/prestataire, #7/#8, qui les
 // construisent de toute façon) : Interface Prestataire/Organisateur,
-// Facturation, Encaissement (payout Stripe/Momo — déjà bâti côté PAIEMENT en
-// phase 3, seul le PANNEAU DE RÉGLAGE reste à faire), carte d'accréditation
+// Facturation, Encaissement (FedaPay/Mobile Money V1 — déjà bâti côté PAIEMENT,
+// seul le panneau de réglage reste séparé), carte d'accréditation
 // PDF.
 
 export interface ProfileCaller {
@@ -454,7 +454,7 @@ export async function changePassword(caller: ProfileCaller, input: { currentPass
 // C'est le chemin emprunté par TOUT client, TOUT agent, et tout organisateur/
 // prestataire dont orgStatus/prestStatus n'est PAS encore 'active' (voir la
 // gate dans app/api/profil/supprimer-compte/route.ts — un dossier déjà
-// approuvé passe par une revue agent, lib/server/agentDeletion.ts:
+// approuvé passe par une revue admin, lib/server/agentDeletion.ts:
 // approveDeletion, qui anonymise le MÊME compte plus tard). Les deux chemins
 // partagent la purge des doublons dénormalisés d'identité à travers le reste
 // de l'app (messages, conversations, demandes d'amis, signalements, avis,

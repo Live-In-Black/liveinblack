@@ -15,24 +15,19 @@ export const FEES = {
   // 1000 FCFA → 200 attendu, l'ancienne formule donnait 350). Montants en
   // FCFA ENTIERS (le XOF n'a pas de centimes — zéro décimale).
   TICKET_XOF: { pct: 0.05, min: 200, cap: 1500, paidBy: 'buyer' as const },
-  // Revente officielle (LIVE_IN_BLACK_Systeme_de_revente.docx §1/§4) : mêmes
-  // 5% qu'un billet neuf, mais prélevés sur le prix de REVENTE (choisi par le
-  // vendeur, jamais > prix initial) et à la charge du VENDEUR (déduits du
-  // montant qui lui est reversé, jamais ajoutés au prix payé par l'acheteur).
-  // La spec ne donne le "min 200 FCFA" que pour la zone XOF (tout le document
-  // de revente raisonne en FCFA, marché Togo/Bénin) — pas d'équivalent EUR
-  // donné, donc RESALE (EUR) garde la même forme que TICKET (pct+cap, sans
-  // minimum inventé).
+  // Barèmes historiques de revente, conservés uniquement pour anciennes données
+  // et tests de refus V1. Aucun parcours actif Benin ne doit créer ou acheter
+  // une annonce de revente tant que Chady ne valide pas une nouvelle spec.
   RESALE: { pct: 0.05, fixedCents: 0, capCents: 250, paidBy: 'seller' as const },
   RESALE_XOF: { pct: 0.05, fixed: 0, cap: 1500, min: 200, paidBy: 'seller' as const },
   // Option d'annulation volontaire Bénin : +10% du prix facial, uniquement
   // si le billet vaut au moins 5 000 FCFA, plafonné à 5 000 FCFA.
   CANCELLATION_PROTECTION: { pct: 0.1 },
   // Blocage temporaire de place ("hold") avec acompte — décision client :
-  // 5% (min/plafond EUR 2€/20€, XOF 200/2000) pendant 24h, ou 10%
-  // (min/plafond EUR 4€/40€, XOF 400/4000) pendant 72h. Prix figé à sa
+  // 5% (XOF 200/2000 en V1) pendant 24h, ou 10%
+  // (XOF 400/4000 en V1) pendant 72h. Prix figé à sa
   // valeur au moment du hold ; solde à régler via un checkout normal avant
-  // expiration, sinon la place est automatiquement remise en vente (acompte
+  // expiration, sinon la place redevient disponible (acompte
   // non remboursé — voir lib/server/seatHolds.ts).
   SEAT_HOLD_SHORT: { pct: 0.05, durationMs: 24 * 60 * 60 * 1000, minCents: 200, capCents: 2000, minXOF: 200, capXOF: 2000 },
   SEAT_HOLD_LONG: { pct: 0.1, durationMs: 72 * 60 * 60 * 1000, minCents: 400, capCents: 4000, minXOF: 400, capXOF: 4000 },

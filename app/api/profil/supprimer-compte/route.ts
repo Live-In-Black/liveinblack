@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
   // Organisateur/prestataire dont le dossier est approuvé (événements,
   // abonnement, vitrine publique en cours) : la suppression passe par une
-  // revue agent (lib/server/agentDeletion.ts) au lieu d'une anonymisation
+  // revue admin (lib/server/agentDeletion.ts) au lieu d'une anonymisation
   // immédiate — voir la note de fidélité dans lib/models/DeletionRequest.ts.
   const approvedOrg = user.activeRole === 'organisateur' && user.orgStatus === 'active'
   const approvedPrest = user.activeRole === 'prestataire' && user.prestStatus === 'active'

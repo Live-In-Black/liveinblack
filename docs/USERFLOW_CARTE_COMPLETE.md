@@ -119,7 +119,7 @@ flowchart TD
     CART --> CHECKOUT[💳 Tunnel de Paiement]
     CHECKOUT --> FEDAPAY{FedaPay}
     FEDAPAY --> MOB_MONEY[📱 Mobile Money\nMTN ou Moov Bénin]
-    FEDAPAY --> CARD[💳 Carte Bancaire]
+    FEDAPAY --> CARD[💳 Option carte via FedaPay\nsi activée]
 
     MOB_MONEY --> CONFIRM_PAY{Paiement confirmé ?}
     CARD --> CONFIRM_PAY

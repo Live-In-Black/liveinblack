@@ -147,7 +147,7 @@ const ALERT_REASON_LABEL: Record<string, string> = {
   event_deleted_before_fulfillment: 'Paiement reçu pour un événement supprimé',
   group_membership_conflict: 'Conflit de place de groupe après paiement',
   sub_amount_mismatch: "Abonnement : montant payé différent du tarif",
-  stripe_refund_failed: 'Remboursement carte historique à vérifier',
+  stripe_refund_failed: 'Remboursement historique à vérifier',
 }
 
 function fmtDate(iso: string): string {
@@ -196,7 +196,7 @@ type ConfirmAction =
 const SECTIONS = [
   { key: 'payouts', label: 'Reversements', helper: 'À verser', color: 'var(--gold-text)', icon: Landmark },
   { key: 'refunds', label: 'Remboursements', helper: 'À restituer', color: 'var(--accent-text)', icon: RotateCcw },
-  { key: 'points', label: 'Points retrait', helper: 'Réseau cash', color: 'var(--gold-text)', icon: Banknote },
+  { key: 'points', label: 'Lieux retrait', helper: 'Réseau cash', color: 'var(--gold-text)', icon: Banknote },
   { key: 'alerts', label: 'Alertes paiement', helper: 'À vérifier', color: 'var(--accent-text)', icon: ShieldCheck },
   { key: 'boosts', label: 'Boosts', helper: 'Suivi commercial', color: 'var(--violet-text)', icon: Megaphone },
 ] as const
@@ -710,13 +710,13 @@ function RefundsSection({
     <div className={styles.sectionStack}>
       <Card accent="var(--primary-a32)" className={styles.guideCard} role="note">
         <div className={`${styles.guideIcon} ${styles.refundGuideIcon}`} aria-hidden="true"><RotateCcw size={20} /></div>
-        <div><strong>Retraits au point de remboursement</strong><p>Validez le code présenté, remettez le montant exact en espèces, puis joignez la signature numérique avant clôture.</p></div>
+        <div><strong>Retraits au lieu de remboursement</strong><p>Validez le code présenté, remettez le montant exact en espèces, puis joignez la signature numérique avant clôture.</p></div>
         <Button variant="secondary" icon={<RefreshCw size={15} aria-hidden="true" />} disabled={processing} loading={processing} loadingText="Reprise…" onClick={() => void processQueuedCancellations()}>
           Relancer les générations
         </Button>
       </Card>
       {refunds.length === 0 ? (
-        <EmptyState title="Aucun retrait en attente" description="Les dossiers avec code actif pour vos points de remboursement apparaîtront ici." />
+        <EmptyState title="Aucun retrait en attente" description="Les dossiers avec code actif pour vos lieux de remboursement apparaîtront ici." />
       ) : (
         <div className={styles.cardGrid}>
           {pageItems.map((r) => (
@@ -796,9 +796,9 @@ function RefundPointsSection({
         setAgentIds('')
       }
       await onSaved()
-      showToast(point ? 'Point de remboursement mis à jour.' : 'Point de remboursement créé.', 'success')
+      showToast(point ? 'Lieu de remboursement mis à jour.' : 'Lieu de remboursement créé.', 'success')
     } catch {
-      showToast("Le point de remboursement n'a pas pu être enregistré.", 'error')
+      showToast("Le lieu de remboursement n'a pas pu être enregistré.", 'error')
     } finally {
       setBusy(false)
     }
@@ -808,7 +808,7 @@ function RefundPointsSection({
     <div className={styles.sectionStack}>
       <Card accent="rgba(var(--gold-rgb), .30)" className={styles.guideCard} role="note">
         <div className={styles.guideIcon} aria-hidden="true"><Banknote size={20} /></div>
-        <div><strong>Réseau de retrait cash</strong><p>Les dossiers cash sont attribués à un point actif, en priorité dans la ville de l’événement. Les agents ne voient que les remboursements rattachés à leurs points.</p></div>
+        <div><strong>Réseau de retrait cash</strong><p>Les dossiers cash sont attribués à un lieu actif, en priorité dans la ville de l’événement. Les agents ne voient que les remboursements rattachés à leurs lieux.</p></div>
       </Card>
 
       <Card className={styles.moneyCard}>
@@ -819,22 +819,22 @@ function RefundPointsSection({
           </div>
         </div>
         <div className={styles.pointForm}>
-          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nom du point" disabled={busy} />
+          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nom du lieu" disabled={busy} />
           <Input value={city} onChange={(event) => setCity(event.target.value)} placeholder="Ville" disabled={busy} />
           <Input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="Adresse complète" disabled={busy} />
           <Input value={agentIds} onChange={(event) => setAgentIds(event.target.value)} placeholder="IDs agents séparés par des virgules" disabled={busy} />
         </div>
         <Button variant="primary" className={styles.cardAction} disabled={busy || !name.trim() || !address.trim()} loading={busy} loadingText="Création…" onClick={() => void savePoint()}>
-          Créer le point
+          Créer le lieu
         </Button>
       </Card>
 
       {points.length === 0 ? (
-        <EmptyState title="Aucun point configuré" description="Crée au moins un point actif avant d’annuler un événement avec remboursements cash." />
+        <EmptyState title="Aucun lieu configuré" description="Crée au moins un lieu actif avant d’annuler un événement avec remboursements cash." />
       ) : (
         <div className={styles.cardGrid}>
           {points.map((point) => (
-            <Card key={point.id} className={styles.moneyCard} role="article" aria-label={`Point de remboursement ${point.name}`}>
+            <Card key={point.id} className={styles.moneyCard} role="article" aria-label={`Lieu de remboursement ${point.name}`}>
               <div className={styles.cardTop}>
                 <div className={styles.identity}>
                   <span className={`${styles.identityIcon} ${point.active ? styles.refundIcon : ''}`} aria-hidden="true"><Banknote size={18} /></span>

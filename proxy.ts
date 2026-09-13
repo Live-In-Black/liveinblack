@@ -16,7 +16,7 @@ const AUTH_REQUIRED_PREFIXES = ['/profile', '/messages', '/scanner', '/on-site-s
 const ORGANISATEUR_OR_AGENT_PREFIXES = ['/my-events']
 const ORGANISATEUR_ONLY_PREFIXES = ['/organizer-studio']
 const SERVICE_ACCESS_PREFIXES = ['/offer-services']
-const AGENT_ONLY_PREFIXES = ['/agent']
+const AGENT_ONLY_PREFIXES = ['/agent', '/admin']
 
 const ALLOWED_API_ORIGIN_PATTERNS = [
   /^https:\/\/liveinblack(?:-[a-z0-9-]+)?\.vercel\.app$/,
@@ -89,6 +89,11 @@ const guardedPageProxy = auth((req) => {
   if (matchesPrefix(pathname, AGENT_ONLY_PREFIXES)) {
     if (!session) return redirectToLogin()
     if (activeRole !== 'agent') return redirectHome()
+    if (matchesPrefix(pathname, ['/agent'])) {
+      const url = req.nextUrl.clone()
+      url.pathname = pathname.replace(/^\/agent(?=\/|$)/, '/admin')
+      return NextResponse.redirect(url)
+    }
   }
 
   return NextResponse.next()
@@ -121,6 +126,7 @@ export const config = {
     '/organizer-studio/:path*',
     '/offer-services/:path*',
     '/agent/:path*',
+    '/admin/:path*',
     '/api/:path*',
   ],
 }

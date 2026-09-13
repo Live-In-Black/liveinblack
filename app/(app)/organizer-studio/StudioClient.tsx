@@ -20,7 +20,6 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
-  HandCoins,
   Layers,
   Plus,
   RotateCcw,
@@ -169,12 +168,8 @@ export default function StudioClient({
 
   function toggleZone(id: string) {
     const has = zones.includes(id)
-    let next: string[]
-    if (id === 'international') next = has ? [] : ['international']
-    else {
-      const withoutIntl = zones.filter((z) => z !== 'international')
-      next = has ? withoutIntl.filter((z) => z !== id) : [...withoutIntl, id]
-    }
+    const currentBeninZones = zones.filter((z) => ZONE_OPTIONS.some((r) => r.id === z))
+    const next = has ? currentBeninZones.filter((z) => z !== id) : [...currentBeninZones, id]
     update({ zonesIntervention: next })
   }
 
@@ -677,7 +672,7 @@ export default function StudioClient({
 
                   {/* Zones d'intervention */}
                   <div>
-                    <Label style={{ fontWeight: 700, fontSize: 'var(--font-size-caption-lg)', marginBottom: 6 }}>Zones d&rsquo;intervention</Label>
+                    <Label style={{ fontWeight: 700, fontSize: 'var(--font-size-caption-lg)', marginBottom: 6 }}>Zone d&rsquo;intervention V1</Label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {ZONE_OPTIONS.map((r) => {
                         const sel = zones.includes(r.id)
@@ -888,7 +883,7 @@ export default function StudioClient({
                           {profile.isVerified && <ShieldCheck size={16} color="var(--primary)" />}
                         </div>
                         <p style={{ margin: '2px 0 0', fontSize: 'var(--font-size-caption)', color: 'var(--primary)', fontWeight: 650 }}>
-                          {[profile.city, profile.country].filter(Boolean).join(' · ') || 'Ville · Pays'}
+                          {[profile.city, profile.country || 'Bénin'].filter(Boolean).join(' · ') || 'Ville · Bénin'}
                         </p>
                         <p style={{ margin: '8px 0 0', fontSize: 'var(--font-size-footnote)', color: 'var(--text-muted)', lineHeight: 1.45 }}>
                           {profile.shortDescription || 'Présentation de l’organisateur…'}

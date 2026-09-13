@@ -10,8 +10,7 @@ import { GROWTH_EVENT_NAMES, trackGrowthEvent } from '@/lib/client/growthAnalyti
 // intégralement côté serveur (webhook FedaPay -> fulfillOrder(),
 // lib/server/fulfillOrder.ts) — cette page ne génère RIEN, elle ne fait que
 // relire le statut de l'Order via /api/checkout/fedapay jusqu'à ce que le
-// webhook ait fini. /api/checkout ne sert plus qu'au rail gratuit et aux
-// anciens retours Stripe historiques.
+// webhook ait fini. /api/checkout ne sert plus qu'au rail gratuit.
 // Place gratuite (rail 'free', lib/server/freeCheckout.ts) : pas de webhook —
 // le billet est déjà émis au moment où cette page se charge, /api/checkout
 // (avec order_id au lieu de session_id) répond donc "paid" dès le premier
@@ -74,7 +73,7 @@ export default function PaymentSuccessClient({
   const router = useRouter()
   const isFedapay = !sessionId && !!fedapayTxnId
   const isFree = !sessionId && !fedapayTxnId && !!freeOrderId
-  // Retour direct d'un ancien cancel_url Stripe (jamais de session_id, jamais
+  // Retour direct d'un ancien cancel_url historique (jamais de session_id, jamais
   // de webhook actif en V1) : état "cancelled" immédiat, même écran que
   // l'abandon FedaPay.
   const isStripeCancelled = !sessionId && !fedapayTxnId && !freeOrderId && !!stripeCancelledEventId
@@ -125,14 +124,6 @@ export default function PaymentSuccessClient({
         return { result: 'pending', data }
       }
 
-      async function checkLegacyStripe(): Promise<{ result: State; data?: Record<string, unknown> }> {
-        const res = await fetch(`/api/checkout?session_id=${encodeURIComponent(sessionId as string)}`)
-        if (!res.ok) return { result: 'error' }
-        const data = await res.json()
-        if (data.orderStatus === 'paid') return { result: 'success', data }
-        return { result: 'pending', data }
-      }
-
       // Rail 'free' : le billet est déjà émis SYNCHRONE avant même que cette
       // page ne se charge (pas de webhook à attendre) — orderStatus est donc
       // 'paid' dès ce premier appel dans l'immense majorité des cas. 'cancelled'
@@ -147,7 +138,7 @@ export default function PaymentSuccessClient({
         return { result: 'pending', data }
       }
 
-      const { result, data } = isFedapay ? await checkFedapay() : isFree ? await checkFree() : await checkLegacyStripe()
+      const { result, data } = isFedapay ? await checkFedapay() : await checkFree()
       if (cancelled) return
 
       if (data) {
@@ -186,7 +177,7 @@ export default function PaymentSuccessClient({
     trackGrowthEvent(GROWTH_EVENT_NAMES.purchaseConfirmed, {
       event_id: eventId || null,
       ticket_count: ticketCount,
-      rail: isFedapay ? 'fedapay' : isFree ? 'free' : 'legacy_stripe',
+      rail: isFedapay ? 'fedapay' : 'free',
       free: isFree,
     })
   }, [conversionKey, eventId, isFedapay, isFree, state, ticketCount])

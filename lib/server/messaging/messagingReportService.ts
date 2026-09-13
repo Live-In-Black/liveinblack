@@ -74,7 +74,7 @@ export async function reportUserForCaller(
     reportReceivedAgainstAccountEmail(reason, `${site}/help`, site),
   )
   await notifyAllAgents(() =>
-    newReportToReviewEmail(`Utilisateur — ${targetName}`, `${site}/agent/signalements`, site),
+    newReportToReviewEmail(`Utilisateur — ${targetName}`, `${site}/admin/signalements`, site),
   )
 
   return { ok: true }

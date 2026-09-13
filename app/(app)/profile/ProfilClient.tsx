@@ -1047,7 +1047,7 @@ function DangerZoneCard() {
       }
       if (data.pending) {
         // Organisateur/prestataire avec un dossier approuvé : la demande part
-        // en revue agent (app/api/profil/supprimer-compte/route.ts), le
+        // en revue admin (app/api/profil/supprimer-compte/route.ts), le
         // compte reste actif et connecté en attendant la réponse.
         setDeleting(false)
         setShowConfirm(false)

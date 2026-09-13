@@ -13,7 +13,7 @@ interface HeroSlide {
 const SLIDES: HeroSlide[] = [
   {
     type: 'video',
-    src: '/videos/nightclub-atmosphere.mp4',
+    src: 'https://assets.mixkit.co/videos/337/337-720.mp4',
     poster: '/videos/nightclub-atmosphere-poster.jpg',
   },
   {

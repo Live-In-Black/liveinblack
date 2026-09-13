@@ -33,7 +33,7 @@ const CATEGORY_VISUALS: Record<EmailCategory, CategoryVisual> = {
   ticket: { label: 'Billets' },
   payment: { label: 'Paiement' },
   refund: { label: 'Remboursement' },
-  resale: { label: 'Revente officielle' },
+  resale: { label: 'Billets' },
   event: { label: 'Événements' },
   payout: { label: 'Versements' },
   staff: { label: 'Équipe événement' },

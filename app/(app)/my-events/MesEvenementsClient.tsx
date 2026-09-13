@@ -29,7 +29,7 @@ const PAST_PAGE_SIZE = 15
 // contenu de la page plutôt que d'ouvrir un modal).
 export interface MesEvenementsClientProps {
   initialEvents: OrganizerEventView[]
-  initialStripeChargesEnabled: boolean
+  initialLegacyCardPayoutReady: boolean
   initialMomos: Record<string, string>
   initialRegion: string
 }
@@ -45,7 +45,7 @@ type ModalState =
   | { type: 'postpone'; event: OrganizerEventView }
   | { type: 'delete'; event: OrganizerEventView }
 
-export default function MesEvenementsClient({ initialEvents, initialStripeChargesEnabled, initialMomos, initialRegion }: MesEvenementsClientProps) {
+export default function MesEvenementsClient({ initialEvents, initialLegacyCardPayoutReady, initialMomos, initialRegion }: MesEvenementsClientProps) {
   const router = useRouter()
   const [events, setEvents] = useState(initialEvents)
   // Vue tableau de bord vs. wizard plein écran (création/édition), reflétée
@@ -70,8 +70,8 @@ export default function MesEvenementsClient({ initialEvents, initialStripeCharge
   }
 
   const payoutGapLabel = useMemo(
-    () => computePayoutGapLabel(events.filter((event) => event.currency === 'XOF'), { stripeChargesEnabled: initialStripeChargesEnabled, momos: initialMomos }),
-    [events, initialStripeChargesEnabled, initialMomos]
+    () => computePayoutGapLabel(events.filter((event) => event.currency === 'XOF'), { legacyCardPayoutReady: initialLegacyCardPayoutReady, momos: initialMomos }),
+    [events, initialLegacyCardPayoutReady, initialMomos]
   )
   const payoutSetupLabel = useMemo(() => {
     const requirements = payoutGapLabel ? [payoutGapLabel] : []

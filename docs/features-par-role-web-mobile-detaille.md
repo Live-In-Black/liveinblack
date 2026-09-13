@@ -90,7 +90,7 @@
 **Acces :** Web `/login`, Mobile `/login`.  
 **Role concerne :** visiteur, client, candidat.  
 **Description :** l'utilisateur peut creer un compte, se connecter, choisir un role de depart, confirmer son email, demander un renvoi de verification ou recuperer son mot de passe.  
-**Valeur :** c'est la porte d'entree vers toutes les fonctions personnelles : achat, wallet, favoris, messages, candidatures et espaces role.
+**Valeur :** c'est la porte d'entree vers toutes les fonctions personnelles : achat, billets, favoris, messages, candidatures et espaces role.
 
 ### 2.2 Profil personnel
 
@@ -141,23 +141,23 @@
 **Description :** l'utilisateur peut bloquer temporairement une place ou une table avec un acompte, puis payer le solde plus tard avant expiration.  
 **Valeur :** cette option facilite les achats plus engageants, notamment pour les tables ou reservations de groupe.
 
-### 2.9 Wallet de billets
+### 2.9 Billets et QR codes
 
 **Acces :** Web `/profile/billets`, Mobile onglet `Billets`.  
 **Role concerne :** client.  
-**Description :** le wallet liste les billets, invitations, places bloquees, billets passes et billets annules. Il affiche les QR codes, les informations d'evenement et les actions disponibles.  
+**Description :** l'espace billets liste les billets, invitations, places bloquees, billets passes et billets annules. Il affiche les QR codes, les informations d'evenement et les actions disponibles. Il ne s'agit pas d'un portefeuille d'argent.  
 **Valeur :** l'utilisateur retrouve tous ses acces au meme endroit, ce qui reduit le stress le jour de l'evenement.
 
 ### 2.10 QR code et page billet
 
-**Acces :** Web `/ticket/[token]`, wallet web/mobile.  
+**Acces :** Web `/ticket/[token]`, billets web/mobile.  
 **Role concerne :** client, staff scan.  
 **Description :** chaque billet peut afficher un QR code securise et une page billet lisible. Le QR sert au controle d'entree, tandis que la page billet donne aussi acces a certaines actions comme commander ou rejoindre la playlist.  
 **Valeur :** c'est la preuve d'acces officielle de l'utilisateur.
 
 ### 2.11 Invitations de places
 
-**Acces :** Web wallet, Mobile onglet `Billets`.  
+**Acces :** Web billets, Mobile onglet `Billets`.  
 **Role concerne :** client.  
 **Description :** un acheteur peut inviter une autre personne sur une place, annuler l'invitation, reprendre la place, ou le destinataire peut accepter/refuser.  
 **Valeur :** cette feature rend les achats de groupe beaucoup plus pratiques.
@@ -171,7 +171,7 @@
 
 ### 2.13 Demande de remboursement
 
-**Acces :** Web wallet, page billet `/ticket/[token]`, Mobile onglet `Billets`.  
+**Acces :** Web billets, page billet `/ticket/[token]`, Mobile onglet `Billets`.  
 **Role concerne :** client.  
 **Description :** le client peut demander un remboursement depuis son billet ou un lien securise. La demande est ensuite traitee selon les regles et les outils agent.  
 **Valeur :** elle donne un parcours clair au lieu de gerer les remboursements uniquement par messages ou support.
@@ -258,8 +258,8 @@
 ### 3.5 Corrections et re-soumission
 
 **Acces :** Web/mobile via dossier de candidature.  
-**Role concerne :** candidat, agent.  
-**Description :** si l'agent demande des changements, le candidat peut corriger son dossier puis le renvoyer pour revue.  
+**Role concerne :** candidat, administrateur.  
+**Description :** si l'administrateur demande des changements, le candidat peut corriger son dossier puis le renvoyer pour revue.  
 **Valeur :** permet d'ameliorer un dossier sans le rejeter definitivement.
 
 ## 4. Organisateur
@@ -432,8 +432,8 @@
 ### 6.3 Vente sur place
 
 **Acces :** Web `/on-site-sales/[eventId]`, Mobile `/agent-sales/[eventId]`.  
-**Role concerne :** staff vente, organisateur, agent finance.  
-**Description :** un vendeur autorise peut vendre des billets a l'entree, soit avec paiement direct, soit avec un mode ou l'agent regle ensuite.  
+**Role concerne :** staff vente, organisateur, vendeur terrain assigne.  
+**Description :** un vendeur autorise peut vendre des billets a l'entree, soit avec paiement direct, soit avec un mode ou le vendeur terrain regle ensuite.  
 **Valeur :** couvre les ventes de derniere minute et garde une trace propre des ventes terrain.
 
 ### 6.4 Commandes et service sur place
@@ -443,93 +443,93 @@
 **Description :** les articles commandables peuvent etre ajoutes, ajustes, servis, annules ou marques comme payes selon les permissions.  
 **Valeur :** digitalise une partie de l'exploitation pendant l'evenement.
 
-## 7. Agent / administrateur LIVE IN BLACK
+## 7. Administrateur LIVE IN BLACK
 
-### 7.1 Centre de controle agent
+### 7.1 Centre de controle admin
 
-**Acces :** Web `/agent`, Mobile `/spaces/agent`.  
-**Role concerne :** agent LIVE IN BLACK.  
+**Acces :** Web `/admin` (alias historique `/agent`), Mobile `/spaces/agent`.  
+**Role concerne :** administrateur LIVE IN BLACK.  
 **Description :** le centre de controle affiche les statistiques globales, les files d'action, les candidatures en attente, les revenus, les billets vendus et les raccourcis vers les modules operationnels.  
 **Valeur :** donne a l'equipe une vision immediate de ce qui se passe sur la plateforme.
 
 ### 7.2 Gestion des comptes
 
-**Acces :** Web `/agent/comptes`, Mobile `/spaces/agent/users` et `/spaces/agent/users/[id]`.  
-**Role concerne :** agent.  
-**Description :** l'agent recherche les utilisateurs, consulte les details, modifie certaines informations, envoie des emails de verification ou reset mot de passe, verifie une adresse ou desactive un compte.  
+**Acces :** Web `/admin/comptes`, Mobile `/spaces/agent/users` et `/spaces/agent/users/[id]`.  
+**Role concerne :** administrateur.  
+**Description :** l'administrateur recherche les utilisateurs, consulte les details, modifie certaines informations, envoie des emails de verification ou reset mot de passe, verifie une adresse ou desactive un compte.  
 **Valeur :** permet de gerer le support compte sans intervention directe en base de donnees.
 
 ### 7.3 Revue des candidatures
 
-**Acces :** Web `/agent/dossiers`, Mobile `/spaces/agent/[id]`.  
-**Role concerne :** agent, candidats.  
-**Description :** l'agent consulte les dossiers organisateur/prestataire, lit les documents, ajoute une note interne, approuve, refuse ou demande des changements.  
+**Acces :** Web `/admin/dossiers`, Mobile `/spaces/agent/[id]`.  
+**Role concerne :** administrateur, candidats.  
+**Description :** l'administrateur consulte les dossiers organisateur/prestataire, lit les documents, ajoute une note interne, approuve, refuse ou demande des changements.  
 **Valeur :** controle la qualite des professionnels autorises sur LIVE IN BLACK.
 
 ### 7.4 Moderation evenements
 
-**Acces :** Web `/agent/evenements`, Mobile `/spaces/agent/events`.  
-**Role concerne :** agent.  
-**Description :** l'agent recherche et filtre les evenements, consulte leur etat et peut annuler un evenement si necessaire.  
+**Acces :** Web `/admin/evenements`, Mobile `/spaces/agent/events`.  
+**Role concerne :** administrateur.  
+**Description :** l'administrateur recherche et filtre les evenements, consulte leur etat et peut annuler un evenement si necessaire.  
 **Valeur :** protege les utilisateurs contre les contenus ou evenements problematiques.
 
 ### 7.5 Moderation avis et signalements
 
-**Acces :** Web `/agent/signalements` et `/agent/avis`, Mobile `/spaces/agent/moderation`.  
-**Role concerne :** agent.  
-**Description :** l'agent traite les signalements de la communaute, modere les avis et marque les problemes comme traites.  
+**Acces :** Web `/admin/signalements` et `/admin/avis`, Mobile `/spaces/agent/moderation`.  
+**Role concerne :** administrateur.  
+**Description :** l'administrateur traite les signalements de la communaute, modere les avis et marque les problemes comme traites.  
 **Valeur :** maintient la confiance et la qualite des interactions.
 
 ### 7.6 Remboursements
 
-**Acces :** Web `/agent/paiements`, Mobile `/spaces/agent/payments`.  
-**Role concerne :** agent finance.  
-**Description :** l'agent consulte les remboursements en attente et peut marquer un remboursement manuel comme effectue lorsqu'il est traite hors plateforme.  
+**Acces :** Web `/admin/paiements`, Mobile `/spaces/agent/payments`.  
+**Role concerne :** administrateur finance.  
+**Description :** l'administrateur consulte les remboursements en attente et peut marquer un remboursement manuel comme effectue lorsqu'il est traite hors plateforme.  
 **Valeur :** structure le suivi financier et evite les remboursements oublies.
 
 ### 7.7 Versements et alertes de paiement
 
-**Acces :** Web `/agent/paiements`, Mobile `/spaces/agent/payouts`.  
-**Role concerne :** agent finance.  
-**Description :** l'agent voit les demandes de versement, les soldes sans demande, les echecs, les alertes et peut marquer un paiement comme regle ou resoudre une alerte.  
+**Acces :** Web `/admin/paiements`, Mobile `/spaces/agent/payouts`.  
+**Role concerne :** administrateur finance.  
+**Description :** l'administrateur voit les soldes XOF actionnables, les echecs et les alertes ; aucune demande de retrait organisateur n'est exposee en V1 FedaPay Marketplace.  
 **Valeur :** donne un controle clair sur l'argent du aux organisateurs et prestataires.
 
 ### 7.8 Demandes de suppression
 
-**Acces :** Web `/agent/suppressions`, Mobile `/spaces/agent/deletion-requests`.  
-**Role concerne :** agent.  
-**Description :** certaines suppressions de compte sensibles passent par une revue agent. L'agent peut approuver ou refuser selon les contraintes du compte.  
+**Acces :** Web `/admin/suppressions`, Mobile `/spaces/agent/deletion-requests`.  
+**Role concerne :** administrateur.  
+**Description :** certaines suppressions de compte sensibles passent par une revue admin. L'administrateur peut approuver ou refuser selon les contraintes du compte.  
 **Valeur :** protege les operations en cours, les ventes et les obligations de suivi.
 
 ### 7.9 Configuration de l'accueil public
 
-**Acces :** Web `/agent/actualite`, Mobile `/spaces/agent/homepage`.  
-**Role concerne :** agent editorial / operations.  
-**Description :** l'agent choisit les evenements mis en avant, l'accent editorial et les contenus visibles sur l'accueil.  
+**Acces :** Web `/admin/actualite`, Mobile `/spaces/agent/homepage`.  
+**Role concerne :** admin editorial / operations.  
+**Description :** l'administrateur choisit les evenements mis en avant, l'accent editorial et les contenus visibles sur l'accueil.  
 **Valeur :** permet de piloter la vitrine commerciale sans redeployer le site.
 
-### 7.10 Blog agent
+### 7.10 Blog admin
 
-**Acces :** Web `/agent/blog`.  
-**Role concerne :** agent editorial.  
+**Acces :** Web `/admin/blog`.  
+**Role concerne :** admin editorial.  
 **Description :** l'equipe peut gerer les articles de blog et importer des campagnes de contenu.  
 **Valeur :** facilite la strategie SEO et la communication de marque.
 
 ### 7.11 Suivi des boosts
 
-**Acces :** Web module finance/boosts agent, Mobile `/spaces/agent/boosts`.  
-**Role concerne :** agent.  
-**Description :** l'agent consulte les campagnes sponsorisees achetees par les organisateurs, leurs statuts et leur activite.  
+**Acces :** Web module finance/boosts admin, Mobile `/spaces/agent/boosts`.  
+**Role concerne :** administrateur.  
+**Description :** l'administrateur consulte les campagnes sponsorisees achetees par les organisateurs, leurs statuts et leur activite.  
 **Valeur :** donne une vue de controle sur un produit payant de visibilite.
 
 ## 8. Fonctions transversales
 
-### 8.1 Roles multiples
+### 8.1 Comptes separes et permissions
 
 **Acces :** Web sidebar et compte, Mobile `/spaces`.  
-**Role concerne :** tous les comptes avec plusieurs roles.  
-**Description :** un meme utilisateur peut etre client, organisateur, prestataire ou agent, puis basculer vers l'espace correspondant.  
-**Valeur :** evite de creer plusieurs comptes pour une meme personne active dans plusieurs fonctions.
+**Role concerne :** client, organisateur, prestataire, administrateur, agents terrain.  
+**Description :** les comptes client, organisateur et prestataire sont separes par adresse e-mail. Les agents terrain sont des permissions d'equipe accordees par un organisateur sur un evenement, pas un compte commercial distinct. L'espace admin reste reserve a l'equipe LIVE IN BLACK.  
+**Valeur :** evite la confusion entre compte utilisateur, compte professionnel, mission terrain et administration plateforme.
 
 ### 8.2 Emails transactionnels
 

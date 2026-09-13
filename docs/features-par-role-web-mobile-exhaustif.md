@@ -109,7 +109,7 @@ Objectif du document: presenter au client, sans vocabulaire technique, toutes le
 
 **Emails organisateur et staff.** Lien: serveur emails `templates/organizerEvents.ts`, `templates/staff.ts`, `templates/payouts.ts`. Ces emails accompagnent les organisateurs et equipes terrain. Ils rappellent les actions a faire et les informations operationnelles.
 
-**Emails moderation et agent.** Lien: serveur emails `templates/moderation.ts`, `templates/agent.ts`, `templates/applications.ts`. Ces emails soutiennent les workflows internes: dossiers, validation, signalements et suivi administratif.
+**Emails moderation et agent.** Lien: serveur emails `templates/moderation.ts`, `templates/admin.ts`, `templates/applications.ts`. Ces emails soutiennent les workflows internes: dossiers, validation, signalements et suivi administratif.
 
 ## 4. Billetterie, achat et parcours client
 
@@ -293,13 +293,13 @@ Objectif du document: presenter au client, sans vocabulaire technique, toutes le
 
 **Vente sur place web.** Lien: Web `/on-site-sales/[eventId]`, API agent sales. L'equipe peut vendre des billets ou articles directement a l'entree ou au comptoir. Cela donne a LIVE IN BLACK un usage terrain complet.
 
-**Vente agent mobile.** Lien: Mobile `/agent-sales/[eventId]`, API `/api/agent-sales/[eventId]/sell`, `/sell-at-door`. Les agents peuvent vendre depuis un telephone. C'est pratique pour les evenements sans poste fixe.
+**Vente terrain mobile.** Lien: Mobile `/agent-sales/[eventId]`, API `/api/agent-sales/[eventId]/sell`, `/sell-at-door`. Les vendeurs assignes a un evenement peuvent vendre depuis un telephone. C'est pratique pour les evenements sans poste fixe.
 
-**Dashboard de vente agent.** Lien: API `/api/agent-sales/[eventId]/dashboard`. L'agent peut suivre ses ventes et son activite. Cela facilite le controle en temps reel.
+**Dashboard de vente terrain.** Lien: API `/api/agent-sales/[eventId]/dashboard`. Le vendeur terrain peut suivre ses ventes et son activite. Cela facilite le controle en temps reel.
 
 **Encaissement porte.** Lien: API `/api/agent-sales/[eventId]/sell-at-door`. Cette fonction couvre les ventes a l'entree, souvent en contexte rapide. Elle rend le produit utilisable dans la realite d'une soiree.
 
-**Reglement des ventes agent.** Lien: API `/api/agent-sales/settlements/[settlementId]/settle`. Les ventes realisees par agents peuvent etre cloturees et reglees. Cela apporte une logique de reconciliation financiere.
+**Reglement des ventes terrain.** Lien: API `/api/agent-sales/settlements/[settlementId]/settle`. Les ventes realisees par vendeurs assignes peuvent etre cloturees et reglees. Cela apporte une logique de reconciliation financiere.
 
 **Rappels ventes cash.** Lien: API `/api/cron/cash-sale-reminders`. Le systeme peut rappeler les operations liees aux ventes cash. Cela limite les oublis dans les reglements.
 
@@ -399,59 +399,59 @@ Objectif du document: presenter au client, sans vocabulaire technique, toutes le
 
 **Categories prestataire.** Lien: Mobile `lib/providerCategories.ts`. Les prestataires sont classes par type de service. Cela rend l'annuaire plus lisible.
 
-## 12. Espace agent et administration
+## 12. Espace admin et administration
 
-**Tableau de bord agent.** Lien: Web `/agent`, Mobile `/spaces/agent`, API `/api/agent/dashboard`. L'agent a une vue d'ensemble des activites importantes: comptes, dossiers, evenements, paiements, signalements et alertes. C'est le poste de pilotage interne.
+**Tableau de bord admin.** Lien: Web `/admin` (alias historique `/agent`), Mobile `/spaces/agent`, API `/api/admin/dashboard`. L'administrateur a une vue d'ensemble des activites importantes: comptes, dossiers, evenements, paiements, signalements et alertes. C'est le poste de pilotage interne.
 
-**Gestion des comptes.** Lien: Web `/agent/comptes`, Mobile `/spaces/agent/users`, `/spaces/agent/users/[id]`, API `/api/agent/users`. Les agents peuvent consulter et administrer les utilisateurs. Cela permet de resoudre les problemes de compte et de support.
+**Gestion des comptes.** Lien: Web `/admin/comptes`, Mobile `/spaces/agent/users`, `/spaces/agent/users/[id]`, API `/api/admin/users`. Les admins peuvent consulter et administrer les utilisateurs. Cela permet de resoudre les problemes de compte et de support.
 
-**Detail utilisateur agent.** Lien: API `/api/agent/users/[id]`. L'agent peut consulter un compte precis. C'est utile pour verifier l'etat, les informations et les actions disponibles.
+**Detail utilisateur admin.** Lien: API `/api/admin/users/[id]`. L'admin peut consulter un compte precis. C'est utile pour verifier l'etat, les informations et les actions disponibles.
 
-**Desactivation utilisateur.** Lien: API `/api/agent/users/[id]/disable`. L'equipe peut desactiver un compte si necessaire. Cela protege la plateforme contre les abus.
+**Desactivation utilisateur.** Lien: API `/api/admin/users/[id]/disable`. L'equipe peut desactiver un compte si necessaire. Cela protege la plateforme contre les abus.
 
-**Envoyer une verification email.** Lien: API `/api/agent/users/[id]/send-verification`, `/verify-email`. L'agent peut aider un utilisateur bloque par la verification. Cela reduit les frictions support.
+**Envoyer une verification email.** Lien: API `/api/admin/users/[id]/send-verification`, `/verify-email`. L'admin peut aider un utilisateur bloque par la verification. Cela reduit les frictions support.
 
-**Forcer ou renvoyer une reinitialisation de mot de passe.** Lien: API `/api/agent/users/[id]/send-password-reset`. L'agent peut assister un utilisateur qui n'arrive plus a se connecter. C'est un outil de support rapide.
+**Forcer ou renvoyer une reinitialisation de mot de passe.** Lien: API `/api/admin/users/[id]/send-password-reset`. L'admin peut assister un utilisateur qui n'arrive plus a se connecter. C'est un outil de support rapide.
 
-**Dossiers de candidature agent.** Lien: Web `/agent/dossiers`, API `/api/agent/applications`. Les agents voient les candidatures organisateur et prestataire. Ils peuvent suivre le pipeline de validation.
+**Dossiers de candidature admin.** Lien: Web `/admin/dossiers`, API `/api/admin/applications`. Les admins voient les candidatures organisateur et prestataire. Ils peuvent suivre le pipeline de validation.
 
-**Detail de dossier.** Lien: API `/api/agent/applications/[id]`. L'agent ouvre un dossier complet. Cela permet une decision fondee.
+**Detail de dossier.** Lien: API `/api/admin/applications/[id]`. L'admin ouvre un dossier complet. Cela permet une decision fondee.
 
-**Note sur dossier.** Lien: API `/api/agent/applications/[id]/note`. L'equipe peut ajouter des notes internes a un dossier. Cela garde l'historique de traitement.
+**Note sur dossier.** Lien: API `/api/admin/applications/[id]/note`. L'equipe peut ajouter des notes internes a un dossier. Cela garde l'historique de traitement.
 
-**Moderation de dossier.** Lien: API `/api/agent/applications/[id]/moderate`. L'agent peut accepter, refuser ou demander une action sur une candidature. Cela transforme l'onboarding en workflow controle.
+**Moderation de dossier.** Lien: API `/api/admin/applications/[id]/moderate`. L'admin peut accepter, refuser ou demander une action sur une candidature. Cela transforme l'onboarding en workflow controle.
 
-**Gestion des evenements agent.** Lien: Web `/agent/evenements`, Mobile `/spaces/agent/events`, API `/api/agent/events`. L'equipe peut surveiller les evenements de la plateforme. Elle voit ce qui est publie et peut intervenir.
+**Gestion des evenements admin.** Lien: Web `/admin/evenements`, Mobile `/spaces/agent/events`, API `/api/admin/events`. L'equipe admin peut surveiller les evenements de la plateforme. Elle voit ce qui est publie et peut intervenir.
 
-**Annulation agent d'un evenement.** Lien: API `/api/agent/events/[id]/cancel`. L'equipe peut annuler un evenement si une decision interne l'exige. Cela donne un filet de securite operationnel.
+**Annulation admin d'un evenement.** Lien: API `/api/admin/events/[id]/cancel`. L'equipe admin peut annuler un evenement si une decision interne l'exige. Cela donne un filet de securite operationnel.
 
-**Gestion des paiements agent.** Lien: Web `/agent/paiements`, Mobile `/spaces/agent/payments`, API `/api/agent/payments/*`. L'equipe suit les remboursements, alertes et reversements. C'est la console finance de la plateforme.
+**Gestion des paiements admin.** Lien: Web `/admin/paiements`, Mobile `/spaces/agent/payments`, API `/api/admin/payments/*`. L'equipe admin suit les remboursements, alertes et reversements. C'est la console finance de la plateforme.
 
-**Alertes paiement.** Lien: API `/api/agent/payments/alerts`, `/alerts/[id]/resolve`. Les anomalies ou points a traiter remontent aux agents. Ils peuvent les marquer resolus apres action.
+**Alertes paiement.** Lien: API `/api/admin/payments/alerts`, `/alerts/[id]/resolve`. Les anomalies ou points a traiter remontent aux admins. Ils peuvent les marquer resolus apres action.
 
-**Remboursements agent.** Lien: API `/api/agent/payments/refunds`, `/refunds/[id]/complete`. L'equipe peut piloter les remboursements. Cela donne un cadre clair a une operation sensible.
+**Remboursements admin.** Lien: API `/api/admin/payments/refunds`, `/refunds/[id]/complete`. L'equipe admin peut piloter les remboursements. Cela donne un cadre clair a une operation sensible.
 
-**Reversements agent.** Lien: API `/api/agent/payments/payouts`, `/mark-paid`, `/settle`. Les agents peuvent suivre, marquer paye ou solder des reversements. Cela evite une comptabilite floue.
+**Reversements admin.** Lien: API `/api/admin/payments/payouts`, `/mark-paid`, `/settle`. Les admins peuvent suivre, marquer paye ou solder des reversements. En V1 Benin/FedaPay Marketplace, aucun bouton de demande de retrait organisateur ne doit etre expose.
 
-**Payouts agent mobile.** Lien: Mobile `/spaces/agent/payouts`. Les agents peuvent suivre les reversements depuis le mobile. C'est utile pour les operations en mouvement.
+**Payouts admin mobile.** Lien: Mobile `/spaces/agent/payouts`. Les admins peuvent suivre les reversements depuis le mobile. C'est utile pour les operations en mouvement.
 
-**Signalements.** Lien: Web `/agent/signalements`, Mobile `/spaces/agent/moderation`, API `/api/agent/reports`, `/api/agent/reports/[id]/handle`. Les signalements utilisateurs sont centralises. L'equipe peut traiter les problemes de comportement, contenu ou securite.
+**Signalements.** Lien: Web `/admin/signalements`, Mobile `/spaces/agent/moderation`, API `/api/admin/reports`, `/api/admin/reports/[id]/handle`. Les signalements utilisateurs sont centralises. L'equipe peut traiter les problemes de comportement, contenu ou securite.
 
-**Moderation des avis.** Lien: Web `/agent/avis`, API `/api/agent/reviews`, `/api/agent/reviews/[id]/moderate`. Les agents peuvent verifier les avis signales ou sensibles. Cela maintient la qualite et la confiance.
+**Moderation des avis.** Lien: Web `/admin/avis`, API `/api/admin/reviews`, `/api/admin/reviews/[id]/moderate`. Les admins peuvent verifier les avis signales ou sensibles. Cela maintient la qualite et la confiance.
 
-**Demandes de suppression.** Lien: Web `/agent/suppressions`, Mobile `/spaces/agent/deletion-requests`, API `/api/agent/deletion-requests`. Les demandes de suppression de compte sont listees pour traitement. Cela soutient la conformite.
+**Demandes de suppression.** Lien: Web `/admin/suppressions`, Mobile `/spaces/agent/deletion-requests`, API `/api/admin/deletion-requests`. Les demandes de suppression de compte sont listees pour traitement. Cela soutient la conformite.
 
-**Approuver une suppression.** Lien: API `/api/agent/deletion-requests/[id]/approve`. L'equipe peut valider une suppression de compte. Le systeme peut ensuite lancer la purge controlee.
+**Approuver une suppression.** Lien: API `/api/admin/deletion-requests/[id]/approve`. L'equipe peut valider une suppression de compte. Le systeme peut ensuite lancer la purge controlee.
 
-**Refuser une suppression.** Lien: API `/api/agent/deletion-requests/[id]/reject`. Une demande peut etre refusee si elle ne remplit pas les conditions. Cela garde une trace de decision.
+**Refuser une suppression.** Lien: API `/api/admin/deletion-requests/[id]/reject`. Une demande peut etre refusee si elle ne remplit pas les conditions. Cela garde une trace de decision.
 
-**Gestion homepage.** Lien: Mobile `/spaces/agent/homepage`, API `/api/agent/homepage-config`. Les agents peuvent configurer les mises en avant de la page d'accueil. Cela permet de piloter la vitrine sans redeploiement.
+**Gestion homepage.** Lien: Mobile `/spaces/agent/homepage`, API `/api/admin/homepage-config`. Les admins peuvent configurer les mises en avant de la page d'accueil. Cela permet de piloter la vitrine sans redeploiement.
 
-**Gestion des boosts agent.** Lien: Mobile `/spaces/agent/boosts`, API `/api/agent/boosts`. Les agents peuvent consulter ou administrer les boosts. Cela securise la partie promotionnelle.
+**Gestion des boosts admin.** Lien: Mobile `/spaces/agent/boosts`, API `/api/admin/boosts`. Les admins peuvent consulter ou administrer les boosts. Cela securise la partie promotionnelle.
 
-**Actualite agent.** Lien: Web `/agent/actualite`. Cette page regroupe les contenus ou actualites internes/publics geres par l'equipe. Elle soutient la communication editee.
+**Actualite admin.** Lien: Web `/admin/actualite`. Cette page regroupe les contenus ou actualites internes/publics geres par l'equipe. Elle soutient la communication editee.
 
-**Blog agent.** Lien: Web `/agent/blog`, API `/api/agent/blog`, `/api/agent/blog/[id]`, `/api/agent/blog/import-campaign`. L'equipe peut gerer les articles de blog et importer des campagnes. Cela donne un outil de contenu integre.
+**Blog admin.** Lien: Web `/admin/blog`, API `/api/admin/blog`, `/api/admin/blog/[id]`, `/api/admin/blog/import-campaign`. L'equipe peut gerer les articles de blog et importer des campagnes. Cela donne un outil de contenu integre.
 
 ## 13. Paiements, reversements et automatisations financieres
 
@@ -491,9 +491,9 @@ Objectif du document: presenter au client, sans vocabulaire technique, toutes le
 
 **Navigation mobile par onglets.** Lien: Mobile `/(tabs)/_layout`, `index`, `search`, `tickets`, `messages`, `profile`. L'application mobile organise l'experience autour de cinq entrees simples: accueil, recherche, billets, messages et profil. Cela rend l'usage quotidien tres direct.
 
-**Ecran espaces.** Lien: Mobile `/spaces/index`. L'utilisateur peut choisir l'espace adapte a son role: organisateur, prestataire ou agent. C'est la passerelle entre usage client et usage professionnel.
+**Ecran espaces.** Lien: Mobile `/spaces/index`. L'utilisateur peut choisir l'espace adapte a son compte: organisateur, prestataire ou admin. Les agents terrain restent des permissions liees aux evenements, pas un compte commercial separe.
 
-**Espace agent mobile.** Lien: Mobile `/spaces/agent`, `/spaces/agent/[id]`. Les agents disposent d'un espace mobile pour consulter les modules internes. Cela rend l'administration accessible sans ordinateur.
+**Espace admin mobile.** Lien: Mobile `/spaces/agent`, `/spaces/agent/[id]`. Les admins disposent d'un espace mobile pour consulter les modules internes. Cela rend l'administration accessible sans ordinateur.
 
 **Espace organisateur mobile.** Lien: Mobile `/spaces/organizer`. L'organisateur gere ses evenements et son profil depuis son telephone. C'est essentiel pour des acteurs terrain.
 

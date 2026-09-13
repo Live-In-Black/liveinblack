@@ -65,6 +65,9 @@ export default async function AgentSalesPage({ params }: { params: Promise<{ eve
   await getDb()
   const event = mongoose.isValidObjectId(eventId) ? await Event.findById(eventId).lean() : null
   if (!event) return <GateScreen title="Événement introuvable" message="Cet événement n'existe pas ou plus." />
+  if (event.currency !== 'XOF') {
+    return <GateScreen title="Vente indisponible en V1" message="La vente sur place du lancement Bénin est réservée aux événements en FCFA avec FedaPay." />
+  }
 
   const dashboardResult = await getAgentSalesDashboard({ id: session.user.id }, eventId)
   if (!dashboardResult.ok) {
@@ -85,7 +88,7 @@ export default async function AgentSalesPage({ params }: { params: Promise<{ eve
     <AgentSalesClient
       eventId={eventId}
       eventName={event.name}
-      currency={event.currency === 'EUR' ? 'EUR' : 'XOF'}
+      currency="XOF"
       places={places}
       initialDashboard={dashboardResult.view}
     />

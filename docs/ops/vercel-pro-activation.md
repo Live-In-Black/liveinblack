@@ -38,10 +38,10 @@ Actif cote repo:
 - Variables ops Vercel documentees dans `.env.example`: bypass protection, fenetre logs, drains et webhook d'erreur.
 - Endpoint Spend Management prepare: `/api/ops/vercel-spend`, signature HMAC verifiee via `VERCEL_SPEND_WEBHOOK_SECRET`, historique 90 jours et auto-maintenance optionnelle via Edge Config.
 - Endpoint webhook Vercel plateforme prepare: `/api/ops/vercel-events`, signature HMAC verifiee via `VERCEL_ACCOUNT_WEBHOOK_SECRET`, historique 90 jours des evenements deploy/projet/domaine.
-- Page agent Ops Vercel preparee: `/agent/vercel`, appuyee par `/api/agent/vercel/ops-events` et `/api/agent/vercel/ops-config`, lecture protegee par `requireAgent`, filtres `source`, `type`, `limit`, payloads rediges par defaut, barometre de completude Pro base sur les signaux recus et les secrets ops configures, feuille de route 100% issue de `config/vercel-pro-decisions.json`, pilotage Edge Config si `VERCEL_API_TOKEN` est configure, confirmations avant actions sensibles, modes rapides normal/urgence et audit trail des changements.
-- Feu vert activation live prepare dans `/agent/vercel`: le panneau synthese preuves fraiches, risques cout/securite, besoin d accord explicite et prochaine commande sure avant toute mutation Vercel live.
-- Dette de preuve 100% preparee dans `/agent/vercel`: le panneau liste les decisions, portes live et preuves strictes qui empechent encore de declarer Vercel Pro utilise a 100%, avec commande de preuve copiable par dette et etat explicite si les registres locaux sont indisponibles.
-- Suivi Usage Pro prepare: `config/vercel-usage-watchlist.json`, expose dans `/agent/vercel` et verifiable via `npm run audit:vercel-usage`.
+- Page admin Ops Vercel preparee: `/admin/vercel`, appuyee par `/api/admin/vercel/ops-events` et `/api/admin/vercel/ops-config`, lecture protegee par `requireAgent`, filtres `source`, `type`, `limit`, payloads rediges par defaut, barometre de completude Pro base sur les signaux recus et les secrets ops configures, feuille de route 100% issue de `config/vercel-pro-decisions.json`, pilotage Edge Config si `VERCEL_API_TOKEN` est configure, confirmations avant actions sensibles, modes rapides normal/urgence et audit trail des changements.
+- Feu vert activation live prepare dans `/admin/vercel`: le panneau synthese preuves fraiches, risques cout/securite, besoin d accord explicite et prochaine commande sure avant toute mutation Vercel live.
+- Dette de preuve 100% preparee dans `/admin/vercel`: le panneau liste les decisions, portes live et preuves strictes qui empechent encore de declarer Vercel Pro utilise a 100%, avec commande de preuve copiable par dette et etat explicite si les registres locaux sont indisponibles.
+- Suivi Usage Pro prepare: `config/vercel-usage-watchlist.json`, expose dans `/admin/vercel` et verifiable via `npm run audit:vercel-usage`.
 - Verification HMAC Vercel centralisee dans `lib/server/vercelSignature.ts` pour drains, Spend Management et webhooks plateforme.
 - Cache public/ISR avec `revalidate`, `unstable_cache`, tags et headers `s-maxage`.
 - Optimisation image Next.js configuree dans `next.config.ts`.
@@ -124,7 +124,7 @@ npm run audit:vercel-spend
 - Configurer le webhook vers `https://ton-domaine.com/api/ops/vercel-spend`.
 - Copier le secret affiche par Vercel dans `VERCEL_SPEND_WEBHOOK_SECRET`.
 - Laisser `VERCEL_SPEND_AUTO_MAINTENANCE=0` au debut. Passer a `1` seulement si l'equipe veut qu'une alerte 100% coupe automatiquement checkout et active `maintenance_mode` via Edge Config.
-- Considerer la brique finalisee seulement quand la checklist confirme: montant, notifications, webhook, secret, decision auto-maintenance et visibilite dans `/agent/vercel`.
+- Considerer la brique finalisee seulement quand la checklist confirme: montant, notifications, webhook, secret, decision auto-maintenance et visibilite dans `/admin/vercel`.
 
 Regles Firewall a creer d'abord en action `log`, puis a publier seulement apres verification dashboard:
 
@@ -229,18 +229,18 @@ Webhook Spend Management:
 Lecture interne des evenements Vercel:
 
 ```bash
-/agent/vercel
-/api/agent/vercel/ops-events
-/api/agent/vercel/ops-events?source=platform&limit=20
-/api/agent/vercel/ops-events?source=spend&limit=20
-/api/agent/vercel/ops-events?source=drain&type=error&limit=20
+/admin/vercel
+/api/admin/vercel/ops-events
+/api/admin/vercel/ops-events?source=platform&limit=20
+/api/admin/vercel/ops-events?source=spend&limit=20
+/api/admin/vercel/ops-events?source=drain&type=error&limit=20
 ```
 
 La page et l'API sont reservees aux comptes `agent`. L'API renvoie des resumes par defaut; `includeSample=1` existe pour debug ponctuel mais redige les champs sensibles evidents.
 
 Pilotage Edge Config depuis l'espace agent:
 
-- `/agent/vercel` lit `/api/agent/vercel/ops-config`.
+- `/admin/vercel` lit `/api/admin/vercel/ops-config`.
 - En lecture seule, la page affiche les flags actifs.
 - En ecriture, ajouter `VERCEL_API_TOKEN`, `VERCEL_TEAM_ID` et `VERCEL_EDGE_CONFIG_ID` pour permettre aux agents de changer les flags sans redéploiement.
 - Flags pilotables: maintenance, checkout, longueur minimale de recherche et TTL cache recherche. La cle revente est historique et forcee hors V1.
@@ -253,11 +253,11 @@ Pilotage Edge Config depuis l'espace agent:
 - Le bloc `Fraicheur des preuves` signale les registres vieux de plus de 14 jours, pour eviter de declarer le 100% avec des preuves perimees.
 - La feuille de route 100% affiche les lignes du registre qui ne sont pas encore `active` ou `rejected`, avec la prochaine action concrete.
 - Le suivi Usage Pro affiche les metriques a surveiller dans Vercel: spend, edge requests, data transfer, functions, images, cache/ISR, web vitals et pression Firewall.
-- Les portes live restantes, l'ordre recommande et les preuves du 100% sont visibles dans `/agent/vercel`; les portes et etapes deja `active` ou `rejected` dans le registre de decisions ne sont plus comptees comme restantes.
+- Les portes live restantes, l'ordre recommande et les preuves du 100% sont visibles dans `/admin/vercel`; les portes et etapes deja `active` ou `rejected` dans le registre de decisions ne sont plus comptees comme restantes.
 - Le bloc `Matrice des preuves live` relie chaque porte ouverte a sa source de preuve: audit live, dashboard, accord explicite ou implementation, avec commande de consignation pre-remplie.
 - Le bloc `Prochaine preuve a capturer` met en avant la prochaine preuve live/dashboard a fermer, son lien Vercel et la commande a copier apres confirmation.
-- La suite d'audit 100% est aussi visible dans `/agent/vercel`, avec distinction local/live-read/strict.
-- La prochaine action recommandee est calculee depuis l'ordre d'activation, les portes live et le registre de decisions, puis affichee en haut de `/agent/vercel`.
+- La suite d'audit 100% est aussi visible dans `/admin/vercel`, avec distinction local/live-read/strict.
+- La prochaine action recommandee est calculee depuis l'ordre d'activation, les portes live et le registre de decisions, puis affichee en haut de `/admin/vercel`.
 - La carte de prochaine action inclut aussi le lien dashboard Vercel le plus pertinent selon la porte live: Billing, Firewall, Webhooks, Log Drains ou dashboard projet.
 - La carte de prochaine action affiche un niveau de securite: preparation safe, live manuel ou feu vert requis.
 - La carte de prochaine action affiche une checklist avant action: responsable, preflight, dashboard cible, preuve attendue et garde-fou de securite.
@@ -265,7 +265,7 @@ Pilotage Edge Config depuis l'espace agent:
 - Le bloc `Risque et cout restants` classe les portes ouvertes par risque cout, securite, observabilite, architecture ou plateforme, avec severite et action sure.
 - Le bloc `Acces dashboard Vercel` donne les raccourcis vers projet, Usage, Billing/Spend, Firewall, Webhooks, Log Drains et Edge Config.
 - Les preuves de completion affichent aussi une commande `ops:vercel:evidence:record` pre-remplie pour consigner la preuve et mettre a jour la decision associee quand il y en a une.
-- Les commandes de preuve et d'audit sont copiables depuis `/agent/vercel`, pour que le diagnostic mene directement a l'execution.
+- Les commandes de preuve et d'audit sont copiables depuis `/admin/vercel`, pour que le diagnostic mene directement a l'execution.
 - Chaque changement est historise dans `VercelOpsConfigChange` avec agent, ancienne valeur, nouvelle valeur et date.
 
 Commandes utiles:
@@ -454,7 +454,7 @@ Regle de completion:
 - `--include-live` ajoute les lectures Vercel live.
 - `--strict --include-live` est le mode final: il doit passer seulement quand le 100% est vraiment prouve.
 - `npm run ops:vercel:next-action` lit les registres et affiche la prochaine porte a fermer dans l'ordre recommande.
-- `/agent/vercel` affiche la meme priorite sous forme de carte actionnable: responsable, niveau d'automatisation, preflight, action, preuve attendue et risque si force.
+- `/admin/vercel` affiche la meme priorite sous forme de carte actionnable: responsable, niveau d'automatisation, preflight, action, preuve attendue et risque si force.
 - La carte affiche aussi la commande de preuve a adapter apres l'action live, pour eviter les preuves oubliees ou desynchronisees.
 
 Consigner une preuve apres action live:
@@ -466,5 +466,5 @@ npm run ops:vercel:evidence:record -- --key live-gates-closed --status complete 
 Pour mettre a jour une decision Pro en meme temps:
 
 ```bash
-npm run ops:vercel:evidence:record -- --key live-gates-closed --status complete --evidence "Webhook Account live confirme par audit:vercel-live." --next "Continuer avec Spend Management." --decision-key account-webhooks --decision-status active --decision-evidence "Webhook Account cree et secret configure." --decision-next "Surveiller les evenements dans /agent/vercel."
+npm run ops:vercel:evidence:record -- --key live-gates-closed --status complete --evidence "Webhook Account live confirme par audit:vercel-live." --next "Continuer avec Spend Management." --decision-key account-webhooks --decision-status active --decision-evidence "Webhook Account cree et secret configure." --decision-next "Surveiller les evenements dans /admin/vercel."
 ```

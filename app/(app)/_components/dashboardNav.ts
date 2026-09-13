@@ -9,7 +9,6 @@ import {
   FileText,
   CreditCard,
   LayoutDashboard,
-  UserPlus,
   Briefcase,
   Users,
   Trash2,
@@ -52,9 +51,9 @@ export interface DashboardNavItem {
 // maintenant de vraies routes listées ici, la sidebar est l'unique
 // navigation. Ordre pensé pour mettre les actions fréquentes en premier
 // (Paramètres, Mes billets) et l'Aide en dernier (rarement consultée).
-// Le portefeuille de billets n'est pas spécifique au rôle client
-// (n'importe quel compte peut avoir acheté des billets), donc commun à tous
-// les rôles plutôt que dans ROLE_NAV.client.
+// L'espace billets n'est pas spécifique au rôle client (n'importe quel compte
+// peut avoir acheté des billets), donc commun à tous les rôles plutôt que dans
+// ROLE_NAV.client.
 //
 // "Mes favoris" est un groupe séparé de "Mon profil" : suivre des
 // événements/organisateurs est une action de découverte, pas de gestion de
@@ -94,8 +93,8 @@ export const COMMON_NAV: DashboardNavItem[] = [
 export const ROLE_NAV: Record<Role, DashboardNavItem[]> = {
   client: [],
   // Labels pensés pour un utilisateur non-technique : "Mon dossier" (jargon
-  // de revue agent) → "Mon inscription" ; "Ma page publique" ne disait pas
-  // qu'elle contient aussi la config des encaissements (Stripe/Mobile Money).
+  // de revue admin) → "Mon inscription" ; "Ma page publique" ne disait pas
+  // qu'elle contient aussi la configuration Mobile Money/FedaPay.
   organisateur: [
     { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Mes événements', href: '/my-events', icon: CalendarDays },

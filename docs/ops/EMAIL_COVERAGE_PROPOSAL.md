@@ -2,7 +2,7 @@
 
 > **Statut : templates tous écrits (lib/server/emails/), vagues P0 (f2290e5), P1 (bd067a4) et P2+infra restante (f8cf8d9) câblées et testées.** Base de départ : les 17 emails déjà existants (voir inventaire précédent) + tous les événements métier significatifs identifiés dans le code (`lib/server/*`, `app/api/*`) pour lesquels aucun email n'existe aujourd'hui. Organisé par rôle destinataire puis par domaine. Chaque ligne indique : déclencheur → destinataire(s) → sujet proposé → contenu → priorité.
 >
-> **Priorités** : 🔴 P0 = critique (argent, accès au billet, sécurité) — **câblé** (achat E1/E2/E14, annulation/report E7/E8, remboursement E9/E10, versement E29/E30/E31, revente E11/E13, staff E33/E34, blocage cash E45). 🟡 P1 = important (expérience, transparence) — **câblé** (E3, E4, E16, E17, E18, E20/E40, E26, E28, E32, E36, E41, E42, E43, E44 — infra construite : reminderSentAt sur SeatHold/CashSaleSettlement, recapEmailSentAt sur Event, User.knownDeviceHashes, 4 nouveaux crons). 🟢 P2 = confort — **câblé** (E5, E12, E15, E21, E23, E24, E25, E27, E37, E46). **E35 (avis organisateur) explicitement hors scope** : aucun système d'avis organisateur n'existe dans le code (seul `providerReviews.ts` existe, pour les prestataires) — construire cette fonctionnalité dépasse "brancher un email".
+> **Priorités** : 🔴 P0 = critique (argent, accès au billet, sécurité) — **câblé** (achat E1/E2/E14, annulation/report E7/E8, remboursement E9/E10, versement E29/E30/E31, staff E33/E34, blocage cash E45). 🟡 P1 = important (expérience, transparence) — **câblé** (E3, E4, E16, E17, E18, E20/E40, E26, E28, E32, E36, E41, E42, E43, E44 — infra construite : reminderSentAt sur SeatHold/CashSaleSettlement, recapEmailSentAt sur Event, User.knownDeviceHashes, 4 nouveaux crons). 🟢 P2 = confort — **câblé** (E5, E12, E15, E21, E23, E24, E25, E27, E37, E46). **Revente et E35 (avis organisateur) explicitement hors scope V1** : aucun parcours de revente ne doit être exposé sans nouvelle validation Chady ; aucun système d'avis organisateur n'existe dans le code (seul `providerReviews.ts` existe, pour les prestataires) — construire cette fonctionnalité dépasse "brancher un email".
 >
 > **Total proposé : 47 nouveaux emails**, en plus des 17 existants = **64 emails** au total. (Pas "une centaine" — voir note de cadrage en fin de document sur pourquoi je ne recommande pas d'aller au-delà.)
 
@@ -27,15 +27,10 @@
 | E8 | Événement reporté | Chaque acheteur de billet | "\<événement\> est reporté au \<nouvelle date\>" | Ancienne/nouvelle date, ton billet reste valable, lien remboursement si tu ne peux pas venir | 🔴 P0 |
 | E9 | Remboursement traité avec succès (hors annulation globale — ex. demande client) | Client demandeur | "Ton remboursement pour \<événement\> est confirmé" | Montant, délai bancaire | 🔴 P0 |
 | E10 | Remboursement échoué (ex. carte expirée) | Client demandeur | "Ton remboursement pour \<événement\> a rencontré un problème" | Cause, action requise, contact support | 🟡 P1 |
-| E11 | Billet scanné/invalidé suite à une revente | Ancien titulaire (vendeur) | "Ton billet pour \<événement\> a été transféré" | Confirmation que le billet n'est plus valable sur son compte | 🟢 P2 |
+| E11 | Billet transféré/invalidé historiquement | Ancien titulaire | "Ton billet pour \<événement\> a été transféré" | Confirmation neutre que le billet n'est plus valable sur son compte | 🟢 P2 |
 
 ### 1.3 Revente de billets
-| # | Déclencheur | Destinataire | Sujet proposé | Contenu | Priorité |
-|---|---|---|---|---|---|
-| E12 | Billet mis en vente avec succès | Vendeur | "Ton billet pour \<événement\> est en vente" | Prix affiché, lien pour retirer l'annonce | 🟢 P2 |
-| E13 | Billet vendu | Vendeur | "Ton billet pour \<événement\> a trouvé preneur 💸" | Montant net reçu, délai de versement | 🔴 P0 |
-| E14 | Achat d'un billet de revente confirmé | Acheteur | (fusionné avec E1/E6) | — | 🔴 P0 |
-| E15 | Annonce de revente expirée (événement trop proche) sans acheteur | Vendeur | "Ton annonce pour \<événement\> a expiré" | Explique le retrait automatique (fenêtre 2h avant portes) | 🟢 P2 |
+Hors périmètre V1 Bénin. Ne pas créer, exposer, planifier ni prioriser d'e-mails de mise en vente, vente, achat ou expiration de revente tant que Chady n'a pas validé un nouveau cahier des charges.
 
 ### 1.4 Compte / Sécurité
 | # | Déclencheur | Destinataire | Sujet proposé | Contenu | Priorité |
@@ -126,7 +121,7 @@
 
 ## Recommandation d'ordre d'implémentation
 
-1. **Vague 1 (P0, ~13 emails)** — billetterie/argent : confirmation d'achat (E1/E2/E6), annulation/report (E7/E8), remboursement (E9), versements (E29/E30/E31), revente vendue (E13), staff assigné (E33), blocage agent cash (E45). C'est le socle "argent + accès" qui manque le plus criant aujourd'hui.
+1. **Vague 1 (P0, ~13 emails)** — billetterie/argent : confirmation d'achat (E1/E2/E6), annulation/report (E7/E8), remboursement (E9), versements (E29/E30/E31), staff assigné (E33), blocage agent cash (E45). La revente reste exclue du lancement V1 Benin. C'est le socle "argent + accès" qui manque le plus criant aujourd'hui.
 2. **Vague 2 (P1, ~17 emails)** — transparence et confiance : échec paiement, rappels expiration hold, alertes agents (candidatures/signalements/suppressions), sécurité connexion, digest messagerie.
 3. **Vague 3 (P2, ~17 emails)** — engagement : avis, stats, jalons de vente, rappels événement intéressé. À ne faire qu'une fois les vagues 1-2 stabilisées et un contrôle de fréquence d'envoi en place (éviter le spam).
 
@@ -140,6 +135,6 @@ Les **47 propositions ci-dessus couvrent déjà toutes les actions significative
 
 ## Prochaine étape si tu valides
 
-Pour chaque email retenu, il faudra : 1) un nouveau template dans `lib/server/email-templates.ts` (même pattern que l'existant), 2) le branchement `sendEmail(...)` au bon endroit dans `lib/server/*` (souvent déjà co-localisé avec la logique métier existante, ex. `orders.ts`, `eventRefunds.ts`, `eventPayouts.ts`, `resale.ts`, `eventStaff.ts`), 3) vérifier les préférences de notification existantes (`notificationsEnabled`, alertes par type) pour respecter l'opt-out utilisateur là où c'est pertinent (surtout P2).
+Pour chaque email retenu, il faudra : 1) un nouveau template dans `lib/server/email-templates.ts` (même pattern que l'existant), 2) le branchement `sendEmail(...)` au bon endroit dans `lib/server/*` (souvent déjà co-localisé avec la logique métier existante, ex. `orders.ts`, `eventRefunds.ts`, `eventPayouts.ts`, `eventStaff.ts`), 3) vérifier les préférences de notification existantes (`notificationsEnabled`, alertes par type) pour respecter l'opt-out utilisateur là où c'est pertinent (surtout P2). Ne pas brancher de template de revente en V1.
 
 Dis-moi quelles vagues/quels emails valider, et je commence l'implémentation par lots avec tests, comme pour le reste du projet.

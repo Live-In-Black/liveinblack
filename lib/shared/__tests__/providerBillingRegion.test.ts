@@ -37,7 +37,7 @@ describe('providerBillingCurrency', () => {
     expect(providerBillingCurrency('benin')).toBe('XOF')
     expect(providerBillingCurrency('mali')).toBe('XOF')
   })
-  it('valeur inconnue → EUR par défaut', () => {
-    expect(providerBillingCurrency('atlantide')).toBe('EUR')
+  it('valeur inconnue → XOF par défaut V1', () => {
+    expect(providerBillingCurrency('atlantide')).toBe('XOF')
   })
 })

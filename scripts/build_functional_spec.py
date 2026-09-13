@@ -288,11 +288,11 @@ def main():
         "/profile — synthèse du profil", "/profile/parametres — compte, confidentialité, préférences et sécurité", "/profile/billets — billets possédés", "/profile/interested-events — événements intéressés", "/profile/followed-organizers — organisateurs suivis", "/messages — conversations", "/notifications — centre de notifications", "/help — aide contextualisée", "/order/[eventId]/[ticketCode] — billet et contrôle", "/checkout — réservation et paiement", "/playlist/[eventId] — playlist participative", "/my-application — suivi de candidature", "/spaces — choix d’espace métier",
     ]:
         add_bullet(doc, label)
-    doc.add_heading("4.3 Pages organisateur, prestataire et agent", level=2)
+    doc.add_heading("4.3 Pages organisateur, prestataire et admin", level=2)
     for label in [
         "Organisateur : /organizer-studio, /my-events, /my-events/[id]/statistiques, /my-shifts, /on-site-sales/[eventId], /scanner/[eventId]",
         "Prestataire : /offer-services et profil/catalogue métier",
-        "Agent : /agent, /agent/evenements, /agent/comptes, /agent/dossiers, /agent/paiements, /agent/signalements, /agent/avis, /agent/suppressions, /agent/actualite, /agent/blog",
+        "Admin : /admin, /admin/evenements, /admin/comptes, /admin/dossiers, /admin/paiements, /admin/signalements, /admin/avis, /admin/suppressions, /admin/actualite, /admin/blog",
     ]:
         add_bullet(doc, label)
 
@@ -337,7 +337,7 @@ def main():
             ("Renvoyer la vérification", "Utilisateur", "Demander un nouveau lien depuis l’écran de compte.", "Un nouveau lien est envoyé avec limite anti-abus."),
             ("Réinitialiser le mot de passe", "Utilisateur", "Demander un token puis définir un nouveau mot de passe.", "Ancien mot de passe invalidé; token à usage unique."),
             ("Changer le mot de passe", "Utilisateur connecté", "Confirmer l’ancien mot de passe et saisir le nouveau.", "Mot de passe mis à jour et sessions sensibles sécurisées."),
-            ("Changer le rôle actif", "Compte multi-rôles", "Sélectionner client, organisateur, prestataire ou agent.", "Les menus et permissions changent sans modifier les rôles attribués."),
+            ("Compte métier séparé", "Utilisateur", "Utiliser un email dédié pour client, organisateur ou prestataire.", "L'interface reste liée au type du compte ; aucune bascule métier n'est proposée."),
             ("Modifier identité et coordonnées", "Utilisateur connecté", "Modifier nom, email, téléphone et avatar.", "Profil persistant avec validation des formats et doublons."),
             ("Gérer confidentialité et préférences", "Utilisateur connecté", "Choisir visibilité, présence, accusés de lecture, ambiance et ville.", "Préférences appliquées au profil et à la découverte."),
             ("Exporter les données", "Utilisateur connecté", "Demander une copie des données du compte.", "Export préparé selon les données autorisées."),
@@ -379,8 +379,8 @@ def main():
             ("Quitter un billet assigné", "Client", "Demander à quitter le billet reçu.", "Billet rendu disponible selon les règles de l’événement."),
             ("Constater l'absence de revente", "Client", "Ouvrir Mes billets ou une fiche événement.", "Aucun bouton, listing ou checkout de revente n'est proposé en V1."),
             ("Demander un remboursement", "Client", "Ouvrir la commande et envoyer le motif.", "Demande idempotente; traitement selon statut de l’événement."),
-            ("Rembourser/compléter côté agent", "Agent", "Ouvrir la file des remboursements et marquer le traitement.", "Alerte résolue et historique conservé."),
-            ("Demander un reversement", "Organisateur", "Renseigner moyen et montant éligible.", "Payout request créé avec contrôle de solde."),
+            ("Rembourser/compléter côté admin", "Admin", "Ouvrir la file des remboursements et marquer le traitement.", "Alerte résolue et historique conservé."),
+            ("Consulter ses encaissements", "Organisateur", "Ouvrir les paiements FedaPay/Mobile Money.", "Part organisateur suivie sans bouton de demande de retrait en V1."),
             ("Gérer l’abonnement prestataire", "Prestataire", "Souscrire, consulter ou annuler l’abonnement.", "État d’abonnement et facturation synchronisés."),
         ]),
         ("Social, notifications et messagerie", [
@@ -445,19 +445,19 @@ def main():
         ("J-04", "Client", "Acheter et utiliser un billet", "Commande → paiement → billet → QR/token → scanner à l’entrée", "Une seule validation; refus explicite si billet annulé, inconnu ou déjà utilisé."),
         ("J-05", "Client", "Transférer un billet", "Billets → assigner → destinataire reçoit invitation → accepter/refuser → propriétaire final", "Transfert atomique; impossibilité de double attribution."),
         ("J-06", "Client", "Vérifier la revente exclue", "Mes billets / fiche événement → aucun bouton ni listing de revente → route directe refusée", "La V1 ne permet aucune mise en vente ni achat de revente."),
-        ("J-07", "Client", "Demander remboursement", "Commande → remboursement → motif → suivi → décision système/agent", "Une seule demande active; statut visible; notification à chaque étape."),
+        ("J-07", "Client", "Demander remboursement", "Commande → remboursement → motif → suivi → décision système/admin", "Une seule demande active; statut visible; notification à chaque étape."),
         ("J-08", "Client", "Créer une conversation", "Messages → nouveau → contact → conversation → message → réaction/lecture", "Conversation et message persistés; participant autorisé uniquement."),
         ("J-09", "Client", "Créer et gérer groupe", "Nouveau groupe → membres → nom/avatar → admin → mute/pin/leave", "Rôles groupe appliqués; départ protégé si dernier admin."),
         ("J-10", "Client", "Gérer son compte", "Profil → paramètres → identité/confidentialité/préférences → export ou suppression", "Données mises à jour; suppression contrôlée par dossier métier."),
-        ("J-11", "Organisateur", "Devenir organisateur", "Inscription → candidature brouillon → documents → soumission → revue agent → activation", "Statut pending/approved/rejected; emails et accès studio synchronisés."),
+        ("J-11", "Organisateur", "Devenir organisateur", "Inscription → candidature brouillon → documents → soumission → revue admin → activation", "Statut pending/approved/rejected; emails et accès studio synchronisés."),
         ("J-12", "Organisateur", "Créer et publier événement", "Studio → créer → billets/médias/staff → aperçu → publier → annuaire public", "Propriétaire et contraintes validés; événement découvrable."),
         ("J-13", "Organisateur", "Exploiter événement", "Événement → guestlist/staff/promo/playlist → ventes → stats → reversement", "Données ventes et droits agrégés; audit des actions."),
         ("J-14", "Organisateur", "Reporter/annuler", "Studio → événement → reporter/annuler → confirmation → impact clients", "Date validée ou annulation; remboursements/notifications idempotents."),
         ("J-15", "Prestataire", "Publier son offre", "Candidature → profil → catalogue → médias → abonnement/facturation → profil public", "Offre visible selon statut; média signé et catalogue cohérent."),
-        ("J-16", "Agent", "Traiter une candidature", "Espace agent → dossiers → détail → note → approuver/refuser → notification", "Décision tracée; rôle/statut métier mis à jour."),
-        ("J-17", "Agent", "Modérer un signalement", "Signalements → détail → vérifier contexte → traiter → note → notification", "Rapport handled; action adaptée et journalisée."),
-        ("J-18", "Agent", "Traiter paiement/remboursement", "Paiements → alertes/refunds/payouts → vérifier → complete/settle/mark-paid", "État financier et audit mis à jour sans double traitement."),
-        ("J-19", "Agent", "Gérer compte/suppression", "Comptes ou suppressions → détail → vérifier → disable/approve/reject", "Accès révoqué ou purge/anonymisation déclenchée."),
+        ("J-16", "Admin", "Traiter une candidature", "Espace admin → dossiers → détail → note → approuver/refuser → notification", "Décision tracée; rôle/statut métier mis à jour."),
+        ("J-17", "Admin", "Modérer un signalement", "Signalements → détail → vérifier contexte → traiter → note → notification", "Rapport handled; action adaptée et journalisée."),
+        ("J-18", "Admin", "Traiter paiement/remboursement", "Paiements → alertes/refunds/payouts → vérifier → complete/settle/mark-paid", "État financier et audit mis à jour sans double traitement."),
+        ("J-19", "Admin", "Gérer compte/suppression", "Comptes ou suppressions → détail → vérifier → disable/approve/reject", "Accès révoqué ou purge/anonymisation déclenchée."),
         ("J-20", "Système", "Webhook paiement", "Fournisseur → endpoint signé → validation → idempotence → commande/abonnement → email", "2xx si accepté; non-traité rejeté sans mutation partielle."),
     ]
     add_table(doc, ["ID", "Acteur", "Objectif", "Étapes", "Résultat / contrôles"], journey_rows, [700, 1500, 1500, 3300, 2360])
@@ -471,7 +471,8 @@ def main():
         ("Organisateur/prestataire", ["/api/organizer-events", "/api/organizers/me", "/api/providers/me", "/api/applications", "/api/subscriptions", "/api/my-staffed-events"]),
         ("Social et messagerie", ["/api/conversations", "/api/messages", "/api/friends", "/api/notifications", "/api/users"]),
         ("Playlist et avis", ["/api/events/[eventId]/playlist", "/api/reviews", "/api/providers/[providerId]/reviews"]),
-        ("Agent", ["/api/agent", "/api/agent-sales"]),
+        ("Admin", ["/api/admin"]),
+        ("Ventes terrain", ["/api/agent-sales"]),
         ("Paiements et webhooks", ["/api/webhooks/fedapay", "/api/checkout/fedapay", "/api/seat-holds/fedapay"]),
         ("Tâches système", ["/api/cron", "/api/health", "/api/uploads"]),
     ]

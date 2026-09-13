@@ -9,7 +9,7 @@ import ProposerServicesClient from './ProposerServicesClient'
 
 // Port de ProposerServicesPage.jsx (#8 phase prestataire, tâche #91) — "Mon
 // espace prestataire" : page publique (profil + catalogue) + bannière
-// d'abonnement (rail EUR/Stripe ou XOF/FedaPay selon le pays de facturation).
+// d'abonnement (V1 XOF/FedaPay ; l'ancien rail EUR/Stripe reste historique).
 // Contrairement au legacy (fetch client-side de la facturation après montage,
 // avec un état "chargement..."), tout est résolu côté serveur avant le
 // premier rendu — aucun flash de chargement.

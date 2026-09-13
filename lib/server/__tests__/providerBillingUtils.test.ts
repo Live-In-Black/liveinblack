@@ -11,10 +11,10 @@ describe('providerBillingUtils', () => {
     expect(deriveDefaultBillingRegionFromApplication('atlantide')).toBe('benin')
   })
 
-  it('normalise le pays d’application quand il est reconnu', () => {
-    expect(deriveDefaultBillingRegionFromApplication('Togo')).toBe('togo')
-    expect(deriveDefaultBillingRegionFromApplication('fr')).toBe('france')
-    expect(deriveDefaultBillingRegionFromApplication('Sénégal')).toBe('senegal')
+  it('force le pays de facturation actif au Bénin même si le dossier mentionne un ancien pays', () => {
+    expect(deriveDefaultBillingRegionFromApplication('Togo')).toBe('benin')
+    expect(deriveDefaultBillingRegionFromApplication('fr')).toBe('benin')
+    expect(deriveDefaultBillingRegionFromApplication('Sénégal')).toBe('benin')
     expect(deriveDefaultBillingRegionFromApplication({ name: 'Bénin' })).toBe('benin')
   })
 

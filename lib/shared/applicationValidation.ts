@@ -29,7 +29,6 @@ export function isValidPhone(dialCode: string, number: string): boolean {
 
 export interface OrganizerFormData {
   nomCommercial: string
-  siret?: string
   emailPro: string
   telephoneProCode: string
   telephonePro: string
@@ -95,7 +94,6 @@ export interface PrestataireFormData {
   pays: string
   nomCommercial: string
   nomScene: string
-  siret?: string
   zonesIntervention: string[]
   description: string
   specialitesLibre: string
@@ -120,10 +118,25 @@ export interface PrestataireFormData {
   menuBase: string
   alcoolFood: boolean
   alcoolFoodAtteste: boolean
-  tarifMin: number | null
-  tarifMax: number | null
-  tarifType: string
-  tarifDevis: boolean
+}
+
+// Nettoyage défensif des anciens champs retirés de la V1 Bénin. Les écrans ne
+// les affichent plus, mais le serveur doit aussi filtrer les brouillons et les
+// payloads forgés avant persistance.
+export function sanitizeApplicationFormData<T extends Record<string, unknown>>(type: 'organisateur' | 'prestataire', data: T): T {
+  const clean = { ...data }
+  delete clean.siret
+  delete clean.siren
+  delete clean.rccm
+  delete clean.ifu
+  if (type === 'prestataire') {
+    delete clean.tarifMin
+    delete clean.tarifMax
+    delete clean.tarifType
+    delete clean.tarifDevis
+    delete clean.devisUniquement
+  }
+  return clean
 }
 
 // Étape 0 — "Compte" (identité + coordonnées).

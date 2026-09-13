@@ -1,16 +1,17 @@
-// Port TypeScript de src/data/legal.js — infos légales centralisées (mentions,
-// contact, hébergeur). MAJ ce fichier dès que la société sera immatriculée
-// (SIREN, adresse, etc.) — voir footerNotice sur chaque page légale.
+// Infos légales centralisées (mentions, contact, hébergeur). MAJ ce fichier dès
+// que la structure juridique béninoise sera immatriculée (RCCM/IFU, adresse,
+// etc.) — voir footerNotice sur chaque page légale.
 
 export const LEGAL = {
   brand: 'LIVEINBLACK',
   // À remplir une fois la structure juridique créée :
-  legalForm: '', // ex: 'SAS', 'SARL', 'Auto-entrepreneur'
-  companyName: '', // ex: 'LIVEINBLACK SAS'
-  siren: '', // 9 chiffres
-  rcs: '', // ex: 'RCS Paris B 123 456 789'
-  capital: '', // ex: '10 000 €'
-  vatNumber: '', // ex: 'FR12345678901'
+  legalForm: '', // ex: 'SARL'
+  companyName: '', // ex: 'LIVEINBLACK SARL'
+  registrationNumber: '', // ex: RCCM/IFU
+  siren: '', // ancien champ France, conservé vide pour compatibilité d'affichage
+  rcs: '', // ancien champ France, conservé vide pour compatibilité d'affichage
+  capital: '', // ex: '1 000 000 FCFA'
+  vatNumber: '',
   // Adresse du siège — à remplir
   address: {
     street: '',
@@ -62,5 +63,6 @@ export const LEGAL_DISPLAY = {
   addressDisplay:
     [LEGAL.address.street, LEGAL.address.zip, LEGAL.address.city, LEGAL.address.country].filter(Boolean).join(', ') ||
     'Adresse en cours de communication',
-  sirenDisplay: LEGAL.siren || "SIREN en cours d'attribution",
+  registrationDisplay: LEGAL.registrationNumber || "RCCM/IFU en cours d'attribution",
+  sirenDisplay: LEGAL.siren || "RCCM/IFU en cours d'attribution",
 }

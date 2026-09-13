@@ -8,7 +8,7 @@ const PAGE_SIZE = 15
 
 // Port de la section « Suppressions » de src/pages/AgentPage.jsx (tab ===
 // 'suppressions', #9 phase agent/admin, tâche #104) — file des demandes de
-// suppression de compte nécessitant une revue agent (organisateur/prestataire
+// suppression de compte nécessitant une revue admin (organisateur/prestataire
 // avec dossier approuvé, voir lib/server/agentDeletion.ts:createDeletionRequest),
 // détail avec blocages/avertissements recalculés à la volée, et purge
 // irréversible derrière une confirmation dédiée. Un compte `client` simple
@@ -218,7 +218,7 @@ export default function AgentDeletionClient() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {listError && (
           <Card style={{ border: '1px solid var(--danger-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <p style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', margin: 0 }}>Lecture impossible. Recharge la page ; si ça persiste, reconnecte-toi (droits agent).</p>
+            <p style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', margin: 0 }}>Lecture impossible. Recharge la page ; si ça persiste, reconnecte-toi (droits admin).</p>
             <Button variant="secondary" onClick={loadList} style={{ fontSize: 'var(--font-size-footnote-lg)' }}>
               Recharger
             </Button>

@@ -89,13 +89,13 @@ Ce document reprend les grandes fonctionnalites de LIVE IN BLACK et explique, po
 
 - **Achat de billets** - Permet de reserver sa place directement sur LIVE IN BLACK.
 - **Billets gratuits** - Permet de gerer aussi les evenements gratuits avec une preuve d'entree.
-- **Paiement Stripe** - Couvre les paiements par carte quand Stripe est disponible.
-- **Paiement FedaPay** - Couvre les paiements adaptes aux marches XOF et Mobile Money.
+- **Paiement FedaPay** - Couvre le paiement actif de la V1 Benin en FCFA/XOF et Mobile Money.
+- **Ancien rail Stripe** - Reste historique/ferme et ne doit pas etre presente comme parcours actif.
 - **Codes promo** - Permet d'appliquer des reductions fournies par l'organisateur.
 - **Achat de table ou place groupee** - Permet de gerer des experiences de groupe, pas seulement des billets individuels.
 - **Reservation temporaire de place** - Bloque une place pendant une duree limitee avant paiement complet.
 - **Paiement de solde** - Permet de finaliser une reservation deja bloquee.
-- **Wallet de billets** - Centralise tous les billets de l'utilisateur.
+- **Espace billets** - Centralise tous les billets de l'utilisateur.
 - **Classement des billets** - Separe les billets a venir, passes et annules pour plus de clarte.
 - **QR code billet** - Sert de preuve d'entree a scanner le jour de l'evenement.
 - **Page billet securisee** - Permet d'ouvrir un billet via un lien protege.
@@ -104,9 +104,9 @@ Ce document reprend les grandes fonctionnalites de LIVE IN BLACK et explique, po
 - **Acceptation/refus d'invitation** - Donne au destinataire le controle avant de rejoindre une place.
 - **Annulation d'invitation** - Permet a l'acheteur de reprendre la main si l'invitation n'est plus valable.
 - **Reprise de place** - Permet au proprietaire de recuperer une place attribuee.
-- **Revente de billet** - Permet a un utilisateur de revendre un billet qu'il ne peut plus utiliser.
-- **Retrait de revente** - Permet de retirer un billet du marche de revente.
-- **Achat en revente** - Permet a un autre utilisateur d'acheter un billet remis en vente.
+- **Revente de billet** - Hors V1 Benin : aucun bouton ni checkout de revente tant que Chady ne valide pas une nouvelle spec.
+- **Retrait de revente** - Hors V1 Benin : les anciennes annonces restent uniquement historiques/audit.
+- **Achat en revente** - Hors V1 Benin : achat de billet neuf ou invitation uniquement.
 - **Demande de remboursement** - Donne un parcours clair pour signaler une demande financiere.
 - **Commande sur place** - Permet de commander des articles lies a un evenement depuis le billet.
 - **Playlist depuis le billet** - Permet de rejoindre l'experience musicale de l'evenement.
@@ -233,7 +233,7 @@ Ce document reprend les grandes fonctionnalites de LIVE IN BLACK et explique, po
 - **Avatar et couverture** - Renforcent l'identite visuelle.
 - **Galerie media** - Montre l'ambiance et les references passees.
 - **Visibilite des medias** - Permet de masquer certains visuels sans les supprimer tout de suite.
-- **Stripe Connect** - Permet de recevoir des versements bancaires lorsque disponible.
+- **Stripe Connect** - Historique ferme en V1 Benin, ne doit pas etre presente comme action active.
 - **Mobile Money** - Permet de recevoir des versements dans les regions ou c'est plus adapte.
 - **Demande de versement** - Declenche le paiement des montants dus.
 - **Statut de versement** - Donne de la transparence sur l'argent en attente ou deja traite.
@@ -349,8 +349,8 @@ Ce document reprend les grandes fonctionnalites de LIVE IN BLACK et explique, po
 - **Validation des formulaires** - Evite les erreurs de saisie et les dossiers incomplets.
 - **Nettoyage des saisies** - Ameliore la qualite des donnees enregistrees.
 - **Protection des routes** - Bloque l'acces aux espaces non autorises.
-- **Paiements multi-rails** - Permet de servir differents pays et usages.
-- **Support Stripe** - Couvre les paiements carte et certains versements.
+- **Paiement V1 FedaPay** - Couvre le contexte XOF actif.
+- **Rail Stripe historique** - Reste ferme/refuse pour la V1 Benin.
 - **Support FedaPay** - Couvre les paiements adaptes au contexte XOF.
 - **Support Mobile Money** - Adapte la plateforme aux habitudes locales.
 - **SEO web** - Rend les pages publiques trouvables sur Google.
@@ -365,4 +365,3 @@ Ce document reprend les grandes fonctionnalites de LIVE IN BLACK et explique, po
 - **Prestataire** - Se rend visible, presente ses offres, recoit des avis et gere son abonnement.
 - **Staff** - Execute les operations terrain : scan, vente, service, commandes et playlist.
 - **Agent** - Controle la qualite, la securite, les dossiers, les finances et la publication.
-

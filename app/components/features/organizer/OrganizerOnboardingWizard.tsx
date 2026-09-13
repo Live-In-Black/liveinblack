@@ -423,7 +423,7 @@ export default function OrganizerOnboardingWizard({
                 <Input style={inputStyle} value={form.typeEtablissementCustom} onChange={(e) => set('typeEtablissementCustom', e.target.value)} placeholder="Précise le type" />
               )}
               <Checkbox
-                label="Itinérant — j'organise dans plusieurs villes / pays"
+                label="Itinérant — j'organise dans plusieurs villes du Bénin"
                 checked={form.itinerant}
                 onChange={(e) => {
                   const itinerant = e.target.checked
@@ -447,11 +447,7 @@ export default function OrganizerOnboardingWizard({
                   </div>
                   <div>
                     <Label style={labelStyle}>Pays</Label>
-                    <Select
-                      value={form.pays}
-                      onChange={(value) => set('pays', value)}
-                      options={regions.map((r) => ({ value: r.country, label: `${r.flag} ${r.country}` }))}
-                    />
+                    <Input style={inputStyle} value="Bénin" readOnly aria-readonly="true" />
                   </div>
                   <div>
                     <Label style={labelStyle}>Capacité d&apos;accueil</Label>
@@ -464,7 +460,7 @@ export default function OrganizerOnboardingWizard({
                 </>
               ) : (
                 <div>
-                  <Label style={labelStyle}>Zones d&apos;activité</Label>
+                  <Label style={labelStyle}>Zone d&apos;activité V1</Label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {regions.map((r) => {
                       const active = form.zonesActivite.includes(r.id)

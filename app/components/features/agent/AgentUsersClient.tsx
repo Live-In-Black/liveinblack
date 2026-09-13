@@ -367,7 +367,7 @@ export default function AgentUsersClient() {
       <div className={styles.pageStack}>
         {listError && (
           <Card accent="var(--danger-border)" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <p style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', margin: 0 }}>Lecture impossible. Recharge la page ; si ça persiste, reconnecte-toi (droits agent).</p>
+            <p style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', margin: 0 }}>Lecture impossible. Recharge la page ; si ça persiste, reconnecte-toi (droits admin).</p>
             <Button variant="secondary" onClick={triggerReload} style={{ fontSize: 'var(--font-size-footnote-lg)' }}>
               Recharger
             </Button>

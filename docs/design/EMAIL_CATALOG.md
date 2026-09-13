@@ -29,9 +29,9 @@ Inventaire généré depuis les modèles réellement utilisés par la plateforme
 | # | E-mail | Objet |
 |---:|---|---|
 | 13 | Contact | [Contact] Question sur ma réservation |
-| 14 | Nouvelle candidature agent | Nouvelle candidature à examiner |
-| 15 | Signalement agent | Nouveau signalement à modérer |
-| 16 | Suppression agent | Demande de suppression à traiter |
+| 14 | Nouvelle candidature admin | Nouvelle candidature à examiner |
+| 15 | Signalement admin | Nouveau signalement à modérer |
+| 16 | Suppression admin | Demande de suppression à traiter |
 | 17 | Vente cash en attente | Règlement en attente pour Cotonou Night Live |
 | 18 | Ventes cash bloquées | Tes ventes cash sont bloquées |
 | 19 | Signalement compte | Un signalement a été déposé — action requise |

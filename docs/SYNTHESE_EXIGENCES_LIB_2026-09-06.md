@@ -315,8 +315,8 @@ LIB conserve ses frais déjà perçus : c'est l'organisateur qui rembourse au pa
 | Achat d'origine | Destination autorisée |
 |---|---|
 | Mobile Money | Compte externe utilisé pour l'achat, repris automatiquement, masqué et verrouillé ; compléter seulement ce qui manque |
-| Carte bancaire | Compte bancaire appartenant à l'acheteur ; RIB fourni par sa banque, titulaire vérifié, données chiffrées |
-| Espèces | Compte Mobile Money ou bancaire vérifié appartenant à l'acheteur |
+| Option carte via FedaPay, si elle a servi à l'achat | Destination de remboursement liée au moyen FedaPay utilisé, masquée et vérifiée ; pas de rail Stripe/RIB autonome |
+| Espèces | Compte Mobile Money vérifié appartenant à l'acheteur, ou destination exceptionnelle validée et tracée |
 
 - REM-29 : collecter ces coordonnées seulement après l'option valablement utilisée ou la bascule « Je ne peux pas me déplacer », pas comme condition inutile à tous les retraits cash.
 - REM-30 : ne pas permettre la saisie libre d'un compte tiers ; les cas exceptionnels de destination nécessitent vérification et trace.
@@ -337,7 +337,7 @@ LIB conserve ses frais déjà perçus : c'est l'organisateur qui rembourse au pa
 ### 9.8 Données, sécurité, temps et textes
 
 - REM-41 : conserver références événement/commande/billet/acheteur/organisateur/agent/transaction, cause, lignes financières, canal/destination masquée, états/dates, preuves, code/point/signature/caisse et historique de livraison des notifications.
-- REM-42 : chiffrement des coordonnées bancaires et pièces sensibles, accès minimaux, masquage dans l'interface, durées de conservation/suppression définies dans la politique appropriée.
+- REM-42 : chiffrement des coordonnées Mobile Money/FedaPay et pièces sensibles, accès minimaux, masquage dans l'interface, durées de conservation/suppression définies dans la politique appropriée.
 - REM-43 : client : ses dossiers ; organisateur : ses événements ; agent : son point. Filtres et export contrôlé par événement, statut, canal, date et agent.
 - REM-44 : heure serveur et fuseau événement ; Bénin = référence Cotonou/Porto-Novo UTC+1. Stocker séparément début de l'événement et fermeture de billetterie ; afficher les échéances exactes.
 - REM-45 : dossier existant même si SMS/e-mail échoue ; relance des canaux et journalisation, sans recréer une dette.
@@ -388,9 +388,9 @@ La numérotation correspond à l'ordre des aperçus, après la couverture. L'exi
 | 11 | Candidature à corriger | Idem |
 | 12 | Espace activé | Activation du compte dédié, pas transformation du client |
 | 13 | Contact | Redirection vers le support approprié |
-| 14 | Nouvelle candidature agent | Notification à l'agent chargé de l'examen ; ne signifie pas création d'un nouveau type de compte commercial |
-| 15 | Signalement agent | Destinataire habilité à la modération |
-| 16 | Suppression agent | Agent chargé du traitement ; délais à aligner |
+| 14 | Nouvelle candidature admin | Notification à l'administrateur chargé de l'examen ; ne signifie pas création d'un nouveau type de compte commercial |
+| 15 | Signalement admin | Destinataire habilité à la modération |
+| 16 | Suppression admin | Administrateur chargé du traitement ; délais à aligner |
 | 17 | Vente cash en attente | Dépend du mécanisme cash retenu ; exemple de délai non contractuel |
 | 18 | Ventes cash bloquées | Dépend du seuil décidé, non du seul exemple du modèle |
 | 19 | Signalement compte | Conserver, confidentialité de la procédure |
@@ -498,7 +498,7 @@ Conserver ces constats comme régressions à vérifier, pas comme état certifi�
 3. Billet simultanément « remboursement demandé », en revente et QR actif : incohérence financière et anti-fraude. La revente est désormais exclue, mais l'invalidation du QR demeure impérative.
 4. Consommations annulées incluses dans le revenu ; exemple servi 10 + annulé 5 = total 15 ; texte d'explication incohérent sur l'inclusion des consommations.
 5. Statistiques « 80/130 vendus » contre 6 réservations/statistiques, indicateur de presque complet faux.
-6. Menu avatar débordant à gauche d'environ 45 px sur les espaces professionnels/agents.
+6. Menu avatar débordant à gauche d'environ 45 px sur les espaces professionnels/admin.
 7. Double connexion/création dans l'en-tête de connexion.
 8. Tests obsolètes sur événements privés/code d'accès et ancienne page de recherche dédiée supprimés fin juillet. Cela ne supprime pas la recherche actuelle de l'en-tête.
 9. Libellés secondaires petits, majuscules grasses et faible lisibilité.

@@ -263,7 +263,7 @@ function buildEvidenceRecordCommand({
     parts.push(`--decision-key ${decisionKey}`)
     parts.push('--decision-status active')
     parts.push('--decision-evidence "preuve live observee"')
-    parts.push('--decision-next "surveiller dans /agent/vercel"')
+    parts.push('--decision-next "surveiller dans /admin/vercel"')
   }
   return parts.join(' ')
 }
@@ -699,7 +699,7 @@ async function getNextActionSummary(): Promise<NextActionSummary> {
       preflightChecklist: [
         'Relancer le diagnostic local.',
         'Verifier les fichiers de configuration Vercel Pro.',
-        'Revenir sur /agent/vercel apres correction.',
+        'Revenir sur /admin/vercel apres correction.',
       ],
     }
   }
@@ -1210,7 +1210,7 @@ async function getDashboardLinksSummary(): Promise<DashboardLinksSummary> {
           key: 'edge-config',
           label: 'Edge Config',
           href: `${teamBase}/~/stores/edge-config`,
-          purpose: 'Verifier les flags maintenance, checkout, revente, recherche et cache.',
+          purpose: 'Verifier les flags maintenance, checkout, recherche et cache. La revente reste fermée hors Edge Config.',
         },
       ],
     }

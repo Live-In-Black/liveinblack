@@ -967,7 +967,7 @@
     },
     {
       "id": "REM-42",
-      "requirement": "chiffrement des coordonnées bancaires et pièces sensibles, accès minimaux, masquage dans l'interface, durées de conservation/suppression définies dans la politique appropriée.",
+      "requirement": "chiffrement des coordonnées Mobile Money/FedaPay et pièces sensibles, accès minimaux, masquage dans l'interface, durées de conservation/suppression définies dans la politique appropriée.",
       "status": "unverified",
       "evidence": []
     },

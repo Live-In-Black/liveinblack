@@ -37,7 +37,7 @@ function evidenceRecordCommand({ key, nextAction, decisionKey, completionStatus 
     parts.push(`--decision-key ${decisionKey}`)
     parts.push('--decision-status active')
     parts.push('--decision-evidence "preuve live observee"')
-    parts.push('--decision-next "surveiller dans /agent/vercel"')
+    parts.push('--decision-next "surveiller dans /admin/vercel"')
   }
   return parts.join(' ')
 }
@@ -117,4 +117,4 @@ if (gate) {
 
 console.log('')
 console.log('Apres action live, consigner la preuve avec:')
-console.log(`npm run ops:vercel:evidence:record -- --key live-gates-closed --status prepared --evidence "preuve observee pour ${nextStep.label}" --next "continuer avec la prochaine porte" --decision-key ${gate?.decisionKey || '<decision-key>'} --decision-status active --decision-evidence "preuve live observee" --decision-next "surveiller dans /agent/vercel"`)
+console.log(`npm run ops:vercel:evidence:record -- --key live-gates-closed --status prepared --evidence "preuve observee pour ${nextStep.label}" --next "continuer avec la prochaine porte" --decision-key ${gate?.decisionKey || '<decision-key>'} --decision-status active --decision-evidence "preuve live observee" --decision-next "surveiller dans /admin/vercel"`)

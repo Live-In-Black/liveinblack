@@ -14,14 +14,14 @@ export interface PayoutGapEvent {
 }
 
 export interface PayoutGapInputs {
-  stripeChargesEnabled: boolean
+  legacyCardPayoutReady?: boolean
   momos: Record<string, string>
 }
 
 export function computePayoutGapLabel(events: PayoutGapEvent[], inputs: PayoutGapInputs): string {
   const active = events.filter((e) => !e.cancelled)
 
-  void inputs.stripeChargesEnabled
+  void inputs.legacyCardPayoutReady
 
   const missingMomoCountries = new Set<string>()
   for (const e of active) {

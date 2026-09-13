@@ -31,11 +31,11 @@ const items: PreviewItem[] = [
   { group: 'Candidatures', label: 'Espace activé', email: emails.roleActivatedEmail('organisateur', `${site}/my-events`) },
 
   { group: 'Équipe & modération', label: 'Contact', email: emails.contactRequestEmail({ name: 'Amina Lawson', email: 'amina@example.com', subject: 'Question sur ma réservation', message: 'Bonjour, je souhaite modifier le nom associé à mon billet.' }) },
-  { group: 'Équipe & modération', label: 'Nouvelle candidature agent', email: emails.newApplicationToReviewEmail('Amina Lawson', 'organisateur', `${site}/agent/dossiers`) },
-  { group: 'Équipe & modération', label: 'Signalement agent', email: emails.newReportToReviewEmail('Message dans une conversation', `${site}/agent/signalements`) },
-  { group: 'Équipe & modération', label: 'Suppression agent', email: emails.deletionRequestToReviewEmail('Amina Lawson', '30 jours', `${site}/agent/suppressions`) },
-  { group: 'Équipe & modération', label: 'Vente cash en attente', email: emails.cashSalePendingSettlementEmail('Cotonou Night Live', '75 000 FCFA', 3, `${site}/agent/paiements`) },
-  { group: 'Équipe & modération', label: 'Ventes cash bloquées', email: emails.cashSalesBlockedEmail(6, `${site}/agent/paiements`) },
+  { group: 'Équipe & modération', label: 'Nouvelle candidature admin', email: emails.newApplicationToReviewEmail('Amina Lawson', 'organisateur', `${site}/admin/dossiers`) },
+  { group: 'Équipe & modération', label: 'Signalement admin', email: emails.newReportToReviewEmail('Message dans une conversation', `${site}/admin/signalements`) },
+  { group: 'Équipe & modération', label: 'Suppression admin', email: emails.deletionRequestToReviewEmail('Amina Lawson', '30 jours', `${site}/admin/suppressions`) },
+  { group: 'Équipe & modération', label: 'Vente cash en attente', email: emails.cashSalePendingSettlementEmail('Cotonou Night Live', '75 000 FCFA', 3, `${site}/admin/paiements`) },
+  { group: 'Équipe & modération', label: 'Ventes cash bloquées', email: emails.cashSalesBlockedEmail(6, `${site}/admin/paiements`) },
   { group: 'Équipe & modération', label: 'Signalement compte', email: emails.reportReceivedAgainstAccountEmail('Contenu inapproprié', `${site}/contact`) },
 
   { group: 'Billets & paiements', label: 'Achat billet', email: emails.ticketPurchaseConfirmedEmail({ eventId: event.id, eventName: event.name, eventWhen: 'Samedi 22 août · 22:00', eventWhere: 'Palais des Congrès de Cotonou', placeLabel: 'Pass Premium', quantity: 2, totalLabel: '30 000 FCFA', ticketUrl: `${site}/profile/billets` }) },

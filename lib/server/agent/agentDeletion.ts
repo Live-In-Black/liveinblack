@@ -137,7 +137,7 @@ async function computeDeletionAudit(uid: string): Promise<DeletionAudit> {
   const owedXOF = (balance?.amountDueXOF ?? 0) + payouts.reduce((sum, p) => sum + Math.max(0, p.amountDueXOF || 0), 0)
   if (owedCents > 0 || owedXOF > 0) {
     const parts: string[] = []
-    if (owedCents > 0) parts.push(`${(owedCents / 100).toFixed(2)} €`)
+    if (owedCents > 0) parts.push(`ancien solde EUR a verifier`)
     if (owedXOF > 0) parts.push(`${owedXOF.toLocaleString('fr-FR')} FCFA`)
     blockers.push({ type: 'pending_settlement', label: `Recette non versée (${parts.join(' + ')}) — à régler avant d'approuver.` })
   }
@@ -267,7 +267,7 @@ export async function approveDeletion(agent: AgentCaller, requestId: string, not
       await scrubAccountPII(uid, session)
 
       // 2. Événements DE l'organisateur supprimé — spécifique à ce chemin
-      //    (dépend de l'audit de blocage ci-dessus, propre à la revue agent) ;
+      //    (dépend de l'audit de blocage ci-dessus, propre à la revue admin) ;
       //    un compte pas encore actif ne peut de toute façon pas avoir créé
       //    d'événement. ATTENTION : les événements listés ici sont relus une
       //    seconde fois, DANS la transaction, pour rester cohérents avec le
@@ -349,7 +349,7 @@ export async function approveDeletion(agent: AgentCaller, requestId: string, not
 // gate exacte de MonDossierPage.jsx (bouton « Demander la suppression du
 // compte », visible uniquement quand `app.status === 'approved'`) — un
 // organisateur/prestataire dont le dossier N'EST PAS encore approuvé n'a rien
-// à faire passer par une revue agent, voir la note de fidélité dans le
+// à faire passer par une revue admin, voir la note de fidélité dans le
 // rapport final. Aucune route/UI de ce port n'appelle encore cette fonction ;
 // c'est un suivi signalé, pas cette tâche-ci.
 
@@ -378,7 +378,7 @@ export async function createDeletionRequest(caller: CreateDeletionRequestCaller,
   const created = await DeletionRequest.create({ userId: caller.id, reason: trimmed, requestedAt: new Date(), status: 'pending' })
 
   const userLabel = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email
-  await notifyAllAgents(() => deletionRequestToReviewEmail(userLabel, 'sous 30 jours', `${SITE}/agent/suppressions`, SITE))
+  await notifyAllAgents(() => deletionRequestToReviewEmail(userLabel, 'sous 30 jours', `${SITE}/admin/suppressions`, SITE))
   // E19 : confirmation au demandeur lui-même — aucun flux d'annulation en
   // libre-service n'existe (la demande est traitée manuellement par un
   // agent, voir approveDeletion), le lien renvoie donc vers /profile où le

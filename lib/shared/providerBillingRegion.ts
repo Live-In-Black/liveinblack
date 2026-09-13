@@ -51,5 +51,5 @@ export function providerBillingCurrency(regionId: unknown): 'EUR' | 'XOF' {
   const id = normalizeProviderBillingRegion(regionId)
   const region = regions.find((r) => r.id === id)
   if (region) return region.currency === 'XOF' ? 'XOF' : 'EUR'
-  return LEGACY_BILLING_CURRENCIES[id] || 'EUR'
+  return LEGACY_BILLING_CURRENCIES[id] || 'XOF'
 }

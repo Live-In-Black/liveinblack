@@ -32,7 +32,7 @@ LIVEINBLACK Web est une application **Next.js App Router** orientee production. 
 - l'espace utilisateur authentifie : profil, billets, evenements suivis, messagerie, notifications ;
 - les outils organisateur : creation et gestion d'evenements, statistiques, guestlist, equipe, payouts ;
 - les outils prestataire : onboarding, catalogue, medias, avis, abonnement ;
-- les outils agent/moderation : comptes, dossiers, evenements, paiements, suppressions, signalements, avis, actualite ;
+- les outils admin/moderation : comptes, dossiers, evenements, paiements, suppressions, signalements, avis, actualite ;
 - les API consommees par le web, les workflows internes et les clients mobiles.
 
 Le projet est prive (`private: true`) et utilise `npm` comme gestionnaire de reference pour l'installation, le build et la CI.
@@ -46,7 +46,7 @@ Le projet est prive (`private: true`) et utilise `npm` comme gestionnaire de ref
 | UI | CSS Modules, composants React locaux, `lucide-react`, `recharts` |
 | Authentification | NextAuth/Auth.js v5 beta, MongoDB adapter |
 | Donnees | MongoDB, Mongoose |
-| Paiements | Stripe, FedaPay |
+| Paiements | FedaPay actif en V1 Benin ; Stripe conserve uniquement pour compatibilite historique/refus |
 | Medias | Cloudinary |
 | Emails | Resend |
 | Push Web | Web Push / VAPID |
@@ -61,15 +61,15 @@ Le projet est prive (`private: true`) et utilise `npm` comme gestionnaire de ref
 | Domaine | Fonctionnalites principales |
 | --- | --- |
 | Evenements | Listing public, recherche, details, interet utilisateur, playlists, boosts, rappels |
-| Billetterie | Commande, paiement Stripe/FedaPay, billets QR, invitations, assignation, revente, remboursements |
-| Organisateurs | Onboarding, studio, creation d'evenements, staff, guestlist, stats, payouts, media |
+| Billetterie | Commande, paiement FedaPay/XOF, billets QR, invitations, assignation, remboursements. Revente hors V1 Benin |
+| Organisateurs | Onboarding, studio, creation d'evenements, staff, guestlist, stats, encaissements FedaPay/Mobile Money, media |
 | Prestataires | Profil public, catalogue, medias, avis, abonnement, zone de facturation |
 | Messagerie | Conversations directes et groupes, reactions, sondages, messages epingles, roles, mute, typing |
 | Notifications | Centre de notifications, lecture individuelle/globale, push web |
-| Agent / moderation | Gestion comptes, dossiers, avis, signalements, suppressions RGPD, paiements, actualite |
+| Admin / moderation | Gestion comptes, dossiers, avis, signalements, suppressions RGPD, paiements, actualite |
 | Ventes terrain | Scanner, caisse sur place, ventes agent, settlements |
 | Blog / SEO | Blog public, campagne de contenu Benin, sitemap index, sitemaps pagines, OpenGraph |
-| Mobile | Scripts de verification des contrats API, auth, CORS, parcours client/agent |
+| Mobile | Scripts de verification des contrats API, auth, CORS, parcours client/admin et agents terrain |
 
 ## Densite UI
 
@@ -135,19 +135,19 @@ Les primitives globales dans `app/globals.css` servent de contrat :
 | `app/(app)/notifications` | Centre de notifications |
 | `app/(app)/scanner` | Scan billets |
 | `app/(app)/on-site-sales` | Caisse terrain |
-| `app/(app)/agent` | Back-office agent/moderation |
+| `app/(app)/agent` | Back-office admin/moderation, alias historique de `/admin` |
 | `app/api/*` | API, webhooks, cron jobs, ressources mobiles |
 
 ### Dossiers `lib/server/`
 
 | Dossier | Role |
 | --- | --- |
-| `agent/` | Garde agent et logique moderation |
+| `agent/` | Garde admin et logique moderation ; nom de dossier historique |
 | `emails/` | Envoi et templates email |
 | `events/` | Evenements, guestlist, stats, sitemaps |
 | `messaging/` | Conversations, messages, groupes, reactions |
 | `organizer/` | Profils organisateurs, payouts, medias |
-| `payments/` | Stripe, FedaPay, checkout, webhooks |
+| `payments/` | FedaPay, checkout, webhooks ; Stripe historique ferme en V1 |
 | `provider/` | Profils prestataires, catalogue, avis |
 | `seo/` | Generation XML sitemap |
 | `users/` | Recherche, blocage, signalement, presence |
@@ -203,9 +203,9 @@ Copier `.env.example` vers `.env.local`, puis renseigner les valeurs.
 | `PUBLIC_SITE_URL` | URL canonique publique |
 | `CRON_SECRET` | Protection des routes cron sensibles |
 | `EXPECTED_PUBLIC_SITE_HOST` | Domaine attendu par l'audit SEO production, par defaut `liveinblack.com` |
-| `STRIPE_SECRET_KEY` | API Stripe |
-| `STRIPE_WEBHOOK_SECRET` | Verification webhook Stripe |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Cle publique Stripe |
+| `STRIPE_SECRET_KEY` | Ancien rail Stripe historique, non utilise pour le checkout V1 Benin |
+| `STRIPE_WEBHOOK_SECRET` | Verification webhook Stripe historique |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Cle publique Stripe historique |
 | `FEDAPAY_SECRET_KEY` | API FedaPay |
 | `FEDAPAY_WEBHOOK_SECRET` | Verification webhook FedaPay |
 | `RESEND_API_KEY` | Emails transactionnels |
@@ -520,7 +520,7 @@ Les assets statiques en production recoivent aussi un `Cache-Control` long et im
 - Ne jamais committer `.env.local`.
 - Ne jamais deduire `PUBLIC_SITE_URL` de l'en-tete `Host` pour les URLs sensibles de paiement.
 - Garder `CRON_SECRET` obligatoire en production.
-- Garder les webhooks Stripe/FedaPay verifies par secret.
+- Garder les webhooks FedaPay verifies par secret ; conserver Stripe uniquement pour les retours historiques explicitement fermes/refuses.
 - Conserver les uploads sensibles sur Cloudinary avec preset signe/prive.
 - Charger GA4 uniquement apres consentement cookies.
 
@@ -638,7 +638,7 @@ Next n'expose au navigateur que les variables prefixees `NEXT_PUBLIC_`. Pour VAP
 
 Verifier :
 
-- URL publique correcte dans Stripe/FedaPay ;
+- URL publique correcte dans FedaPay, et dans Stripe seulement si un rail historique est conserve pour refus/compatibilite ;
 - secret webhook configure ;
 - `PUBLIC_SITE_URL` configure ;
 - logs Vercel de la route webhook ;

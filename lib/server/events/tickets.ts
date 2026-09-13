@@ -102,10 +102,8 @@ export interface TicketWalletItemView {
   // reporté (voir requestClientRefund, qui bypasse la condition de report
   // dans ce cas précis).
   cancellationProtectionPurchased: boolean
-  // Revente officielle (lib/server/resale.ts). `resellable` reflète les
-  // conditions vérifiables ici (source/scan/déjà en vente) — la fenêtre de
-  // clôture (2h avant les portes) et le statut de l'event sont revérifiés
-  // serveur au moment de la mise en vente, jamais fiés à cet indicateur seul.
+  // Revente historique hors V1 Benin. Gardé dans la forme de réponse pour
+  // compatibilité client, mais forcé à false/null dans la projection active.
   resellable: boolean
   activeListing: { id: string; resalePriceMinor: number; feeMinor: number; sellerNetMinor: number; status: string } | null
 }
@@ -184,7 +182,7 @@ export function toWalletItemView(
     place: ticket.place ?? '',
     placePrice: ticket.placePrice ?? 0,
     totalPrice: ticket.totalPrice ?? 0,
-    currency: ticket.currency ?? 'EUR',
+    currency: ticket.currency === 'EUR' ? 'EUR' : 'XOF',
     preorders: (ticket.preorders ?? []).map((p) => ({ name: p.name, price: p.price ?? 0, qty: p.qty ?? 1, showOptionId: p.showOptionId ?? null, showLabel: p.showLabel ?? null, showInfo: p.showInfo ?? null })),
     guestName: ticket.guestName ?? null,
     bookedAt: ticket.bookedAt ? new Date(ticket.bookedAt).toISOString() : null,

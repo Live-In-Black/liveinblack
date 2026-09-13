@@ -10,15 +10,15 @@ export const dynamic = 'force-dynamic'
 // app/components/EventCheckoutPanel.tsx pour une place gratuite (rail 'free' —
 // redirection CLIENT directe, billet déjà émis synchrone par
 // app/api/checkout/free/route.ts : ?order_id=&free=true, jamais de session_id
-// ni d'id FedaPay). Les anciens retours Stripe restent relisibles uniquement
-// pour afficher leur état historique, pas pour ouvrir un paiement V1.
+// ni d'id FedaPay). En V1, un session_id historique n'est plus relu ici :
+// seuls FedaPay et les billets gratuits peuvent confirmer une commande.
 export default async function PaiementReussiPage({
   searchParams,
 }: {
   searchParams: Promise<{ session_id?: string; id?: string; status?: string; close?: string; order_id?: string; free?: string; cancelled?: string; event_id?: string }>
 }) {
   const params = await searchParams
-  const sessionId = params.session_id || null
+  const sessionId = null
   const fedapayTxnId = !sessionId ? params.id || null : null
   const fedapayClose = params.close === 'true'
   // order_id ne compte comme identifiant "billet gratuit" que si ni session_id

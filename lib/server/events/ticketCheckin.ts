@@ -66,9 +66,8 @@ export async function checkinTicket(caller: CheckinCaller, input: CheckinInput):
   // ── Le scanner appelant doit être ouvert sur LE MÊME événement que le
   // billet (bug de sécurité confirmé par audit : sans ce contrôle, un billet
   // de l'événement B se check-in avec succès depuis le scanner de
-  // l'événement A — écriture irréversible de checkedInAt/checkedInBy et
-  // crédit de point sur le mauvais événement, sans qu'aucun signal d'erreur
-  // n'avertisse le staff). ──
+  // l'événement A — écriture irréversible de checkedInAt/checkedInBy, sans
+  // qu'aucun signal d'erreur n'avertisse le staff). ──
   if (ticket.eventId !== input.eventId) return { ok: false, status: 409, error: 'wrong_event' }
 
   let allowed = false
@@ -157,10 +156,10 @@ export async function checkinTicket(caller: CheckinCaller, input: CheckinInput):
     await session.endSession()
   }
 
-  // Nom du titulaire du compte, indépendamment du crédit de point ci-dessus
-  // (lu même pour un billet gratuit/invitation, jamais seulement quand
-  // `pointAwarded`) — best-effort : un titulaire supprimé entre-temps ne doit
-  // jamais faire échouer un check-in déjà accordé.
+  // Nom du titulaire du compte, lu même pour un billet gratuit/invitation.
+  // `pointAwarded` reste un champ de compatibilité, pas un programme actif.
+  // Best-effort : un titulaire supprimé entre-temps ne doit jamais faire
+  // échouer un check-in déjà accordé.
   let holderName: string | null = null
   if (ticket.userId && ticket.source !== 'guestlist') {
     const holderUser = await User.findById(ticket.userId).select('firstName lastName').lean()

@@ -141,11 +141,11 @@ export function ticketInvalidatedByResaleEmail(eventName: string, site: string =
   const evName = escapeHtml(eventName)
   const inner = `
     ${heading('Ton billet a été transféré')}
-    ${paragraph(`Ton billet pour <strong style="color:inherit;">${evName}</strong> a été vendu et n'est plus valable sur ton compte.`)}
+    ${paragraph(`Ton billet pour <strong style="color:inherit;">${evName}</strong> n'est plus valable sur ton compte. Si tu ne reconnais pas ce transfert, contacte le support.`)}
   `
   return {
     subject: `Ton billet pour ${eventName} a été transféré`,
-    html: wrap(inner, { site, preheader: 'Confirmation de vente de ton billet.' }),
+    html: wrap(inner, { site, preheader: 'Ton billet a été invalidé sur ce compte.' }),
     inApp: { type: 'resale', title: 'Ton billet a été transféré', body: eventName, link: `${site}/profile/billets`, push: true },
   }
 }

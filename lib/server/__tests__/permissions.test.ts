@@ -54,8 +54,8 @@ describe('canCreateEvent', () => {
     // si un futur prestStatus passe à 'pending' séparément.
     expect(canCreateEvent({ activeRole: 'organisateur', status: 'active', orgStatus: 'active' })).toBe(true)
     expect(canCreateEvent({ activeRole: 'organisateur', status: 'active', orgStatus: 'pending' })).toBe(false)
-    // Statut global 'pending' mais orgStatus déjà 'active' (compte multi-rôle
-    // dont une autre interface est en cours de review) : orgStatus l'emporte.
+    // Statut global historique 'pending' mais orgStatus déjà 'active' :
+    // orgStatus l'emporte.
     expect(canCreateEvent({ activeRole: 'organisateur', status: 'pending', orgStatus: 'active' })).toBe(true)
   })
 })

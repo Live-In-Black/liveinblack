@@ -73,7 +73,7 @@ const TOAST_LABEL: Record<ModerationOp, string> = {
 // moderateReview dans lib/server/providerReviews.ts) — jamais affichés tels
 // quels à l'agent.
 const MODERATE_ERROR_LABELS: Record<string, string> = {
-  forbidden: 'Action réservée aux agents.',
+  forbidden: 'Action réservée aux admins.',
   invalid_body: 'Requête invalide — réessaie.',
   note_required: 'La note ne peut pas être vide.',
   review_not_found: 'Cet avis est introuvable (déjà traité ailleurs ?).',
@@ -349,7 +349,7 @@ export default function AgentReviewsClient() {
           subtitle={noteReview.providerName ? `À propos de l’avis de ${noteReview.authorName} sur ${noteReview.providerName}.` : `À propos de l’avis de ${noteReview.authorName}.`}
           actions={<><Button variant="secondary" onClick={() => { setNoteForId(null); setNoteText('') }} disabled={Boolean(busyId)}>Annuler</Button><Button variant="primary" onClick={() => act(noteReview, 'note', noteText.trim())} disabled={Boolean(busyId) || !noteText.trim()} loading={busyId === noteReview.id} loadingText="Enregistrement…">Enregistrer</Button></>}
         >
-          <label className={styles.modalLabel} htmlFor="review-admin-note">Visible uniquement par les agents</label>
+          <label className={styles.modalLabel} htmlFor="review-admin-note">Visible uniquement par les admins</label>
           <Input id="review-admin-note" value={noteText} onChange={(event) => setNoteText(event.target.value.slice(0, 500))} placeholder="Ajouter un contexte de modération" autoFocus />
           <p className={styles.characterCount}>{noteText.length}/500</p>
         </Modal>

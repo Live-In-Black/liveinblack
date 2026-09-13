@@ -86,7 +86,7 @@ Source : classeur WhatsApp `00000422-LIVEINBLACK_mobile_QA_interactive.xlsx`. Le
 | ROLE-001 | P0 | Rôles | Hub sans rôle, rôle unique et rôles multiples | Remplacer le cumul commercial par trois comptes distincts ; missions d'agents toujours permises. |
 | ROLE-002 | P1 | Rôles | Organisateur : liste et détail | Conserver ; exécuter sur la V1 et consigner le résultat. |
 | ROLE-003 | P1 | Rôles | Prestataire : profil, abonnement et avis | Annuaire/abonnement confirmés ; qualifier le niveau attendu des avis. |
-| ROLE-004 | P1 | Rôles | Agent : dashboard et écrans exposés | Conserver ; exécuter sur la V1 et consigner le résultat. |
+| ROLE-004 | P1 | Rôles | Admin : dashboard et écrans exposés | Conserver ; exécuter sur la V1 et consigner le résultat. |
 | ROLE-005 | P0 | Rôles | Accès interdit par mauvais rôle | Conserver ; tester serveur, URL, API et liens profonds, pas seulement les menus. |
 | ROLE-006 | P1 | Rôles | Fonctions v1 non portées non simulées | Conserver ; exécuter sur la V1 et consigner le résultat. |
 | APP-001 | P1 | Secondaire | Candidature organisateur | Nouveau compte organisateur indépendant ; pièce du titulaire seulement sur le parcours visé. |
@@ -310,4 +310,3 @@ Les liens pointent vers les exports originaux sur cette machine. « Inventorié 
 ## 5. Limites d'exhaustivité
 
 162 fichiers recensés dans les deux dossiers. Les 6 vocaux, 10 vidéos, certaines images et 2 messages supprimés empêchent de garantir qu'aucune demande uniquement orale/visuelle n'a été omise. Il n'y a pas de transcription inventée ni de conclusion de conformité dérivée du simple inventaire. Le PDF QA fourni séparément dans Downloads correspond au bilan également présent dans le groupe ; il n'est pas compté une deuxième fois dans ces 162 fichiers.
-

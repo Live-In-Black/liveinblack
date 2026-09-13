@@ -77,7 +77,7 @@ export function promoUnitDiscount(promo: Promo | null, unitSmallest: number, min
   return Math.min(unit, fixed)
 }
 
-export function promoLabel(promo: Promo | null, currency = 'EUR'): string {
+export function promoLabel(promo: Promo | null, currency = 'XOF'): string {
   if (!promo) return ''
   if (promo.type === 'percent') return `-${Math.round(Number(promo.value) || 0)} %`
   const cur = String(currency).toUpperCase() === 'XOF' ? 'FCFA' : '€'

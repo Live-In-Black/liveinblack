@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   alternates: { canonical: '/privacy' },
 }
 
-// Port de src/pages/PolitiqueConfidentialitePage.jsx — conforme RGPD (UE
-// 2016/679) + Loi Informatique et Libertés (France).
+// Politique de confidentialité adaptée au lancement Bénin ; le RGPD reste
+// mentionné quand il s'applique aux utilisateurs concernés.
 export default function PolitiqueConfidentialitePage() {
   const sections: LegalSection[] = [
     {
@@ -79,14 +79,14 @@ Pour toute question relative à vos données personnelles, vous pouvez nous cont
     {
       n: '07',
       title: 'Vos droits',
-      body: 'Conformément aux articles 15 à 22 du RGPD, vous disposez des droits suivants :',
+      body: 'Conformément à la réglementation applicable à la protection des données, et au RGPD lorsqu’il s’applique, vous disposez notamment des droits suivants :',
       list: [
         { label: "Droit d'accès", value: "obtenir la confirmation que vos données sont traitées et en recevoir une copie — en libre-service, à tout moment, via « Télécharger mes données » dans votre profil (voir section 08 ci-dessous)" },
         { label: 'Droit de rectification', value: 'corriger des données inexactes ou incomplètes' },
         {
           label: "Droit à l'effacement (« droit à l'oubli »)",
           value:
-            "demander la suppression de vos données ; les données sans obligation légale de conservation sont supprimées, celles couvertes par une obligation comptable ou une piste d'audit (factures, transactions) sont anonymisées et conservées pour la seule durée légale requise, conformément à l'article 17.3 du RGPD",
+            "demander la suppression de vos données ; les données sans obligation légale de conservation sont supprimées, celles couvertes par une obligation comptable ou une piste d'audit (factures, transactions) sont anonymisées et conservées pour la seule durée légale requise",
         },
         { label: 'Droit à la limitation', value: 'demander de geler temporairement le traitement' },
         { label: 'Droit à la portabilité', value: "recevoir vos données dans un format lisible par machine (JSON) et les transférer — via le même téléchargement en libre-service que le droit d'accès" },
@@ -122,7 +122,7 @@ ${LEGAL.authority.url}`,
 • Paiements traités par des prestataires spécialisés, notamment FedaPay pour la billetterie XOF
 • Sauvegardes régulières
 
-En cas de violation de données susceptible d'engendrer un risque pour vos droits et libertés, nous vous en informerons sous 72 heures conformément à l'article 34 du RGPD.`,
+En cas de violation de données susceptible d'engendrer un risque pour vos droits et libertés, nous vous en informerons dans les délais requis par la réglementation applicable.`,
     },
     {
       n: '10',
@@ -143,7 +143,7 @@ En cas de modification substantielle, nous vous en informerons par notification 
       title="Politique de confidentialité"
       lastUpdate={LEGAL.lastUpdate}
       sections={sections}
-      footerNotice="Politique conforme au RGPD et à la loi française Informatique et Libertés modifiée. Document susceptible de validation finale par un DPO ou un juriste."
+      footerNotice="Politique adaptée au lancement Bénin et susceptible de validation finale par un DPO ou un juriste."
     />
   )
 }

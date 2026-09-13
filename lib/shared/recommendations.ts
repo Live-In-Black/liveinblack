@@ -319,8 +319,8 @@ export function getRecommendedEvents<T extends RecommendationEvent>({
   // Events à ne jamais recommander (ex: déjà mis en avant ailleurs sur la
   // même page, pour éviter un doublon visuel) — comparé à `event.id`.
   excludeEventIds?: Set<string>
-  // Jamais recommander ses propres événements (organisateur qui consulte
-  // /events avec un compte multi-rôles) — même règle que legacy.
+  // Jamais recommander ses propres événements (organisateur/admin ou donnée
+  // historique consultant /events) — même règle que legacy.
   currentUserId?: string | null
   max?: number
   minScore?: number

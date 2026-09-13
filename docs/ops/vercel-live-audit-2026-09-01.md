@@ -18,7 +18,7 @@ Resultat du dernier audit live avec acces reseau autorise:
 - `EDGE_CONFIG` activee dans Vercel: production et development. Preview attend une branche precise.
 - Spend Management webhook prepare cote site: `/api/ops/vercel-spend`.
 - Webhook Vercel plateforme prepare cote site: `/api/ops/vercel-events`.
-- Page agent des evenements Vercel preparee: `/agent/vercel`, APIs `/api/agent/vercel/ops-events` et `/api/agent/vercel/ops-config`.
+- Page admin des evenements Vercel preparee: `/admin/vercel`, APIs `/api/admin/vercel/ops-events` et `/api/admin/vercel/ops-config`.
 - Drains observabilite: 0.
 
 Regles Firewall stagees:
