@@ -1,223 +1,48 @@
-import crypto from 'node:crypto'
-import mongoose from 'mongoose'
 import { getDb } from '@/lib/db/mongoose'
-import Event from '@/lib/models/Event'
+import type { Types } from 'mongoose'
 import Order, { type OrderDoc } from '@/lib/models/Order'
-import Ticket from '@/lib/models/Ticket'
 import ResaleListing, { type ResaleListingDoc } from '@/lib/models/ResaleListing'
-import SellerBalance from '@/lib/models/SellerBalance'
-import EventPayout from '@/lib/models/EventPayout'
-import { computeResaleFeeCents, computeResaleFeeXOF } from '@/lib/shared/fees'
-import { eventStartMs, isEventEnded } from '@/lib/shared/event-time'
-import { notifyUserById } from '@/lib/server/emails/notify'
-import { resaleListingSoldEmail, ticketInvalidatedByResaleEmail, ticketPurchaseConfirmedEmail, resaleListingCreatedEmail, resaleListingExpiredEmail } from '@/lib/server/emails'
-import { fmtMoney } from '@/lib/shared/money'
 
-const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
-
-// Module historique de revente officielle (D92).
-// V1 Benin : la revente est exclue. Les exports restent pour compatibilite et
-// audit d'anciens dossiers, mais les points d'entree actifs retournent
-// immediatement `resale_disabled_v1`.
-
-const MAX_RESALES_PER_ADMISSION = 2
-const CLOSES_BEFORE_DOORS_MS = 2 * 60 * 60 * 1000
-const RESALE_ORDER_TTL_MS = 30 * 60 * 1000
+// Module historique de revente officielle.
+// V1 Benin : la revente est exclue. Les exports restent pour compatibilite
+// avec d'anciens imports et webhooks, mais aucun point d'entree ne cree,
+// n'achete ou ne finalise une revente.
 
 export interface ResaleCaller {
   id: string
 }
 
 type ErrResult = { ok: false; status: number; error: string }
+type ResaleDisabledResult = { ok: false; status: 410; error: 'resale_disabled_v1' }
+type HistoricalListing = ResaleListingDoc & { _id: Types.ObjectId }
+type HistoricalOrder = OrderDoc & { _id: Types.ObjectId }
 
-class ResaleError extends Error {
-  status: number
-  code: string
-  constructor(status: number, code: string) {
-    super(code)
-    this.status = status
-    this.code = code
-  }
-}
-
-function minorPerMajor(currency: string): number {
-  return currency === 'XOF' ? 1 : 100
-}
-
-function rotateQr(ticket: { seatVersion?: number | null; entryNonce?: string | null }) {
-  ticket.seatVersion = (ticket.seatVersion ?? 0) + 1
-  ticket.entryNonce = crypto.randomBytes(12).toString('hex')
-}
+const RESALE_DISABLED: ResaleDisabledResult = { ok: false, status: 410, error: 'resale_disabled_v1' }
 
 // ─────────────────────────── listTicketForResale ───────────────────────────
 
-export type ListResaleResult = ErrResult | { ok: true; listing: ResaleListingDoc & { _id: mongoose.Types.ObjectId } }
+export type ListResaleResult = ResaleDisabledResult | { ok: true; listing: HistoricalListing }
 
 export async function listTicketForResale(caller: ResaleCaller, ticketCode: string, resalePriceMajor: number): Promise<ListResaleResult> {
   void caller
   void ticketCode
   void resalePriceMajor
-  return { ok: false, status: 410, error: 'resale_disabled_v1' }
-
-  await getDb()
-
-  const code = ticketCode?.trim().toUpperCase()
-  if (!code) return { ok: false, status: 400, error: 'invalid_ticket_code' }
-
-  const ticket = await Ticket.findOne({ ticketCode: code })
-  if (!ticket) return { ok: false, status: 404, error: 'ticket_not_found' }
-  if (ticket.userId !== caller.id) return { ok: false, status: 403, error: 'forbidden' }
-  if (ticket.revoked) return { ok: false, status: 409, error: 'ticket_revoked' }
-  if (ticket.checkedInAt) return { ok: false, status: 409, error: 'ticket_already_checked_in' }
-  if (ticket.resaleListingId) return { ok: false, status: 409, error: 'already_listed' }
-  if (ticket.orderId) {
-    const refundState = await Order.findById(ticket.orderId).select('clientRefundRequestedAt status').lean()
-    if (refundState?.clientRefundRequestedAt || refundState?.status === 'superseded') {
-      return { ok: false, status: 409, error: 'refund_already_requested' }
-    }
-  }
-  const paidNormally = ticket.source === 'paid' || Boolean(ticket.source?.startsWith('stripe')) || Boolean(ticket.source?.startsWith('fedapay'))
-  if (!paidNormally) {
-    // 'guestlist'/'free' restent exclus (aucun paiement à l'origine, la
-    // politique de revente ne s'applique qu'à un billet réellement acheté).
-    // 'agent_cash'/'agent_momo' : le document de revente précise qu'un
-    // billet vendu hors application par un agent devient revendable dès
-    // qu'il est rattaché au VRAI compte de son détenteur (#H3a, corrigé le
-    // 12/08/2026 — l'exclusion précédente était catégorique, sans cette
-    // distinction). `ticket.userId === caller.id` est déjà garanti par le
-    // garde ci-dessus ; ce qu'il faut encore vérifier, c'est que ce userId
-    // n'est PAS resté celui de l'agent (billet jamais résolu à un compte
-    // réel — voir lib/server/agentSales.ts::mintAgentSaleTickets).
-    const isAgentSale = ticket.source === 'agent_cash' || ticket.source === 'agent_momo'
-    const order = isAgentSale && ticket.orderId ? await Order.findById(ticket.orderId).select('agentUid').lean() : null
-    const linkedToRealAccount = Boolean(order?.agentUid) && order!.agentUid !== ticket.userId
-    if (!isAgentSale || !linkedToRealAccount) {
-      return { ok: false, status: 409, error: 'not_resellable_source' }
-    }
-  }
-  if ((ticket.resaleCount ?? 0) >= MAX_RESALES_PER_ADMISSION) return { ok: false, status: 409, error: 'resale_limit_reached' }
-
-  const event = await Event.findById(ticket.eventId)
-  if (!event) return { ok: false, status: 404, error: 'event_not_found' }
-  if (event.cancelled) return { ok: false, status: 409, error: 'event_cancelled' }
-  if (isEventEnded(event)) return { ok: false, status: 409, error: 'event_ended' }
-
-  const closesAt = new Date(eventStartMs(event) - CLOSES_BEFORE_DOORS_MS)
-  if (Date.now() >= closesAt.getTime()) return { ok: false, status: 409, error: 'resale_window_closed' }
-
-  const currency = (ticket.currency || event.currency || 'EUR') as 'EUR' | 'XOF'
-  const mpm = minorPerMajor(currency)
-  const resalePriceMinor = Math.round(Number(resalePriceMajor) * mpm)
-  const originalPriceMinor = Math.round(Number(ticket.placePrice || 0) * mpm)
-  if (resalePriceMinor <= 0) return { ok: false, status: 400, error: 'invalid_price' }
-  if (resalePriceMinor > originalPriceMinor) return { ok: false, status: 400, error: 'price_above_original' }
-
-  const feeMinor = currency === 'XOF' ? computeResaleFeeXOF(resalePriceMinor) : computeResaleFeeCents(resalePriceMinor)
-  const sellerNetMinor = resalePriceMinor - feeMinor
-
-  const isGroup = Boolean(ticket.tableId)
-  let groupTicketCodes: string[] = [code]
-  if (isGroup) {
-    if (ticket.hostUid !== caller.id) return { ok: false, status: 403, error: 'not_group_host' }
-    const seats = await Ticket.find({ tableId: ticket.tableId, revoked: { $ne: true } }).lean()
-    if (seats.some((s) => s.userId !== caller.id || s.checkedInAt || s.resaleListingId)) {
-      return { ok: false, status: 409, error: 'group_not_fully_held_by_host' }
-    }
-    groupTicketCodes = seats.map((s) => s.ticketCode)
-  }
-
-  const session = await mongoose.startSession()
-  try {
-    let listing: (ResaleListingDoc & { _id: mongoose.Types.ObjectId }) | null = null
-    await session.withTransaction(async () => {
-      const [created] = await ResaleListing.create(
-        [
-          {
-            ticketCode: code,
-            eventId: ticket.eventId,
-            sellerUid: caller.id,
-            resalePriceMinor,
-            currency,
-            feeMinor,
-            sellerNetMinor,
-            closesAt,
-            isGroupListing: isGroup,
-            tableId: isGroup ? ticket.tableId : null,
-          },
-        ],
-        { session }
-      )
-      listing = created as ResaleListingDoc & { _id: mongoose.Types.ObjectId }
-
-      const tickets = await Ticket.find({ ticketCode: { $in: groupTicketCodes } }).session(session)
-      for (const t of tickets) {
-        rotateQr(t)
-        t.resaleListingId = String(listing!._id)
-        await t.save({ session })
-      }
-    })
-    if (!listing) throw new ResaleError(500, 'listing_creation_failed')
-    await notifyUserById(caller.id, () =>
-      resaleListingCreatedEmail(event.name, fmtMoney(resalePriceMinor / mpm, currency), `${SITE}/profile/billets`, SITE)
-    )
-    return { ok: true, listing }
-  } catch (err) {
-    if (err instanceof ResaleError) return { ok: false, status: err.status, error: err.code }
-    console.error('[resale] listTicketForResale transaction failed:', err)
-    return { ok: false, status: 500, error: 'internal_error' }
-  } finally {
-    await session.endSession()
-  }
+  return RESALE_DISABLED
 }
 
 // ─────────────────────────── withdrawResaleListing ──────────────────────────
 
-export type WithdrawResaleResult = ErrResult | { ok: true }
+export type WithdrawResaleResult = ResaleDisabledResult | ErrResult | { ok: true }
 
 export async function withdrawResaleListing(caller: ResaleCaller, listingId: string): Promise<WithdrawResaleResult> {
-  await getDb()
-
-  const listing = await ResaleListing.findById(listingId)
-  if (!listing) return { ok: false, status: 404, error: 'listing_not_found' }
-  if (listing.sellerUid !== caller.id) return { ok: false, status: 403, error: 'forbidden' }
-  if (listing.status !== 'active') return { ok: false, status: 409, error: 'not_active' }
-
-  const groupTicketCodes = listing.isGroupListing
-    ? (await Ticket.find({ tableId: listing.tableId }).select('ticketCode').lean()).map((t) => t.ticketCode)
-    : [listing.ticketCode]
-
-  const session = await mongoose.startSession()
-  try {
-    await session.withTransaction(async () => {
-      const fresh = await ResaleListing.findById(listingId).session(session)
-      if (!fresh || fresh.status !== 'active') throw new ResaleError(409, 'not_active')
-      fresh.status = 'withdrawn'
-      await fresh.save({ session })
-
-      // Nouveau QR pour le vendeur — jamais réactiver l'ancien (règle non
-      // négociable de la spec), même mécanique qu'à la mise en vente.
-      const tickets = await Ticket.find({ ticketCode: { $in: groupTicketCodes } }).session(session)
-      for (const t of tickets) {
-        rotateQr(t)
-        t.resaleListingId = null
-        await t.save({ session })
-      }
-    })
-    return { ok: true }
-  } catch (err) {
-    if (err instanceof ResaleError) return { ok: false, status: err.status, error: err.code }
-    console.error('[resale] withdrawResaleListing transaction failed:', err)
-    return { ok: false, status: 500, error: 'internal_error' }
-  } finally {
-    await session.endSession()
-  }
+  void caller
+  void listingId
+  return RESALE_DISABLED
 }
 
 // ─────────────────────────── initiateResaleOrder ────────────────────────────
-// Ancien point d'entree checkout revente. V1 Benin : aucun stock n'est
-// decremente et aucune commande de revente n'est creee.
 
-export type InitiateResaleResult = ErrResult | { ok: true; order: OrderDoc & { _id: mongoose.Types.ObjectId } }
+export type InitiateResaleResult = ResaleDisabledResult | { ok: true; order: HistoricalOrder }
 
 export async function initiateResaleOrder(
   buyerCaller: ResaleCaller,
@@ -227,98 +52,36 @@ export async function initiateResaleOrder(
   void buyerCaller
   void listingId
   void rail
-  return { ok: false, status: 410, error: 'resale_disabled_v1' }
-
-  await getDb()
-
-  const listing = await ResaleListing.findById(listingId)
-  if (!listing) return { ok: false, status: 404, error: 'listing_not_found' }
-  if (listing.status !== 'active') return { ok: false, status: 409, error: 'not_active' }
-  if (listing.sellerUid === buyerCaller.id) return { ok: false, status: 409, error: 'cannot_buy_own_listing' }
-  if (Date.now() >= listing.closesAt.getTime()) return { ok: false, status: 409, error: 'resale_window_closed' }
-  if (rail === 'stripe' && listing.currency !== 'EUR') return { ok: false, status: 400, error: 'wrong_rail_for_currency' }
-  if (rail === 'fedapay' && listing.currency !== 'XOF') return { ok: false, status: 400, error: 'wrong_rail_for_currency' }
-
-  const ticket = await Ticket.findOne({ ticketCode: listing.ticketCode }).lean()
-  if (!ticket) return { ok: false, status: 404, error: 'ticket_not_found' }
-
-  const session = await mongoose.startSession()
-  try {
-    let created: (OrderDoc & { _id: mongoose.Types.ObjectId }) | null = null
-    await session.withTransaction(async () => {
-      const freshListing = await ResaleListing.findById(listingId).session(session)
-      if (!freshListing || freshListing.status !== 'active') throw new ResaleError(409, 'not_active')
-
-      const [doc] = await Order.create(
-        [
-          {
-            userId: buyerCaller.id,
-            eventId: listing.eventId,
-            placeId: 'resale',
-            placeType: ticket.place || 'Revente',
-            qty: 1,
-            isTable: listing.isGroupListing,
-            tableSeats: 0,
-            unitPriceMinor: listing.resalePriceMinor,
-            currency: listing.currency,
-            feeMinor: listing.feeMinor,
-            sellerUid: listing.sellerUid,
-            connectMode: 'ledger', // vendeur = un client, jamais éligible Stripe Connect ici
-            rail,
-            status: 'pending',
-            kind: 'resale',
-            resaleListingId: listingId,
-            stockDecremented: false,
-            expiresAt: new Date(Date.now() + RESALE_ORDER_TTL_MS),
-          },
-        ],
-        { session }
-      )
-      created = doc as OrderDoc & { _id: mongoose.Types.ObjectId }
-
-      freshListing.status = 'reserved'
-      freshListing.resaleOrderId = String(created._id)
-      await freshListing.save({ session })
-    })
-    if (!created) throw new ResaleError(500, 'order_creation_failed')
-    return { ok: true, order: created }
-  } catch (err) {
-    if (err instanceof ResaleError) return { ok: false, status: err.status, error: err.code }
-    console.error('[resale] initiateResaleOrder transaction failed:', err)
-    return { ok: false, status: 500, error: 'internal_error' }
-  } finally {
-    await session.endSession()
-  }
+  return RESALE_DISABLED
 }
 
 // ─────────────────────────── releaseResaleOrder ─────────────────────────────
-// Miroir de lib/server/orders.ts::releaseOrder — appelée sur expiration/échec
-// du paiement (checkout.session.expired, transaction.canceled/declined) pour
-// rendre le listing disponible à nouveau.
+// Encore utile pour les webhooks : si une ancienne commande `kind: resale`
+// revient via Stripe/FedaPay, on la marque expiree et on libere son listing.
 
-export async function releaseResaleOrder(orderId: string): Promise<{ ok: boolean }> {
+export async function releaseResaleOrder(orderId: string, session: unknown = null): Promise<{ ok: boolean }> {
   await getDb()
-  const order = await Order.findById(orderId)
+
+  const query = Order.findById(orderId)
+  if (session) query.session(session as never)
+  const order = await query
   if (!order || order.kind !== 'resale' || order.status !== 'pending') return { ok: true }
 
   order.status = 'expired'
-  await order.save()
+  await order.save(session ? { session: session as never } : undefined)
 
   if (order.resaleListingId) {
-    await ResaleListing.updateOne(
+    const update = ResaleListing.updateOne(
       { _id: order.resaleListingId, status: 'reserved', resaleOrderId: orderId },
       { $set: { status: 'active', resaleOrderId: null } }
     )
+    if (session) update.session(session as never)
+    await update
   }
   return { ok: true }
 }
 
 // ─────────────────────────── fulfillResaleOrder ─────────────────────────────
-// Appelée depuis les webhooks Stripe/FedaPay à la place de fulfillOrder quand
-// order.kind === 'resale'. Ne mint AUCUN nouveau billet (contrairement à
-// fulfillOrder) : mute le(s) billet(s) existant(s) — rotation QR + nouveau
-// titulaire — et crédite le vendeur (SellerBalance, même ledger que tout le
-// monde, cf. lib/server/organizerPayouts.ts qui est déjà générique par uid).
 
 export type FulfillResaleResult =
   | { status: 'already_processed' }
@@ -333,120 +96,9 @@ export async function fulfillResaleOrder(orderId: string, opts: { paidAmountMino
   void orderId
   void opts
   return { status: 'resale_disabled_v1' }
-
-  await getDb()
-
-  const order = await Order.findById(orderId)
-  if (!order || order.kind !== 'resale') return { status: 'order_not_found' }
-  if (order.paid) return { status: 'already_processed' }
-  if (!order.resaleListingId) return { status: 'listing_not_found' }
-
-  // FedaPay uniquement (pas d'équivalent Stripe — la session n'est pas
-  // falsifiable après création) : le montant réellement payé doit
-  // correspondre EXACTEMENT au prix de revente + commission attendus.
-  if (opts.paidAmountMinor !== undefined && opts.paidAmountMinor !== order.unitPriceMinor + order.feeMinor) {
-    return { status: 'amount_mismatch' }
-  }
-
-  const listing = await ResaleListing.findById(order.resaleListingId)
-  if (!listing) return { status: 'listing_not_found' }
-  if (listing.status === 'sold') return { status: 'already_processed' }
-  if (listing.status !== 'reserved') return { status: 'not_reserved' }
-
-  const groupTicketCodes = listing.isGroupListing
-    ? (await Ticket.find({ tableId: listing.tableId }).select('ticketCode').lean()).map((t) => t.ticketCode)
-    : [listing.ticketCode]
-
-  const session = await mongoose.startSession()
-  const ticketCodes: string[] = []
-  try {
-    // Anciens titulaires capturés AVANT rotation (t.userId est écrasé dans la
-    // boucle ci-dessous) — pour l'email E11 (ticketInvalidatedByResaleEmail),
-    // envoyé une fois par ancien titulaire distinct après la transaction.
-    const previousHolderUserIds = new Set<string>()
-    await session.withTransaction(async () => {
-      const tickets = await Ticket.find({ ticketCode: { $in: groupTicketCodes } }).session(session)
-      const previousOrderIds = new Set(tickets.map((t) => t.orderId).filter((id): id is string => Boolean(id)))
-      for (const t of tickets) {
-        if (t.userId && t.userId !== order.userId) previousHolderUserIds.add(t.userId)
-      }
-
-      for (const t of tickets) {
-        rotateQr(t) // tue le QR de l'ancien détenteur — même billet, jamais un nouveau ticketCode
-        t.userId = order.userId
-        t.hostUid = listing.isGroupListing ? order.userId : t.hostUid
-        t.assignedTo = null
-        t.assignedName = null
-        t.assignedAt = null
-        t.resaleListingId = null
-        t.resaleCount = (t.resaleCount ?? 0) + 1
-        t.orderId = String(order._id)
-        await t.save({ session })
-        ticketCodes.push(t.ticketCode)
-      }
-
-      // Les commandes d'origine (achat initial ou revente précédente) de ces
-      // billets ne doivent plus jamais être remboursées en cas d'annulation —
-      // seule CETTE commande (le dernier payeur réel) doit l'être.
-      if (previousOrderIds.size) {
-        await Order.updateMany({ _id: { $in: [...previousOrderIds] }, status: 'paid' }, { $set: { status: 'superseded' } }, { session })
-      }
-
-      if (listing.sellerNetMinor > 0) {
-        const field = listing.currency === 'XOF' ? 'amountDueXOF' : 'amountDueCents'
-        await SellerBalance.updateOne({ sellerUid: listing.sellerUid }, { $inc: { [field]: listing.sellerNetMinor } }, { session, upsert: true })
-        if (listing.currency === 'XOF') {
-          const event = await Event.findById(listing.eventId).session(session)
-          await EventPayout.updateOne(
-            { eventId: listing.eventId },
-            { $inc: { amountDueXOF: listing.sellerNetMinor }, $setOnInsert: { sellerUid: listing.sellerUid, status: 'accumulating' }, $set: { momoCountry: event?.region ? momoCountryForRegion(event.region) : null } },
-            { session, upsert: true }
-          )
-        }
-      }
-
-      listing.status = 'sold'
-      listing.buyerUid = order.userId
-      listing.soldAt = new Date()
-      await listing.save({ session })
-
-      order.paid = true
-      order.status = 'paid'
-      order.settled = true
-      await order.save({ session })
-    })
-
-    // Emails best-effort, hors transaction (jamais bloquants) — voir
-    // lib/server/emails/notify.ts.
-    const event = await Event.findById(listing.eventId).select('name').lean()
-    const eventName = event?.name || 'ton événement'
-    if (listing.sellerNetMinor > 0) {
-      await notifyUserById(listing.sellerUid, () =>
-        resaleListingSoldEmail(eventName, fmtMoney(listing.sellerNetMinor / (listing.currency === 'XOF' ? 1 : 100), listing.currency), 'quelques jours après l’événement', SITE)
-      )
-    }
-    for (const previousUserId of previousHolderUserIds) {
-      await notifyUserById(previousUserId, () => ticketInvalidatedByResaleEmail(eventName, SITE))
-    }
-    // E14 (proposition) : l'achat d'un billet de revente reçoit la même
-    // confirmation qu'un achat normal (E1), ce parcours ne passant jamais par
-    // fulfillOrder.ts.
-    await notifyUserById(order.userId, () =>
-      ticketPurchaseConfirmedEmail(
-        { eventId: listing.eventId, eventName, eventWhen: null, eventWhere: null, placeLabel: 'Revente officielle', quantity: ticketCodes.length, totalLabel: fmtMoney((order.unitPriceMinor + order.feeMinor) / (order.currency === 'XOF' ? 1 : 100), order.currency), ticketUrl: `${SITE}/profile/billets` },
-        SITE
-      )
-    )
-
-    return { status: 'ok', ticketCodes }
-  } finally {
-    await session.endSession()
-  }
 }
 
 // ─────────────────────── getActiveResaleListingsForEvent ────────────────────
-// Lecture PUBLIQUE (page événement) — jamais l'identité du vendeur (spec :
-// "l'identité du vendeur n'est jamais communiquée à l'acheteur").
 
 export interface PublicResaleListingView {
   id: string
@@ -458,56 +110,12 @@ export interface PublicResaleListingView {
 }
 
 export async function getActiveResaleListingsForEvent(eventId: string): Promise<PublicResaleListingView[]> {
-  await getDb()
-  const listings = await ResaleListing.find({ eventId, status: 'active' }).sort({ listedAt: 1 }).lean()
-  if (listings.length === 0) return []
-
-  const ticketCodes = listings.map((l) => l.ticketCode)
-  const tickets = await Ticket.find({ ticketCode: { $in: ticketCodes } }).select('ticketCode place tableId').lean()
-  const ticketByCode = new Map(tickets.map((t) => [t.ticketCode, t]))
-
-  const groupSizes = new Map<string, number>()
-  for (const l of listings) {
-    if (!l.isGroupListing || !l.tableId) continue
-    if (!groupSizes.has(l.tableId)) {
-      const count = await Ticket.countDocuments({ tableId: l.tableId })
-      groupSizes.set(l.tableId, count)
-    }
-  }
-
-  return listings.map((l) => ({
-    id: String(l._id),
-    place: ticketByCode.get(l.ticketCode)?.place || '',
-    resalePriceMinor: l.resalePriceMinor,
-    currency: l.currency,
-    isGroupListing: l.isGroupListing,
-    seatCount: l.isGroupListing && l.tableId ? groupSizes.get(l.tableId) || 1 : 1,
-  }))
-}
-
-// Mapping minimal région -> code pays FedaPay, même logique que
-// lib/server/fulfillOrder.ts::momoCountryForEvent (dupliqué ici car non
-// exporté depuis ce fichier — à factoriser si un 3e appelant apparaît).
-function momoCountryForRegion(region: string): string | null {
-  const key = region.trim().toLowerCase()
-  const map: Record<string, string> = { togo: 'tg', 'bénin': 'bj', benin: 'bj', 'côte d’ivoire': 'ci', senegal: 'sn', 'sénégal': 'sn' }
-  return map[key] || null
+  void eventId
+  return []
 }
 
 // ─────────────────────────── expireStaleResaleListings ──────────────────────
-// Sweep historique hors cron V1 : a appeler seulement en migration/audit si
-// d'anciennes annonces encore actives doivent etre classees comme expirees.
-export async function expireStaleResaleListings(): Promise<{ expired: number }> {
-  await getDb()
-  const stale = await ResaleListing.find({ status: 'active', closesAt: { $lte: new Date() } }).lean()
 
-  let expiredCount = 0
-  for (const listing of stale) {
-    const claimed = await ResaleListing.updateOne({ _id: listing._id, status: 'active' }, { $set: { status: 'expired' } })
-    if (claimed.modifiedCount !== 1) continue
-    expiredCount += 1
-    const event = await Event.findById(listing.eventId).select('name').lean()
-    await notifyUserById(listing.sellerUid, () => resaleListingExpiredEmail(event?.name || 'cet événement', SITE))
-  }
-  return { expired: expiredCount }
+export async function expireStaleResaleListings(): Promise<{ expired: number }> {
+  return { expired: 0 }
 }

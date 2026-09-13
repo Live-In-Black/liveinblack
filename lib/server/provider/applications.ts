@@ -75,10 +75,9 @@ export interface ApplicationView {
   updatedAt: string
 }
 
-// Organisateur : seule la pièce d'identité est réellement exigée — Stripe
-// Connect gère la vérification bancaire séparément (voir
-// OnboardingOrganisateur.jsx step "Tes revenus"/documents, comment legacy :
-// "Stripe gère les coords bancaires — on ne demande que l'identité").
+// Organisateur : seule la pièce d'identité est réellement exigée côté dossier.
+// En V1 Bénin, l'encaissement/payout organisateur passe ensuite par le
+// sous-compte FedaPay Marketplace configuré séparément.
 // Prestataire : exigences DYNAMIQUES selon les catégories choisies, voir
 // getRequiredDocs (lib/shared/applicationValidation.ts, port de
 // src/utils/applications.js) — jamais un simple ['identity'] fixe.

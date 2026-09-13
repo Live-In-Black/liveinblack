@@ -76,8 +76,8 @@ const domains = [
     designKeywords: ['organisateur'],
     screens: ['app/spaces/organizer.tsx', 'app/spaces/organizer/new.tsx', 'app/spaces/organizer/[eventId].tsx'],
     libs: ['lib/organizerEvents.ts', 'lib/organizerProfile.ts', 'lib/organizerPayouts.ts'],
-    routes: ['app/api/organizer-events/route.ts', 'app/api/organizers/me/route.ts', 'app/api/organizers/me/payouts/route.ts'],
-    signals: [/fetchOrganizerEvents/, /createOrganizerEvent/, /fetchOrganizerProfile/, /requestPayout/],
+    routes: ['app/api/organizer-events/route.ts', 'app/api/organizers/me/route.ts', 'app/api/organizers/me/payout-momos/route.ts'],
+    signals: [/fetchOrganizerEvents/, /createOrganizerEvent/, /fetchOrganizerProfile/, /fetchPayoutMomos/, /savePayoutMomos/],
   },
   {
     name: 'Prestataire',

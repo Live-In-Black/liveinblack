@@ -145,19 +145,25 @@ describe('validatePrestataireFormData / getRequiredDocs (unitaire, pur)', () => 
 describeIntegration('applications (intégration, vraie base + Cloudinary) — dossier prestataire (#8)', () => {
   describe('getMyApplication / saveApplicationDraft (type prestataire)', () => {
     it('renvoie null si aucun dossier', async () => {
-      const alice = await seedUser()
+      const alice = await seedUser({ roles: ['prestataire'], activeRole: 'prestataire' })
       const app = await getMyApplication({ id: alice.id }, 'prestataire')
       expect(app).toBeNull()
     })
 
     it('crée un brouillon et le relit', async () => {
-      const alice = await seedUser()
+      const alice = await seedUser({ roles: ['prestataire'], activeRole: 'prestataire' })
       const result = await saveApplicationDraft({ id: alice.id }, 'prestataire', { prenom: 'Brouillon' })
       expect(result.ok).toBe(true)
 
       const app = await getMyApplication({ id: alice.id }, 'prestataire')
       expect(app?.status).toBe('draft')
       expect(app?.formData.prenom).toBe('Brouillon')
+    })
+
+    it('refuse le brouillon prestataire depuis un compte client', async () => {
+      const alice = await seedUser()
+      const result = await saveApplicationDraft({ id: alice.id }, 'prestataire', { prenom: 'Tentative' })
+      expect(result).toEqual({ ok: false, status: 403, error: 'separate_account_required' })
     })
   })
 
@@ -171,7 +177,7 @@ describeIntegration('applications (intégration, vraie base + Cloudinary) — do
     })
 
     it('accepte une catégorie "salle" avec la pièce d’identité seule', async () => {
-      const alice = await seedUser()
+      const alice = await seedUser({ roles: ['prestataire'], activeRole: 'prestataire' })
       const result = await submitPrestataireApplication(
         { id: alice.id },
         { formData: baseForm({ prestataireTypes: ['salle'] }), documents: IDENTITY_ONLY_DOCS }
@@ -180,7 +186,7 @@ describeIntegration('applications (intégration, vraie base + Cloudinary) — do
     })
 
     it('accepte une catégorie sans exigence spécifique (photo_video) avec identity seul', async () => {
-      const alice = await seedUser()
+      const alice = await seedUser({ roles: ['prestataire'], activeRole: 'prestataire' })
       const result = await submitPrestataireApplication({ id: alice.id }, { formData: baseForm(), documents: IDENTITY_ONLY_DOCS })
       expect(result.ok).toBe(true)
     })
@@ -191,8 +197,8 @@ describeIntegration('applications (intégration, vraie base + Cloudinary) — do
       expect(result.ok).toBe(false)
     })
 
-    it('soumet avec succès : bascule le rôle actif et pose prestStatus=pending', async () => {
-      const alice = await seedUser()
+    it('soumet avec succès depuis un compte prestataire dédié et pose prestStatus=pending', async () => {
+      const alice = await seedUser({ roles: ['prestataire'], activeRole: 'prestataire' })
       const result = await submitPrestataireApplication({ id: alice.id }, { formData: baseForm(), documents: IDENTITY_ONLY_DOCS })
       expect(result.ok).toBe(true)
       if (!result.ok) return
@@ -200,24 +206,24 @@ describeIntegration('applications (intégration, vraie base + Cloudinary) — do
       expect(result.application.documents.identity).toHaveLength(1)
 
       const fresh = await User.findById(alice.id).lean()
-      expect(fresh?.roles).toContain('prestataire')
+      expect(fresh?.roles).toEqual(['prestataire'])
       expect(fresh?.activeRole).toBe('prestataire')
       expect(fresh?.prestStatus).toBe('pending')
     })
 
-    it('un organisateur déjà actif qui candidate en prestataire ne perd pas orgStatus=active', async () => {
+    it('refuse une candidature prestataire depuis un compte organisateur existant', async () => {
       const alice = await seedUser({ roles: ['organisateur'], activeRole: 'organisateur', orgStatus: 'active' })
       const result = await submitPrestataireApplication({ id: alice.id }, { formData: baseForm(), documents: IDENTITY_ONLY_DOCS })
-      expect(result.ok).toBe(true)
+      expect(result).toEqual({ ok: false, status: 403, error: 'separate_account_required' })
 
       const fresh = await User.findById(alice.id).lean()
       expect(fresh?.orgStatus).toBe('active')
-      expect(fresh?.roles).toEqual(expect.arrayContaining(['organisateur', 'prestataire']))
-      expect(fresh?.prestStatus).toBe('pending')
+      expect(fresh?.roles).toEqual(['organisateur'])
+      expect(fresh?.prestStatus).not.toBe('pending')
     })
 
     it('resoumission après needs_changes passe le statut à resubmitted', async () => {
-      const alice = await seedUser()
+      const alice = await seedUser({ roles: ['prestataire'], activeRole: 'prestataire' })
       await submitPrestataireApplication({ id: alice.id }, { formData: baseForm(), documents: IDENTITY_ONLY_DOCS })
       await Application.updateOne({ userId: alice.id, type: 'prestataire' }, { $set: { status: 'needs_changes', requestedChanges: 'Précise ta zone.' } })
 
@@ -277,7 +283,7 @@ describeIntegration('applications (intégration, vraie base + Cloudinary) — do
         email,
         password: 'Test1234!',
         formData: baseForm({ prestataireTypes: ['salle'] }),
-        documents: IDENTITY_ONLY_DOCS,
+        documents: {},
       })
       expect(result.ok).toBe(false)
       const user = await User.findOne({ email }).lean()

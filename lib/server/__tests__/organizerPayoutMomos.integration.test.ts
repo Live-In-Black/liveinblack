@@ -1,5 +1,5 @@
 // Tests d'INTÉGRATION (vraie base MongoDB) pour lib/server/organizerPayoutMomos.ts
-// (#7 phase organisateur — numéros Mobile Money par pays + réarmement des
+// (#7 phase organisateur — numéro Mobile Money Bénin + réarmement des
 // versements FedaPay bloqués faute de numéro).
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import mongoose from 'mongoose'
@@ -44,7 +44,7 @@ async function seedUser(overrides: Partial<Record<string, unknown>> = {}) {
 describeIntegration('organizerPayoutMomos (intégration, vraie base) — numéros Mobile Money + réarmement (#7)', () => {
   it('refuse un numéro invalide et ne modifie rien', async () => {
     const userId = await seedUser()
-    const result = await updatePayoutMomos({ id: userId }, { tg: '+229 90 00 00 00' })
+    const result = await updatePayoutMomos({ id: userId }, { bj: '+228 90 00 00 00' })
     expect(result.ok).toBe(false)
 
     const listed = await listPayoutMomos({ id: userId })
@@ -52,42 +52,52 @@ describeIntegration('organizerPayoutMomos (intégration, vraie base) — numéro
     if (listed.ok) expect(listed.momos).toEqual({})
   })
 
-  it('enregistre plusieurs numéros valides, un par pays', async () => {
+  it('enregistre le numéro Mobile Money Bénin', async () => {
     const userId = await seedUser()
-    const result = await updatePayoutMomos({ id: userId }, { tg: '+228 90 00 00 00', bj: '+229 91 11 11 11' })
+    const result = await updatePayoutMomos({ id: userId }, { bj: '+229 01 97 00 00 00' })
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.momos).toEqual({ tg: '+22890000000', bj: '+22991111111' })
+    expect(result.momos).toEqual({ bj: '+2290197000000' })
 
     const listed = await listPayoutMomos({ id: userId })
     expect(listed.ok).toBe(true)
-    if (listed.ok) expect(listed.momos).toEqual({ tg: '+22890000000', bj: '+22991111111' })
+    if (listed.ok) expect(listed.momos).toEqual({ bj: '+2290197000000' })
   })
 
-  it('remplace entièrement la map — retirer un pays du payload le supprime', async () => {
+  it('refuse les anciens pays Mobile Money hors lancement Bénin', async () => {
     const userId = await seedUser()
-    await updatePayoutMomos({ id: userId }, { tg: '+228 90 00 00 00', bj: '+229 91 11 11 11' })
-
     const result = await updatePayoutMomos({ id: userId }, { tg: '+228 90 00 00 00' })
+    expect(result.ok).toBe(false)
+
+    const listed = await listPayoutMomos({ id: userId })
+    expect(listed.ok).toBe(true)
+    if (listed.ok) expect(listed.momos).toEqual({})
+  })
+
+  it('remplace entièrement la map — retirer le pays du payload le supprime', async () => {
+    const userId = await seedUser()
+    await updatePayoutMomos({ id: userId }, { bj: '+229 01 97 00 00 00' })
+
+    const result = await updatePayoutMomos({ id: userId }, {})
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.momos).toEqual({ tg: '+22890000000' })
+    expect(result.momos).toEqual({})
   })
 
   it('réarme immédiatement une enveloppe bloquée "no_momo_number" dès qu’un numéro correspondant est ajouté', async () => {
     const userId = await seedUser()
-    const event = await Event.create({ name: 'Soirée Togo', date: '2020-01-01', city: 'Lomé', region: 'Togo', organizerId: userId, createdBy: userId, places: [] })
+    const event = await Event.create({ name: 'Soirée Bénin', date: '2020-01-01', city: 'Cotonou', region: 'Bénin', organizerId: userId, createdBy: userId, places: [] })
     await EventPayout.create({
       eventId: String(event._id),
       sellerUid: userId,
       amountDueXOF: 15000,
-      momoCountry: 'tg',
+      momoCountry: 'bj',
       status: 'failed',
-      failReason: 'Aucun numéro Mobile Money enregistré pour Togo',
+      failReason: 'Aucun numéro Mobile Money enregistré pour Bénin',
       failCode: 'no_momo_number',
     })
 
-    const result = await updatePayoutMomos({ id: userId }, { tg: '+228 90 00 00 00' })
+    const result = await updatePayoutMomos({ id: userId }, { bj: '+229 01 97 00 00 00' })
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.rearmedCount).toBe(1)
@@ -100,10 +110,10 @@ describeIntegration('organizerPayoutMomos (intégration, vraie base) — numéro
 
   it('ne réarme pas une enveloppe dont l’événement a été annulé', async () => {
     const userId = await seedUser()
-    const event = await Event.create({ name: 'Soirée Togo', date: '2020-01-01', city: 'Lomé', region: 'Togo', organizerId: userId, createdBy: userId, places: [], cancelled: true })
-    await EventPayout.create({ eventId: String(event._id), sellerUid: userId, amountDueXOF: 15000, momoCountry: 'tg', status: 'failed', failCode: 'no_momo_number' })
+    const event = await Event.create({ name: 'Soirée Bénin', date: '2020-01-01', city: 'Cotonou', region: 'Bénin', organizerId: userId, createdBy: userId, places: [], cancelled: true })
+    await EventPayout.create({ eventId: String(event._id), sellerUid: userId, amountDueXOF: 15000, momoCountry: 'bj', status: 'failed', failCode: 'no_momo_number' })
 
-    const result = await updatePayoutMomos({ id: userId }, { tg: '+228 90 00 00 00' })
+    const result = await updatePayoutMomos({ id: userId }, { bj: '+229 01 97 00 00 00' })
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.rearmedCount).toBe(0)
@@ -114,8 +124,8 @@ describeIntegration('organizerPayoutMomos (intégration, vraie base) — numéro
 
   it('ne réarme jamais un échec non ré-armable (ex. refus FedaPay)', async () => {
     const userId = await seedUser()
-    const event = await Event.create({ name: 'Soirée Togo', date: '2020-01-01', city: 'Lomé', region: 'Togo', organizerId: userId, createdBy: userId, places: [] })
-    await EventPayout.create({ eventId: String(event._id), sellerUid: userId, amountDueXOF: 15000, momoCountry: 'tg', status: 'failed', failCode: 'payout_rejected' })
+    const event = await Event.create({ name: 'Soirée Bénin', date: '2020-01-01', city: 'Cotonou', region: 'Bénin', organizerId: userId, createdBy: userId, places: [] })
+    await EventPayout.create({ eventId: String(event._id), sellerUid: userId, amountDueXOF: 15000, momoCountry: 'bj', status: 'failed', failCode: 'payout_rejected' })
 
     const rearmed = await rearmFailedPayouts(userId)
     expect(rearmed).toBe(0)
@@ -129,7 +139,7 @@ describeIntegration('organizerPayoutMomos (intégration, vraie base) — numéro
     const event = await Event.create({ name: 'Soirée Bénin', date: '2020-01-01', city: 'Cotonou', region: 'Bénin', organizerId: userId, createdBy: userId, places: [] })
     await EventPayout.create({ eventId: String(event._id), sellerUid: userId, amountDueXOF: 8000, momoCountry: null, status: 'failed', failCode: 'country_undetermined' })
 
-    const result = await updatePayoutMomos({ id: userId }, { bj: '+229 91 11 11 11' })
+    const result = await updatePayoutMomos({ id: userId }, { bj: '+229 01 97 00 00 00' })
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.rearmedCount).toBe(1)
@@ -144,7 +154,7 @@ describeIntegration('organizerPayoutMomos (intégration, vraie base) — numéro
     const event = await Event.create({ name: 'Soirée Mystère', date: '2020-01-01', city: 'Atlantis', region: 'Unknown', organizerId: userId, createdBy: userId, places: [] })
     await EventPayout.create({ eventId: String(event._id), sellerUid: userId, amountDueXOF: 9000, momoCountry: null, status: 'failed', failCode: 'country_undetermined' })
 
-    const result = await updatePayoutMomos({ id: userId }, { tg: '+228 90 00 00 00' })
+    const result = await updatePayoutMomos({ id: userId }, { bj: '+229 01 97 00 00 00' })
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.rearmedCount).toBe(0)

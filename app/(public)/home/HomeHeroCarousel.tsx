@@ -1,34 +1,105 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styles from './home.module.css'
 
-const SLIDES = [
-  '/images/live-in-black/night-benin/night-benin-dancefloor.png',
-  '/images/live-in-black/night-benin/night-benin-concert.png',
-  '/images/live-in-black/night-benin/night-benin-rooftop.png',
+interface HeroSlide {
+  type: 'video' | 'image'
+  src: string
+  poster?: string
+}
+
+const SLIDES: HeroSlide[] = [
+  {
+    type: 'video',
+    src: '/videos/nightclub-atmosphere.mp4',
+    poster: '/videos/nightclub-atmosphere-poster.jpg',
+  },
+  {
+    type: 'image',
+    src: '/images/live-in-black/night-benin/night-benin-concert.png',
+  },
+  {
+    type: 'image',
+    src: '/images/live-in-black/night-benin/night-benin-rooftop.png',
+  },
 ]
 
 export default function HomeHeroCarousel() {
   const [active, setActive] = useState(0)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const timer = window.setInterval(() => setActive((current) => (current + 1) % SLIDES.length), 6000)
-    return () => window.clearInterval(timer)
-  }, [])
+
+    // Si on est sur le slide vidéo, on laisse la vidéo se jouer avant de passer à la suite
+    const duration = SLIDES[active].type === 'video' ? 8000 : 6000
+    const timer = window.setTimeout(() => {
+      setActive((current) => (current + 1) % SLIDES.length)
+    }, duration)
+
+    return () => window.clearTimeout(timer)
+  }, [active])
+
+  useEffect(() => {
+    if (SLIDES[active].type === 'video' && videoRef.current) {
+      videoRef.current.currentTime = 0
+      videoRef.current.play().catch(() => {
+        // Autoplay policy fallback
+      })
+    }
+  }, [active])
 
   return (
     <>
       <div className={styles.heroSlides} aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: -3 }}>
-        {SLIDES.map((src, index) => (
-          <Image key={src} src={src} alt="" fill priority={index === 0} unoptimized sizes="100vw" className={`${styles.heroImage} ${index === active ? styles.heroImageActive : ''}`} />
-        ))}
+        {SLIDES.map((slide, index) => {
+          const isActive = index === active
+          if (slide.type === 'video') {
+            return (
+              <video
+                key={slide.src}
+                ref={videoRef}
+                src={slide.src}
+                poster={slide.poster}
+                autoPlay
+                muted
+                playsInline
+                loop={false}
+                className={`${styles.heroVideo} ${isActive ? styles.heroVideoActive : ''}`}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  pointerEvents: 'none',
+                }}
+              />
+            )
+          }
+          return (
+            <Image
+              key={slide.src}
+              src={slide.src}
+              alt=""
+              fill
+              priority={index === 0}
+              unoptimized
+              sizes="100vw"
+              className={`${styles.heroImage} ${isActive ? styles.heroImageActive : ''}`}
+            />
+          )
+        })}
       </div>
-      <div className={styles.heroCarouselControls} role="group" aria-label="Choisir l’image du carrousel">
-        {SLIDES.map((src, index) => (
-          <button key={src} type="button" className={index === active ? styles.heroCarouselDotActive : styles.heroCarouselDot} aria-label={`Afficher l’image ${index + 1}`} aria-pressed={index === active} onClick={() => setActive(index)} />
+      <div className={styles.heroCarouselControls} role="group" aria-label="Choisir le média du carrousel">
+        {SLIDES.map((slide, index) => (
+          <button
+            key={slide.src}
+            type="button"
+            className={index === active ? styles.heroCarouselDotActive : styles.heroCarouselDot}
+            aria-label={`Afficher le média ${index + 1} (${slide.type === 'video' ? 'Vidéo' : 'Photo'})`}
+            aria-pressed={index === active}
+            onClick={() => setActive(index)}
+          />
         ))}
       </div>
     </>

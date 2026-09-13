@@ -18,7 +18,7 @@ const TABS: Array<{ id: TabId; label: string; color: string; roleName: string; d
     color: 'var(--primary)',
     roleName: 'Le Clubber',
     description:
-      'Découvre les meilleures soirées près de chez toi, réserve en quelques secondes, reçois ton billet QR instantanément et cumule des points à chaque sortie.',
+      'Découvre les meilleures soirées près de chez toi, réserve en quelques secondes et reçois ton billet QR instantanément.',
     cta: 'Créer mon compte',
     href: '/login?mode=register',
     image: '/images/live-in-black/night-benin/night-benin-dancefloor.png',

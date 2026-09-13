@@ -107,13 +107,13 @@ describe('validateOrganizerFormData (unitaire, pur)', () => {
 describeIntegration('applications (intégration, vraie base + Cloudinary) — dossier organisateur (#7)', () => {
   describe('getMyApplication / saveApplicationDraft', () => {
     it('renvoie null si aucun dossier', async () => {
-      const alice = await seedUser()
+      const alice = await seedUser({ roles: ['organisateur'], activeRole: 'organisateur' })
       const app = await getMyApplication({ id: alice.id }, 'organisateur')
       expect(app).toBeNull()
     })
 
     it('crée un brouillon et le relit', async () => {
-      const alice = await seedUser()
+      const alice = await seedUser({ roles: ['organisateur'], activeRole: 'organisateur' })
       const result = await saveApplicationDraft({ id: alice.id }, 'organisateur', { nomCommercial: 'Brouillon Test' })
       expect(result.ok).toBe(true)
 
@@ -123,7 +123,7 @@ describeIntegration('applications (intégration, vraie base + Cloudinary) — do
     })
 
     it('refuse l’autosave sur un dossier déjà soumis', async () => {
-      const alice = await seedUser()
+      const alice = await seedUser({ roles: ['organisateur'], activeRole: 'organisateur' })
       const submitResult = await submitOrganizerApplication({ id: alice.id }, { formData: VALID_FORM, documents: VALID_DOCS })
       expect(submitResult.ok).toBe(true)
 
@@ -131,6 +131,12 @@ describeIntegration('applications (intégration, vraie base + Cloudinary) — do
       expect(draftResult.ok).toBe(false)
       if (draftResult.ok) return
       expect(draftResult.error).toBe('not_editable')
+    })
+
+    it('refuse le brouillon organisateur depuis un compte client', async () => {
+      const alice = await seedUser()
+      const result = await saveApplicationDraft({ id: alice.id }, 'organisateur', { nomCommercial: 'Tentative' })
+      expect(result).toEqual({ ok: false, status: 403, error: 'separate_account_required' })
     })
   })
 
@@ -149,8 +155,8 @@ describeIntegration('applications (intégration, vraie base + Cloudinary) — do
       expect(result.ok).toBe(false)
     })
 
-    it('soumet avec succès : bascule le rôle actif et pose orgStatus=pending', async () => {
-      const alice = await seedUser()
+    it('soumet avec succès depuis un compte organisateur dédié et pose orgStatus=pending', async () => {
+      const alice = await seedUser({ roles: ['organisateur'], activeRole: 'organisateur' })
       const result = await submitOrganizerApplication({ id: alice.id }, { formData: VALID_FORM, documents: VALID_DOCS })
       expect(result.ok).toBe(true)
       if (!result.ok) return
@@ -159,22 +165,19 @@ describeIntegration('applications (intégration, vraie base + Cloudinary) — do
       expect(result.application.documents.identity[0].url).toMatch(/^\/api\/applications\//)
 
       const fresh = await User.findById(alice.id).lean()
-      expect(fresh?.roles).toContain('organisateur')
+      expect(fresh?.roles).toEqual(['organisateur'])
       expect(fresh?.activeRole).toBe('organisateur')
       expect(fresh?.orgStatus).toBe('pending')
     })
 
-    it('un organisateur déjà actif qui candidate pour un second rôle ne perd pas orgStatus=active tant qu’il ne resoumet pas SON dossier organisateur', async () => {
-      // Ce test documente la garantie de non-régression du #7 : orgStatus
-      // n'est modifié QUE par une action sur le dossier organisateur
-      // lui-même, jamais par effet de bord d'un autre dossier.
-      const alice = await seedUser({ roles: ['organisateur'], activeRole: 'organisateur', orgStatus: 'active' })
-      const fresh = await User.findById(alice.id).lean()
-      expect(fresh?.orgStatus).toBe('active')
+    it('refuse la soumission organisateur depuis un compte client existant', async () => {
+      const alice = await seedUser()
+      const result = await submitOrganizerApplication({ id: alice.id }, { formData: VALID_FORM, documents: VALID_DOCS })
+      expect(result).toEqual({ ok: false, status: 403, error: 'separate_account_required' })
     })
 
     it('resoumission après needs_changes passe le statut à resubmitted', async () => {
-      const alice = await seedUser()
+      const alice = await seedUser({ roles: ['organisateur'], activeRole: 'organisateur' })
       await submitOrganizerApplication({ id: alice.id }, { formData: VALID_FORM, documents: VALID_DOCS })
       await Application.updateOne({ userId: alice.id, type: 'organisateur' }, { $set: { status: 'needs_changes', requestedChanges: 'Corrige la pièce d’identité du titulaire.' } })
 

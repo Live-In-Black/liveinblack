@@ -33,6 +33,7 @@ import {
 } from 'lucide-react'
 import NextImage from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
+import OrganizerTeamManager from './OrganizerTeamManager'
 
 export interface OrganizerProfileView {
   publicName: string
@@ -143,7 +144,7 @@ export default function StudioClient({
   const [pendingConfirm, setPendingConfirm] = useState<{ title: string; message: string; confirmLabel: string; onConfirm: () => void } | null>(null)
   const [crop, setCrop] = useState<{ kind: 'avatar' | 'banner'; src: string } | null>(null)
   
-  const [tab, setTab] = useQueryParamState<'page' | 'media' | 'paiements' | 'remboursements'>('tab', 'page')
+  const [tab, setTab] = useQueryParamState<'page' | 'media' | 'paiements' | 'remboursements' | 'equipe'>('tab', 'page')
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.hash === '#encaissement') setTab('paiements')
@@ -437,10 +438,10 @@ export default function StudioClient({
         <header className="lb-dashboard-page-header studio-header">
           <div>
             <h1 className="lb-dashboard-title" style={{ margin: 0 }}>
-              {tab === 'page' ? 'Page publique & Profil' : tab === 'media' ? 'Galerie & Médias' : tab === 'paiements' ? 'Encaissements' : 'Remboursements'}
+              {tab === 'page' ? 'Page publique & Profil' : tab === 'media' ? 'Galerie & Médias' : tab === 'paiements' ? 'Encaissements' : tab === 'remboursements' ? 'Remboursements' : 'Équipe & Accès'}
             </h1>
             <p className="lb-dashboard-description" style={{ marginTop: 6 }}>
-              {tab === 'page' ? 'Personnalise ton univers de marque, ta bio et tes liens de contact.' : tab === 'media' ? 'Gère les photos et vidéos de tes soirées passées.' : tab === 'paiements' ? 'Configure tes comptes Stripe et Mobile Money Bénin.' : 'Suis les demandes et dossiers de remboursement.'}
+              {tab === 'page' ? 'Personnalise ton univers de marque, ta bio et tes liens de contact.' : tab === 'media' ? 'Gère les photos et vidéos de tes soirées passées.' : tab === 'paiements' ? 'Configure ton encaissement FedaPay Marketplace et ton Mobile Money Bénin.' : tab === 'remboursements' ? 'Suis les demandes et dossiers de remboursement.' : 'Crée et gère les sous-comptes pour tes agents de contrôle et vendeurs.'}
             </p>
           </div>
           <Button
@@ -502,6 +503,16 @@ export default function StudioClient({
           >
             <RotateCcw size={16} />
             <span>Remboursements</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'equipe'}
+            className={`studio-tab-btn ${tab === 'equipe' ? 'active' : ''}`}
+            onClick={() => setTab('equipe')}
+          >
+            <Users size={16} />
+            <span>Équipe & Accès</span>
           </button>
         </div>
 
@@ -1115,6 +1126,10 @@ export default function StudioClient({
         {tab === 'remboursements' && (
           <OrganizerRefundsSection initialRefunds={initialRefunds} />
         )}
+
+        {tab === 'equipe' && (
+          <OrganizerTeamManager />
+        )}
       </div>
 
       {crop && (
@@ -1509,7 +1524,7 @@ function PayoutSection({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Suivi V1 : pas de Stripe Connect ni de demande de reversement différé. */}
+      {/* Suivi V1 : encaissement FedaPay Marketplace uniquement. */}
       <Card style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <div>
@@ -1517,7 +1532,7 @@ function PayoutSection({
               Encaissement FedaPay Marketplace
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: 'var(--font-size-footnote)', color: 'var(--text-muted)' }}>
-              Pour le lancement Bénin, chaque achat FCFA est réparti au paiement via FedaPay. Aucun Stripe Connect ni versement différé n&apos;est proposé dans cet espace.
+              Pour le lancement Bénin, chaque achat FCFA est réparti au paiement via FedaPay Marketplace.
             </p>
           </div>
         </div>

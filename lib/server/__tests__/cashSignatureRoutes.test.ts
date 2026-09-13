@@ -39,6 +39,13 @@ describe('routes de signature privee', () => {
     expect((await POST(request({ code: 'CODE-12345', signatureDataUrl, operationId }), context)).status).toBe(200)
     expect(completeManualRefund).toHaveBeenCalledWith({ id: 'agent', name: 'Agent' }, 'a'.repeat(24), { code: 'CODE-12345', signatureDataUrl, operationId }, {})
   })
+  it('accepte la capture signee dans signatureUpload', async () => {
+    vi.mocked(completeManualRefund).mockResolvedValue({ ok: true })
+    const dataUrl = 'data:image/png;base64,' + 'b'.repeat(4096)
+    const operationId = '11111111-1111-4111-8111-111111111111'
+    expect((await POST(request({ code: 'CODE-12345', signatureUpload: { dataUrl }, operationId }), context)).status).toBe(200)
+    expect(completeManualRefund).toHaveBeenCalledWith({ id: 'agent', name: 'Agent' }, 'a'.repeat(24), { code: 'CODE-12345', signatureDataUrl: dataUrl, operationId }, {})
+  })
   it('borne le corps sans Content-Length avant tout decodage PNG', async () => {
     expect((await POST(request({ signatureDataUrl: 'a'.repeat(710000) }), context)).status).toBe(413)
     expect(completeManualRefund).not.toHaveBeenCalled()

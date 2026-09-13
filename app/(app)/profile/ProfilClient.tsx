@@ -33,7 +33,6 @@ export interface ProfilUser {
   birthYear: number | null
   gender: string | null
   nameChangedAt: string | null
-  points: number
   role: string
   privacy: { showOnline: boolean; showAvatar: boolean; readReceipts: boolean; personalizedRecommendations: boolean }
   preferences: Partial<Preferences> | null
@@ -96,7 +95,7 @@ const ROLE_LABELS: Record<string, { label: string; badgeTone: 'teal' | 'violet' 
   agent: { label: 'Admin', badgeTone: 'gold' },
 }
 
-// Racine du dashboard "Mon profil" — identité/avatar/points uniquement.
+// Racine du dashboard "Mon profil" — identité, avatar et raccourcis client.
 // Les anciens panneaux internes (Mes billets, Paramètres, Support) et la
 // navigation "Événements intéressés"/"Organisateurs suivis" sont maintenant
 // de vraies routes listées dans le sous-menu de la sidebar (voir
@@ -108,7 +107,6 @@ export default function ProfilClient({ initialUser }: { initialUser: ProfilUser 
 
 function MainView({ user, setUser }: { user: ProfilUser; setUser: (u: ProfilUser) => void }) {
   const roleInfo = ROLE_LABELS[user.role]
-  const isOrganizer = user.role === 'organisateur'
 
   return (
     <main className={`profile-main lb-dashboard-page ${overviewStyles.root}`}>
@@ -123,7 +121,6 @@ function MainView({ user, setUser }: { user: ProfilUser; setUser: (u: ProfilUser
             <p className={overviewStyles.email}>{user.email}</p>
             <div className={overviewStyles.badges}>
               {roleInfo && <Badge tone={roleInfo.badgeTone}>{roleInfo.label}</Badge>}
-              {!isOrganizer && <Badge tone="gold">{user.points || 0} pts</Badge>}
             </div>
           </div>
           <div className={overviewStyles.identityActions}>
@@ -137,16 +134,6 @@ function MainView({ user, setUser }: { user: ProfilUser; setUser: (u: ProfilUser
         </Card>
 
         <div className={overviewStyles.content}>
-          {!isOrganizer && (
-            <Card className={overviewStyles.points}>
-              <div className={overviewStyles.pointsSummary}>
-                <p className={overviewStyles.pointsLabel}>Points fidélité</p>
-                <strong className={overviewStyles.pointsValue}>{user.points || 0}<span> pt{user.points === 1 ? '' : 's'}</span></strong>
-              </div>
-              <p className={overviewStyles.pointsText}>Tu gagnes un point pour chaque ticket ou carré acheté. Ils seront bientôt échangeables contre des avantages exclusifs.</p>
-            </Card>
-          )}
-
           <section className={overviewStyles.quickSection} aria-labelledby="profile-shortcuts-title">
             <div className={overviewStyles.quickHeader}>
               <h2 id="profile-shortcuts-title">Accès rapides</h2>
@@ -1129,7 +1116,6 @@ const FAQ = [
   { q: 'Comment réserver un billet ?', a: 'Va sur l’onglet Événements, sélectionne la soirée de ton choix et clique sur Réservation. Choisis ton type de place et confirme.' },
   { q: 'Où retrouver mes billets ?', a: 'Tes billets sont disponibles dans « Mes billets » depuis ton espace client. Tu peux y consulter tes places et les informations de chaque événement.' },
   { q: 'Puis-je annuler ma réservation ?', a: 'Les réservations sont fermes et définitives. En cas d’annulation d’événement par l’organisateur, un remboursement sera traité sous 5 jours ouvrés.' },
-  { q: 'Comment utiliser mes points ?', a: 'Tu gagnes 1 point par ticket ou carré acheté. Les points seront bientôt échangeables contre des avantages exclusifs (accès prioritaire, réductions, cadeaux).' },
   { q: 'Comment créer un événement ?', a: "Rends-toi dans 'Mes Événements' via le menu. Tu peux créer et publier ton événement en 5 étapes simples." },
   { q: 'Comment modifier mes informations personnelles ?', a: 'Ouvre « Paramètres », puis l’onglet « Profil ». Tu peux modifier séparément ton nom, ton téléphone et tes informations facultatives.' },
   { q: 'J’ai oublié mon mot de passe, que faire ?', a: 'Depuis la page de connexion, utilise le lien de mot de passe oublié. Un lien sécurisé sera envoyé à l’adresse e-mail associée à ton compte.' },

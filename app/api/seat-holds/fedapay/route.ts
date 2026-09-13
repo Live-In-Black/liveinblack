@@ -43,10 +43,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'amount_below_minimum' }, { status: 400 })
   }
   const marketplaceSubAccountReference = order.fedapaySubAccountReference || (isFedapaySandboxMode() ? fedapaySandboxSubAccountReference() : null)
-  if (order.sellerUid && !marketplaceSubAccountReference && process.env.NODE_ENV === 'production' && !isFedapaySandboxMode()) {
-    await releaseSeatHoldDepositOrder(orderId, releaseOrder)
-    return NextResponse.json({ error: 'fedapay_marketplace_account_required' }, { status: 409 })
-  }
+  // Même compatibilité que le checkout : les nouveaux événements exigent un
+  // sous-compte à la publication, mais un événement existant peut encaisser
+  // l'acompte en mode ledger sans perdre le blocage de place.
+  const marketplaceCommissions = fedapayMarketplaceCommissions(marketplaceSubAccountReference, order.unitPriceMinor)
 
   if (!isFedapayConfigured() && process.env.NODE_ENV !== 'production') {
     const transactionId = `dev_fedapay_${orderId}`
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
       customer: session.user.email ? { email: session.user.email } : null,
       metadata: { orderId },
       reference: orderId,
-      subAccountsCommissions: fedapayMarketplaceCommissions(marketplaceSubAccountReference, order.unitPriceMinor),
+      subAccountsCommissions: marketplaceCommissions,
     })
     const tok = await createToken(txn.id)
 

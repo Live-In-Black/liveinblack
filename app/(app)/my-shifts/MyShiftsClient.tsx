@@ -24,6 +24,13 @@ interface ScanDrawerState {
   eventName: string
 }
 
+interface ScannedTicketSummary {
+  place?: string | null
+  totalPrice?: number | null
+  currency?: string | null
+  holderName?: string | null
+}
+
 const ROLE_META: Record<string, { label: string; color: string; soft: string; border: string; desc: string }> = {
   serveur: { label: 'Serveur', color: 'var(--primary)', soft: 'var(--primary-a12)', border: 'var(--primary-a35)', desc: 'Prends et sers les commandes au bar' },
   scan: { label: 'Contrôle entrée', color: 'var(--violet-text)', soft: 'rgba(var(--violet-rgb), .12)', border: 'var(--violet-border)', desc: "Scanne les billets à l'entrée" },
@@ -39,7 +46,7 @@ export default function MyShiftsClient({ events }: { events: StaffedEventItem[] 
   const [cameraActive, setCameraActive] = useState(true)
   const [manualCode, setManualCode] = useState('')
   const [scanning, setScanning] = useState(false)
-  const [scanResult, setScanResult] = useState<{ ok: boolean; message: string; ticket?: any } | null>(null)
+  const [scanResult, setScanResult] = useState<{ ok: boolean; message: string; ticket?: ScannedTicketSummary } | null>(null)
 
   async function handleCheckin(rawCode: string) {
     if (!scanDrawer || !rawCode.trim() || scanning) return
@@ -294,7 +301,7 @@ export default function MyShiftsClient({ events }: { events: StaffedEventItem[] 
                   </strong>
                   {scanResult.ticket && (
                     <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
-                      {scanResult.ticket.place} · {fmtMoney(scanResult.ticket.totalPrice, scanResult.ticket.currency)}
+                      {scanResult.ticket.place || 'Place'} · {fmtMoney(scanResult.ticket.totalPrice || 0, scanResult.ticket.currency || 'XOF')}
                       {scanResult.ticket.holderName ? ` · ${scanResult.ticket.holderName}` : ''}
                     </p>
                   )}

@@ -87,7 +87,7 @@ if (exists(mobileRoot, 'package.json')) {
   requireIncludes(mobileRoot, 'app/(tabs)/tickets.tsx', 'fetchMyRefundCases', 'Le wallet mobile doit afficher les dossiers de remboursement.')
   requireIncludes(mobileRoot, 'app/(tabs)/tickets.tsx', 'switchRefundToIndividual', 'Le mobile doit permettre la bascule irréversible vers remboursement individuel.')
   requireIncludes(mobileRoot, 'app/spaces/agent/payments.tsx', 'code unique', 'Le module agent mobile doit demander le code unique.')
-  requireIncludes(mobileRoot, 'app/spaces/agent/payments.tsx', 'uploadPublicImage', 'Le module agent mobile doit joindre une signature/preuve.')
+  requireIncludes(mobileRoot, 'lib/agentPayments.ts', 'signatureUpload', 'Le module agent mobile doit joindre une signature/preuve privee.')
   requireIncludes(mobileRoot, 'lib/clientRefunds.ts', "aucun\n// remboursement automatique Stripe/FedaPay", 'Le commentaire mobile doit exclure le remboursement automatique Stripe/FedaPay.')
   for (const file of ['app', 'lib'].flatMap((dir) => walk(mobileRoot, dir))) {
     const text = read(mobileRoot, file)

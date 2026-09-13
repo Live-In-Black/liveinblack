@@ -8,9 +8,9 @@ describe('prix historique des cartes evenement', () => {
   it('conserve le montant XOF sans conversion', () => {
     expect(render({ price: 9000, currency: 'XOF' })).toContain('dès 9000 FCFA')
   })
-  it('identifie explicitement un ancien montant EUR', () => {
+  it('masque un ancien montant hors V1 sans conversion', () => {
     const html = render({ price: 15, currency: 'EUR' })
-    expect(html).toContain('15 EUR (ancien tarif)')
+    expect(html).toContain('Prix historique à vérifier')
     expect(html).not.toContain('FCFA')
   })
   it.each([

@@ -1,6 +1,5 @@
-// Formatage monétaire V1 Bénin : XOF/FCFA par défaut. Les valeurs explicitement
-// EUR restent affichées en EUR afin de ne pas convertir silencieusement un
-// historique financier qui doit être migré à part.
+// Formatage monétaire V1 Bénin : XOF/FCFA par défaut. Les valeurs historiques
+// hors XOF ne sont jamais converties ni présentées comme payables en V1.
 import { regions } from './regions'
 import { stripDiacritics } from './diacritics'
 
@@ -56,13 +55,10 @@ export function fmtMoney(amount: unknown, currency: string = 'XOF'): string {
   if (String(currency).toUpperCase() === 'XOF') {
     return `${Math.round(n).toLocaleString('fr-FR').replace(/\s/g, '\u00A0')}\u00A0FCFA`
   }
-  const hasCents = Math.round(n * 100) % 100 !== 0
-  return `${n.toLocaleString('fr-FR', {
-    minimumFractionDigits: hasCents ? 2 : 0,
-    maximumFractionDigits: 2,
-  }).replace(/\s/g, '\u00A0')}\u00A0€`
+  void n
+  return 'Montant historique'
 }
 
 export function currencySymbol(currency: string = 'XOF'): string {
-  return String(currency).toUpperCase() === 'XOF' ? 'FCFA' : '€'
+  return String(currency).toUpperCase() === 'XOF' ? 'FCFA' : 'historique'
 }

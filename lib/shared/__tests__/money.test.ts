@@ -32,9 +32,9 @@ function normalizeSpaces(s: string): string {
 }
 
 describe('fmtMoney', () => {
-  it('XOF entier avec suffixe FCFA, EUR avec décimales seulement si utiles', () => {
+  it('XOF entier avec suffixe FCFA, historique hors XOF masque', () => {
     expect(normalizeSpaces(fmtMoney(5000, 'XOF'))).toBe('5 000 FCFA')
-    expect(normalizeSpaces(fmtMoney(12, 'EUR'))).toBe('12 €')
-    expect(normalizeSpaces(fmtMoney(12.5, 'EUR'))).toBe('12,50 €')
+    expect(normalizeSpaces(fmtMoney(12, 'EUR'))).toBe('Montant historique')
+    expect(normalizeSpaces(fmtMoney(12.5, 'EUR'))).toBe('Montant historique')
   })
 })

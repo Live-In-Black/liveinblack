@@ -731,11 +731,6 @@ export default function EventCheckoutPanel({
               </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--text-muted)' }}>Points fidélité</span>
-              <span style={{ fontSize: 'var(--font-size-footnote)', fontWeight: 700, color: 'var(--gold)' }}>+1 par billet scanné à l&apos;entrée</span>
-            </div>
-
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: 8 }}>
               <span style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)' }}>Paiement</span>
               <span style={{ fontSize: 'var(--font-size-caption-lg)', fontWeight: 600, color: 'var(--text-muted)' }}>

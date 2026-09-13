@@ -117,6 +117,11 @@ export const ROLE_NAV: Record<Role, DashboardNavItem[]> = {
         { label: 'Remboursements', href: '/organizer-studio?tab=remboursements', icon: RotateCcw },
       ],
     },
+    {
+      label: 'Équipe & Accès',
+      href: '/organizer-studio?tab=equipe',
+      icon: Users,
+    },
     { label: 'Mon inscription', href: '/my-application', icon: FileText },
   ],
   prestataire: [

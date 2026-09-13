@@ -141,55 +141,6 @@
   gap: 18px;
 }
 
-.points {
-  display: grid;
-  grid-template-columns: minmax(140px, auto) minmax(0, 1fr);
-  align-items: center;
-  gap: 20px;
-  min-height: 74px;
-  padding: 12px 16px !important;
-  border: 1px solid var(--primary-a16) !important;
-  border-radius: var(--radius-card) !important;
-  background: var(--primary-a05) !important;
-  box-shadow: none !important;
-}
-
-.pointsSummary {
-  padding-right: 20px;
-  border-right: 1px solid var(--primary-a16);
-}
-
-.pointsLabel {
-  margin: 0;
-  color: var(--primary);
-  font-size: var(--font-size-footnote);
-  font-weight: 500;
-}
-
-.pointsValue {
-  display: block;
-  margin-top: 2px;
-  color: var(--text);
-  font-size: 1.65rem;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -.025em;
-}
-
-.pointsValue span {
-  color: var(--text-muted);
-  font-size: var(--font-size-body-sm);
-  font-weight: 500;
-}
-
-.pointsText {
-  max-width: 760px;
-  margin: 0;
-  color: var(--text-muted);
-  font-size: var(--font-size-body-sm);
-  line-height: 1.5;
-}
-
 .quickSection { min-width: 0; }
 
 .quickHeader {
@@ -312,8 +263,6 @@
   .identity { gap: 12px; padding: 14px 13px !important; }
   .identityActions { width: 100%; display: grid; grid-template-columns: 1fr; padding-left: 0; }
   .editLink, .logout { width: 100%; min-width: 0; padding-inline: 11px !important; white-space: normal; text-align: center; }
-  .points { grid-template-columns: 1fr; gap: 10px; padding: 14px !important; }
-  .pointsSummary { padding: 0 0 10px; border-right: 0; border-bottom: 1px solid var(--primary-a16); }
   .quickHeader { align-items: flex-start; flex-direction: column; gap: 3px; }
   .quickGrid { grid-template-columns: 1fr; gap: 7px; }
   .quickLink { min-height: 78px; grid-template-columns: 82px minmax(0, 1fr); }

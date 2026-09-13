@@ -5,14 +5,14 @@ import EventPayout from '@/lib/models/EventPayout'
 import { sanitizeFedapaySubAccountReference } from '../payments/fedapayMarketplace'
 import { canRearmPayout, momosToRecord, sanitizePayoutMomos } from './organizerPayoutMomosUtils'
 
-// Port de src/components/MomoPayoutManager.jsx (numéros mobile money par pays
-// UEMOA, #7 phase organisateur) + de rearmFailedPayouts (lib/eventPayouts.js)
+// Port de src/components/MomoPayoutManager.jsx (numéro Mobile Money Bénin,
+// #7 phase organisateur) + de rearmFailedPayouts (lib/eventPayouts.js)
 // — l'auto-guérison qui débloque un versement tombé en échec faute de numéro
 // DÈS que l'organisateur en ajoute un, plutôt que d'attendre le cron
 // quotidien (lib/server/eventPayouts.ts, task #26 — qui, lui, ne portait
 // délibérément PAS le réarmement, faute d'UI organisateur à ce stade).
 //
-// `User.payoutMomos` (Map<string,string>, clé = code pays 'tg'/'bj'/…) est la
+// `User.payoutMomos` (Map<string,string>, clé = code pays 'bj') est la
 // SOURCE UNIQUE — un enregistrement REMPLACE entièrement la map (fidèle au
 // commentaire legacy "payoutMomos = SOURCE UNIQUE désormais"), il n'y a pas
 // d'ancien numéro unique à migrer dans cette migration (jamais eu d'autre

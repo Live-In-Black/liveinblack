@@ -1,6 +1,5 @@
 import { MongoClient } from 'mongodb'
 import { v2 as cloudinary } from 'cloudinary'
-import Stripe from 'stripe'
 
 const TIMEOUT_MS = 10_000
 
@@ -21,11 +20,6 @@ const checks = [
     } finally {
       await client.close()
     }
-  }],
-  ['Stripe', async () => {
-    if (!process.env.STRIPE_SECRET_KEY) throw new Error('missing')
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { timeout: 8_000, maxNetworkRetries: 0 })
-    await stripe.balance.retrieve()
   }],
   ['Cloudinary', async () => {
     const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } = process.env

@@ -86,6 +86,14 @@ describe('routes des justificatifs prives', () => {
     expect(declareIndividualRefund).toHaveBeenCalledWith('organizer', 'refund', { reference: 'REF-1', channel: 'Banque', proofId: 'a'.repeat(24), declaredAt: null }, {})
   })
 
+  it('accepte un proofUpload strict contenant seulement l identifiant prive', async () => {
+    vi.mocked(declareIndividualRefund).mockResolvedValue({ ok: true })
+    const proofId = 'b'.repeat(24)
+    const response = await DECLARE(new Request('https://example.test/declare', { method: 'POST', body: JSON.stringify({ reference: 'REF-2', channel: 'Mobile Money', proofUpload: { proofId } }) }), uploadContext)
+    expect(response.status).toBe(200)
+    expect(declareIndividualRefund).toHaveBeenCalledWith('organizer', 'refund', { reference: 'REF-2', channel: 'Mobile Money', proofId, declaredAt: null }, {})
+  })
+
   it('ne signe plus de justificatif public pour un organisateur', async () => {
     vi.mocked(auth).mockResolvedValue({ user: { id: 'organizer', activeRole: 'organisateur' } } as never)
     const response = await SIGN(new Request('https://example.test/sign', { method: 'POST', body: JSON.stringify({ purpose: 'refund-proof', contentType: 'image/png', size: 100 }) }))

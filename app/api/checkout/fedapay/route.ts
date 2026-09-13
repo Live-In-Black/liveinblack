@@ -87,10 +87,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'amount_below_minimum' }, { status: 400 })
   }
   const marketplaceSubAccountReference = order.fedapaySubAccountReference || (isFedapaySandboxMode() ? fedapaySandboxSubAccountReference() : null)
-  if (order.sellerUid && !marketplaceSubAccountReference && process.env.NODE_ENV === 'production' && !isFedapaySandboxMode()) {
-    await releaseOrder(orderId, session.user.id)
-    return NextResponse.json({ error: 'fedapay_marketplace_account_required' }, { status: 409 })
-  }
+  // Les nouveaux événements sont bloqués à la publication sans sous-compte
+  // Marketplace. Ici on laisse passer les événements existants : createOrder()
+  // les marque en connectMode "ledger" et FedaPay encaisse alors sans split
+  // automatique, au lieu de casser le tunnel client avec un 409.
+  const marketplaceCommissions = fedapayMarketplaceCommissions(marketplaceSubAccountReference, sellerShare)
 
   if (!isFedapayConfigured() && process.env.NODE_ENV !== 'production') {
     const transactionId = `dev_fedapay_${orderId}`
@@ -118,7 +119,7 @@ export async function POST(req: Request) {
       customer: session.user.email ? { email: session.user.email } : null,
       metadata: { orderId },
       reference: orderId,
-      subAccountsCommissions: fedapayMarketplaceCommissions(marketplaceSubAccountReference, sellerShare),
+      subAccountsCommissions: marketplaceCommissions,
     })
     const tok = await createToken(txn.id)
 

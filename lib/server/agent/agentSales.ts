@@ -5,6 +5,7 @@ import Order, { type OrderDoc } from '@/lib/models/Order'
 import Ticket from '@/lib/models/Ticket'
 import User from '@/lib/models/User'
 import EventStaff from '@/lib/models/EventStaff'
+import OrganizerMember from '@/lib/models/OrganizerMember'
 import CashSaleSettlement from '@/lib/models/CashSaleSettlement'
 import SellerBalance from '@/lib/models/SellerBalance'
 import EventPayout from '@/lib/models/EventPayout'
@@ -77,6 +78,18 @@ async function assertSalesAgent(eventId: string, callerId: string) {
   const staff = await EventStaff.findOne({ eventId }).lean()
   const roster = staff?.roster as Record<string, { role: string }> | undefined
   if (roster?.[callerId]?.role === 'vendeur') return { ok: true as const, event }
+
+  const orgMember = await OrganizerMember.findOne({
+    organizerId: event.organizerId || event.createdBy,
+    userId: callerId,
+    status: 'active',
+    permissions: 'sales',
+  }).lean()
+  if (orgMember) {
+    if (!orgMember.assignedEventIds?.length || orgMember.assignedEventIds.includes(eventId)) {
+      return { ok: true as const, event }
+    }
+  }
 
   return { ok: false as const, status: 403, error: 'forbidden' }
 }
@@ -307,16 +320,17 @@ async function processSale(agentCaller: AgentSaleCaller, eventId: string, input:
       const preorderTotal = order.preorders.reduce((s, p) => s + p.price * p.qty, 0)
       const amountTotal = order.unitPriceMinor * seatCount + preorderTotal + order.feeMinor
       const sellerShare = sellerShareForOrder({ unitPriceMinor: order.unitPriceMinor, seatCount, preorderTotalMinor: preorderTotal })
-      if (order.sellerUid && !order.fedapaySubAccountReference && process.env.NODE_ENV === 'production') {
-        await releaseAgentSaleOrder(String(order._id))
-        return { ok: false, status: 409, error: 'fedapay_marketplace_account_required' }
-      }
+      // Les ventes agent gardent le même fallback que le checkout client :
+      // les événements existants sans sous-compte FedaPay encaissent en
+      // ledger, tandis que les nouveaux événements restent bloqués à la
+      // publication tant que Marketplace n'est pas configuré.
+      const marketplaceCommissions = fedapayMarketplaceCommissions(order.fedapaySubAccountReference, sellerShare)
       const txn = await createTransaction({
         description: `${order.placeType} — vente agent`.slice(0, 200),
         amount: amountTotal,
         metadata: { orderId: String(order._id) },
         reference: String(order._id),
-        subAccountsCommissions: fedapayMarketplaceCommissions(order.fedapaySubAccountReference, sellerShare),
+        subAccountsCommissions: marketplaceCommissions,
       })
       const tok = await createToken(txn.id)
       if (!tok.token) throw new Error('fedapay_token_missing')

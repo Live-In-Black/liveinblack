@@ -9,7 +9,7 @@ export function readMessageEventSnapshot(content: string | null) {
   let priceLabel: string | null = null
   if (raw.price != null) {
     if (price == null || !['XOF', 'EUR'].includes(currency || '')) priceLabel = 'Prix à vérifier'
-    else if (currency === 'EUR') priceLabel = `${price} EUR (ancien tarif)`
+    else if (currency === 'EUR') priceLabel = 'Prix historique à vérifier'
     else if (!Number.isInteger(price)) priceLabel = 'Prix à vérifier'
     else priceLabel = `dès ${price} FCFA`
   }

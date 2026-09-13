@@ -36,10 +36,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'amount_below_minimum' }, { status: 400 })
   }
   const marketplaceSubAccountReference = order.fedapaySubAccountReference || (isFedapaySandboxMode() ? fedapaySandboxSubAccountReference() : null)
-  if (order.sellerUid && !marketplaceSubAccountReference && process.env.NODE_ENV === 'production' && !isFedapaySandboxMode()) {
-    await releaseOrder(orderId, session.user.id)
-    return NextResponse.json({ error: 'fedapay_marketplace_account_required' }, { status: 409 })
-  }
+  // Compatibilité legacy : la publication impose Marketplace pour les
+  // nouveaux événements, mais le solde d'un blocage existant doit rester
+  // payable en ledger si aucun sous-compte n'était encore rattaché.
+  const marketplaceCommissions = fedapayMarketplaceCommissions(marketplaceSubAccountReference, order.unitPriceMinor)
 
   if (!isFedapayConfigured() && process.env.NODE_ENV !== 'production') {
     const transactionId = `dev_fedapay_${orderId}`
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
       customer: session.user.email ? { email: session.user.email } : null,
       metadata: { orderId },
       reference: orderId,
-      subAccountsCommissions: fedapayMarketplaceCommissions(marketplaceSubAccountReference, order.unitPriceMinor),
+      subAccountsCommissions: marketplaceCommissions,
     })
     const tok = await createToken(txn.id)
 

@@ -8,11 +8,17 @@ import { SIGNATURE_MAX_CHARACTERS } from '@/lib/server/refunds/signatures'
 import { readLimitedJson } from '@/lib/server/limitedJson'
 import { checkRateLimit } from '@/lib/server/rateLimit'
 
+const signatureDataSchema = z.string().startsWith('data:image/png;base64,').max(SIGNATURE_MAX_CHARACTERS)
+
 const bodySchema = z.object({
   code: z.string().trim().min(8).max(128),
-  signatureDataUrl: z.string().startsWith('data:image/png;base64,').max(SIGNATURE_MAX_CHARACTERS),
+  signatureDataUrl: signatureDataSchema.optional(),
+  signatureUpload: z.object({ dataUrl: signatureDataSchema }).strict().optional(),
   operationId: z.string().uuid(),
-}).strict()
+}).strict().refine((body) => Boolean(body.signatureDataUrl || body.signatureUpload?.dataUrl), {
+  path: ['signatureUpload'],
+  message: 'signature_required',
+})
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -26,13 +32,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!parsed.success) return NextResponse.json({ error: 'invalid_body', details: parsed.error.flatten() }, { status: 400 })
 
   const { id } = await params
+  const signatureDataUrl = parsed.data.signatureUpload?.dataUrl ?? parsed.data.signatureDataUrl
+  if (!signatureDataUrl) return NextResponse.json({ error: 'signature_required' }, { status: 400 })
   const agentName = [session!.user!.name].filter(Boolean).join(' ') || session!.user!.email || 'Admin'
   const result = await completeManualRefund(
     { id: session!.user!.id, name: agentName },
     id,
     {
       code: parsed.data.code,
-      signatureDataUrl: parsed.data.signatureDataUrl,
+      signatureDataUrl,
       operationId: parsed.data.operationId,
     },
     auditContextFromRequest(req)

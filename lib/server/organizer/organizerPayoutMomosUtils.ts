@@ -1,4 +1,4 @@
-import { validateMomoNumber } from '@/lib/shared/payoutMomoValidation'
+import { isSupportedMomoCountry, validateMomoNumber } from '@/lib/shared/payoutMomoValidation'
 import { normalizeRegionId } from '@/lib/shared/locations'
 import { regions } from '@/lib/shared/regions'
 
@@ -10,16 +10,6 @@ export interface PayoutFailureCandidate {
 export interface PayoutEventLike {
   region?: string | null
   cancelled?: boolean | null
-}
-
-const LEGACY_MOMO_BY_REGION: Record<string, string> = {
-  togo: 'tg',
-  'cote-ivoire': 'ci',
-  senegal: 'sn',
-  'burkina-faso': 'bf',
-  mali: 'ml',
-  niger: 'ne',
-  'guinee-bissau': 'gw',
 }
 
 export function momosToRecord(momos: unknown): Record<string, string> {
@@ -45,10 +35,10 @@ export function isRearmableFailCode(failCode: string | null | undefined): boolea
 }
 
 export function resolvePayoutMomoCountry(candidate: PayoutFailureCandidate, event: PayoutEventLike | null | undefined): string | null {
-  if (candidate.momoCountry) return candidate.momoCountry
+  if (isSupportedMomoCountry(candidate.momoCountry)) return candidate.momoCountry
   if (!event) return null
   const regionId = normalizeRegionId(event.region || '')
-  return regions.find((region) => region.id === regionId)?.momoCountry || LEGACY_MOMO_BY_REGION[regionId] || null
+  return regions.find((region) => region.id === regionId)?.momoCountry || null
 }
 
 export function canRearmPayout(candidate: PayoutFailureCandidate, event: PayoutEventLike | null | undefined, sellerMomos: Record<string, string>): { ok: true; eventCountry: string } | { ok: false } {

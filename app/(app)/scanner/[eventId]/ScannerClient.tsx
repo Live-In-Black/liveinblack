@@ -571,7 +571,7 @@ export default function ScannerClient({ eventId, eventName, currency, rank }: Sc
                     </div>
                   )}
                   <p style={{ fontSize: 'var(--font-size-caption-lg)', color: 'var(--text-muted)', margin: 0 }}>
-                    {checkinResult.pointAwarded ? 'Point de fidélité crédité au titulaire.' : 'Pas de point de fidélité pour ce scan.'}
+                    Entrée enregistrée pour ce billet.
                   </p>
                 </div>
               </Card>

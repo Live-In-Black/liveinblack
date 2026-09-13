@@ -28,7 +28,8 @@ function fmtDate(value: string | null | undefined): string {
 }
 
 function fmtPaymentAmount(amountMinor: number, currency: 'EUR' | 'XOF'): string {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: currency === 'XOF' ? 0 : 2 }).format(currency === 'EUR' ? amountMinor / 100 : amountMinor)
+  if (currency !== 'XOF') return 'Montant historique'
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amountMinor)
 }
 
 function InfoTile({ label, value, accent }: { label: string; value: string; accent?: string }) {
@@ -131,7 +132,7 @@ export default function SubscriptionPanel({ profile, subscription }: { profile: 
                 <div key={payment.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, padding: '12px 13px', borderRadius: 11, background: 'var(--fill-secondary)', border: '1px solid var(--border)' }}>
                   <div>
                     <p style={{ margin: 0, fontSize: 'var(--font-size-callout)', fontWeight: 700 }}>{fmtPaymentAmount(payment.amountMinor, payment.currency)}</p>
-                    <p style={{ margin: '3px 0 0', fontSize: 'var(--font-size-caption-lg)', color: 'var(--text-faint)' }}>{fmtDate(payment.paidAt)} · {payment.rail === 'stripe' ? 'Carte bancaire' : 'FedaPay'}</p>
+                    <p style={{ margin: '3px 0 0', fontSize: 'var(--font-size-caption-lg)', color: 'var(--text-faint)' }}>{fmtDate(payment.paidAt)} · {payment.currency === 'XOF' ? 'FedaPay' : 'Historique'}</p>
                   </div>
                   {payment.receiptUrl ? <a href={payment.receiptUrl} target="_blank" rel="noopener noreferrer" style={{ color: C.teal, fontSize: 'var(--font-size-footnote)', fontWeight: 700, textDecoration: 'none' }}>Voir le reçu</a> : <span style={{ color: C.teal, fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 800 }}>PAYÉ</span>}
                 </div>

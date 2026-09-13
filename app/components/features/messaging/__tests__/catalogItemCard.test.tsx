@@ -10,9 +10,9 @@ describe('offres partagees lisibles sans fausse devise', () => {
   it('affiche le prix XOF et son unite', () => {
     expect(render({ price: 90000, currency: 'XOF', unit: 'soirée' })).toContain('90000 FCFA / soirée')
   })
-  it('conserve un ancien EUR sans conversion', () => {
+  it('masque un ancien prix hors V1 sans conversion', () => {
     const html = render({ price: 120, currency: 'EUR' })
-    expect(html).toContain('120 EUR (ancien tarif)')
+    expect(html).toContain('Prix historique à vérifier')
     expect(html).not.toContain('FCFA')
   })
   it.each([{ price: 120 }, { price: '120', currency: 'XOF' }, { price: 120, currency: 'USD' },

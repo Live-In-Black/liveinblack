@@ -439,7 +439,7 @@ export default function AuthForm() {
       className="lb-auth-form"
       style={{
         width: '100%',
-        maxWidth: mode === 'login' || regStep === 1 ? 430 : 520,
+        maxWidth: mode === 'login' ? 430 : regStep === 1 ? 480 : 520,
         margin: '0 auto',
       }}
     >
@@ -586,29 +586,29 @@ export default function AuthForm() {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 10,
-                    padding: '9px 11px',
-                    minHeight: 56,
+                    gap: 12,
+                    padding: '10px 14px',
+                    minHeight: 58,
                     borderRadius: 14,
                     textAlign: 'left',
                     justifyContent: 'flex-start',
                   }}
                 >
-                  <div style={{ width: 32, height: 32, borderRadius: 11, background: 'var(--surface-2)', border: '1px solid var(--border)', color: accent, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--surface-2)', border: '1px solid var(--border)', color: accent, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <RoleIcon role={role} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2, flexWrap: 'wrap' }}>
-                      <p style={{ fontSize: 'var(--font-size-headline)', fontWeight: 700, letterSpacing: '-0.2px', color: 'var(--text)', margin: 0 }}>{title}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                      <p style={{ fontSize: 'var(--font-size-headline)', fontWeight: 700, letterSpacing: '-0.2px', color: 'var(--text)', margin: 0, whiteSpace: 'nowrap' }}>{title}</p>
                       {badge && (
-                        <span style={{ fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text)', padding: '2px 7px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-2)' }}>
+                        <span style={{ fontSize: 'var(--font-size-caption-2-lg)', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text)', padding: '2px 7px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-2)', whiteSpace: 'nowrap' }}>
                           {badge}
                         </span>
                       )}
                     </div>
-                    <p style={{ fontSize: 'var(--font-size-footnote-lg)', color: 'var(--text-muted)', margin: 0, lineHeight: 1.35 }}>{desc}</p>
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, lineHeight: 1.35, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{desc}</p>
                   </div>
-                  <svg className="lb-role-chevron" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" strokeWidth={2} strokeLinecap="round" style={{ flexShrink: 0 }}>
+                  <svg className="lb-role-chevron" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" strokeWidth={2} strokeLinecap="round" style={{ flexShrink: 0, marginLeft: 4 }}>
                     <path d="M9 18l6-6-6-6" />
                   </svg>
                 </Button>

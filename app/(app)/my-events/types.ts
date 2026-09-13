@@ -25,5 +25,6 @@ export type EventActionKey = 'stats' | 'bookings' | 'boost' | 'guests' | 'staff'
 
 export function formatMoney(amount: number, currency: 'EUR' | 'XOF'): string {
   if (currency === 'XOF') return `${Math.round(amount).toLocaleString('fr-FR')} FCFA`
-  return `${amount.toFixed(2).replace('.', ',')} €`
+  void amount
+  return 'Montant historique'
 }

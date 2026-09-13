@@ -4,6 +4,7 @@ import Event, { type EventDoc } from '@/lib/models/Event'
 import EventStaff from '@/lib/models/EventStaff'
 import EventOrder, { type EventOrderDoc } from '@/lib/models/EventOrder'
 import EventOrderLog from '@/lib/models/EventOrderLog'
+import OrganizerMember from '@/lib/models/OrganizerMember'
 import User from '@/lib/models/User'
 import type { MessagingErrorResult } from '../messaging/messagingServiceTypes'
 
@@ -43,8 +44,30 @@ export async function loadEventOrderContext(eventId: string, callerId: string): 
   if (!event) return { ok: false, status: 404, error: 'event_not_found' }
   const staffDoc = await EventStaff.findOne({ eventId }).lean()
   const roster = staffDoc?.roster as StaffRoster | undefined
-  const rank = resolveEventOrderRank(callerId, event, roster)
-  const { role } = computeEventOrderAuthContext(callerId, event, roster)
+  let rank = resolveEventOrderRank(callerId, event, roster)
+  let { role } = computeEventOrderAuthContext(callerId, event, roster)
+
+  if (rank === 0) {
+    const orgMember = await OrganizerMember.findOne({
+      organizerId: event.organizerId || event.createdBy,
+      userId: callerId,
+      status: 'active',
+    }).lean()
+    if (orgMember) {
+      const perms = orgMember.permissions || []
+      const matchesEvent = !orgMember.assignedEventIds?.length || orgMember.assignedEventIds.includes(eventId)
+      if (matchesEvent) {
+        if (perms.includes('events_edit')) {
+          rank = 3
+          role = 'manager'
+        } else if (perms.includes('scan') || perms.includes('sales')) {
+          rank = 1
+          role = perms.includes('scan') ? 'scan' : 'vendeur'
+        }
+      }
+    }
+  }
+
   return { ok: true, ctx: { event, rank, role } }
 }
 
@@ -54,7 +77,24 @@ export async function getCallerEventOrderRank(callerId: string, eventId: string)
   if (!event) return 0
   const staffDoc = await EventStaff.findOne({ eventId }).lean()
   const roster = staffDoc?.roster as StaffRoster | undefined
-  return resolveEventOrderRank(callerId, event, roster)
+  const directRank = resolveEventOrderRank(callerId, event, roster)
+  if (directRank > 0) return directRank
+
+  const orgMember = await OrganizerMember.findOne({
+    organizerId: event.organizerId || event.createdBy,
+    userId: callerId,
+    status: 'active',
+  }).lean()
+  if (orgMember) {
+    const perms = orgMember.permissions || []
+    const matchesEvent = !orgMember.assignedEventIds?.length || orgMember.assignedEventIds.includes(eventId)
+    if (matchesEvent) {
+      if (perms.includes('events_edit')) return 3
+      if (perms.includes('scan') || perms.includes('sales')) return 1
+    }
+  }
+
+  return 0
 }
 
 export async function resolveEventOrderCallerName(callerId: string): Promise<string | null> {

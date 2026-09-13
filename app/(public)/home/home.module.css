@@ -48,15 +48,19 @@
   z-index: -3;
 }
 
-.heroImage {
+.heroImage,
+.heroVideo {
   opacity: 0;
   object-fit: cover;
   object-position: 58% 42%;
   filter: brightness(.98);
-  transition: opacity 700ms ease;
+  transition: opacity 700ms ease, transform 1200ms ease;
+  width: 100%;
+  height: 100%;
 }
 
-.heroImageActive {
+.heroImageActive,
+.heroVideoActive {
   opacity: 1;
 }
 
@@ -1096,6 +1100,44 @@
   }
 }
 
+/* Subtly controlled interactive micro-animations for cards and buttons */
+.home :global(.lb-card) {
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.24s ease;
+  will-change: transform;
+}
+
+.home :global(.lb-card):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px -10px rgba(0, 0, 0, 0.38), 0 0 0 1px var(--primary-a20);
+}
+
+.home :global(.editorial-card) {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.home :global(.editorial-card):hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.45);
+}
+
+/* Subtle scroll-driven parallax for modern browsers */
+@supports ((animation-timeline: view()) and (animation-range: entry)) {
+  .heroSlides {
+    animation: heroParallax linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+
+  @keyframes heroParallax {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(18%);
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home :global(.lb-home-greeting) {
     animation: none;
@@ -1103,11 +1145,17 @@
 
   .primaryButton,
   .secondaryButton,
-  .home :global(.lb-card) {
+  .home :global(.lb-card),
+  .home :global(.editorial-card) {
     transition: none;
+    transform: none !important;
   }
 
   .roleImage {
     transition: none;
+  }
+
+  .heroSlides {
+    animation: none !important;
   }
 }

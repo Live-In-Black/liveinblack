@@ -520,7 +520,7 @@ export default function OrganizerOnboardingWizard({
               <h2 style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>Tes revenus</h2>
               <p style={{ fontSize: 'var(--font-size-body-sm)', color: 'var(--text-muted)', margin: 0 }}>Comment tu seras payé</p>
               <p style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
-                LIVEINBLACK collecte les paiements via FedaPay (Mobile Money et cartes) avec répartition instantanée à chaque achat. L&apos;organisateur perçoit sa part directement sans délai — aucun versement différé ni attente à J+5.
+                LIVEINBLACK collecte les paiements via FedaPay (Mobile Money et cartes) avec répartition instantanée à chaque achat. L&apos;organisateur perçoit sa part directement via le compte Marketplace configuré.
               </p>
               {[
                 ['01', 'Dossier approuvé', 'Ton dossier est examiné et validé par notre équipe.'],

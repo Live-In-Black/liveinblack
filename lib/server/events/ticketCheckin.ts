@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db/mongoose'
 import Ticket from '@/lib/models/Ticket'
 import Event from '@/lib/models/Event'
 import EventStaff from '@/lib/models/EventStaff'
+import OrganizerMember from '@/lib/models/OrganizerMember'
 import User from '@/lib/models/User'
 import { verifyTicketToken, extractTicketCode } from './ticketToken'
 import { isEventEnded } from '@/lib/shared/event-time'
@@ -55,9 +56,10 @@ export async function checkinTicket(caller: CheckinCaller, input: CheckinInput):
   if (!ticket) return { ok: false, status: 404, error: 'ticket_not_found' }
   if (ticket.revoked) return { ok: false, status: 409, error: 'revoked' }
 
-  // ── Autorisation : agent (n'importe quelle interface active), propriétaire/
-  // organisateur de CET événement, ou membre du staff (hors rôle 'dj' — son
-  // outil est la playlist, pas le contrôle d'entrée, cf. #75). ──
+  // ── Autorisation : propriétaire/organisateur de CET événement, membre du
+  // staff, ou sous-compte terrain assigné par l'organisateur. Le rôle global
+  // "agent" de l'équipe LIVEINBLACK ne donne pas un passe-droit scanner : en
+  // V1, un agent terrain est un client nommé sur un événement précis.
   const event = await Event.findById(ticket.eventId)
   if (!event) return { ok: false, status: 404, error: 'event_not_found' }
 
@@ -69,7 +71,7 @@ export async function checkinTicket(caller: CheckinCaller, input: CheckinInput):
   // n'avertisse le staff). ──
   if (ticket.eventId !== input.eventId) return { ok: false, status: 409, error: 'wrong_event' }
 
-  let allowed = caller.roles.includes('agent')
+  let allowed = false
   if (!allowed && (event.organizerId === caller.id || event.createdBy === caller.id)) allowed = true
   if (!allowed) {
     const staff = await EventStaff.findOne({ eventId: ticket.eventId }).lean()
@@ -81,6 +83,20 @@ export async function checkinTicket(caller: CheckinCaller, input: CheckinInput):
     // (scan, serveur, manager). Le DJ reste limité à la playlist et le vendeur
     // à la billetterie sur place.
     if (entry && (entry.role === 'scan' || entry.role === 'serveur' || entry.role === 'manager')) allowed = true
+  }
+  if (!allowed) {
+    // Vérification des sous-comptes agents de terrain de l'organisateur
+    const orgMember = await OrganizerMember.findOne({
+      organizerId: event.organizerId || event.createdBy,
+      userId: caller.id,
+      status: 'active',
+      permissions: 'scan',
+    }).lean()
+    if (orgMember) {
+      if (!orgMember.assignedEventIds?.length || orgMember.assignedEventIds.includes(ticket.eventId)) {
+        allowed = true
+      }
+    }
   }
   if (!allowed) return { ok: false, status: 403, error: 'forbidden' }
 
@@ -119,12 +135,11 @@ export async function checkinTicket(caller: CheckinCaller, input: CheckinInput):
     if (!isFreePlace) return { ok: false, status: 403, error: 'not_entitled' }
   }
 
-  // ── Check-in idempotent + point de fidélité (transaction : lecture avant
-  // écriture, jamais deux fois pour un même billet, jamais si le titulaire a
-  // supprimé son compte — cf. #10/#22). Le point va au TITULAIRE COURANT
-  // (ticket.userId), pas forcément l'acheteur d'origine. ──
+  // ── Check-in idempotent. Le champ `pointAwarded` reste dans la réponse pour
+  // compatibilité avec les clients déployés, mais la V1 Bénin n'a pas de
+  // programme de points : il reste toujours `false`.
   let alreadyCheckedIn = false
-  let pointAwarded = false
+  const pointAwarded = false
   const session = await mongoose.startSession()
   try {
     await session.withTransaction(async () => {
@@ -137,18 +152,6 @@ export async function checkinTicket(caller: CheckinCaller, input: CheckinInput):
       fresh.checkedInAt = new Date()
       fresh.checkedInBy = caller.id
       await fresh.save({ session })
-
-      // Billet gratuit ou invitation : entrée accordée, AUCUN point (anti-farming
-      // #75 — un organisateur d'event gratuit ne doit pas pouvoir se scanner à
-      // volonté pour accumuler des points).
-      if (fresh.paid === true && fresh.userId) {
-        const holder = await User.findById(fresh.userId).session(session)
-        if (holder) {
-          holder.points = (holder.points || 0) + 1
-          await holder.save({ session })
-          pointAwarded = true
-        }
-      }
     })
   } finally {
     await session.endSession()

@@ -217,7 +217,7 @@ export default function TicketWalletPanel({ groups, currentUserId }: { groups: T
         <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <div>
             <h1 style={{ margin: 0, color: 'var(--text)', fontSize: 'clamp(24px,2.8vw,30px)', fontWeight: 700, letterSpacing: '-.025em' }}>Mes billets</h1>
-            <p style={{ maxWidth: 640, margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote)', lineHeight: 1.45 }}>Tous tes accès, QR codes et places à venir dans un seul portefeuille.</p>
+            <p style={{ maxWidth: 640, margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote)', lineHeight: 1.45 }}>Tous tes accès, QR codes et places à venir au même endroit.</p>
           </div>
           <ActionLink href="/events">Trouver une soirée</ActionLink>
         </header>

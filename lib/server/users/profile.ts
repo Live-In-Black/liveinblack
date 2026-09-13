@@ -48,7 +48,6 @@ export interface MyProfileView {
   birthYear: number | null
   gender: string | null
   nameChangedAt: string | null
-  points: number
   role: string
   privacy: { showOnline: boolean; showAvatar: boolean; readReceipts: boolean; personalizedRecommendations: boolean }
   preferences: Record<string, unknown> | null
@@ -71,7 +70,6 @@ export async function getMyProfile(caller: ProfileCaller): Promise<MyProfileView
     birthYear: user.birthYear ?? null,
     gender: user.gender ?? null,
     nameChangedAt: user.nameChangedAt ? new Date(user.nameChangedAt).toISOString() : null,
-    points: user.points ?? 0,
     role: user.activeRole ?? 'client',
     privacy: {
       showOnline: user.privacy?.showOnline ?? true,

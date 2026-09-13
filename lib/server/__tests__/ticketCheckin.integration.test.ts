@@ -81,7 +81,7 @@ async function seedTicket(eventId: string, overrides: Record<string, unknown> = 
 }
 
 describeIntegration('checkinTicket (intégration, transaction réelle)', () => {
-  it('accorde le point de fidélité au titulaire courant pour un billet payé', async () => {
+  it('valide un billet payé sans créditer de points en V1 Bénin', async () => {
     const event = await seedEvent()
     const holder = await seedHolder()
     await seedTicket(event.id, { userId: holder.id })
@@ -90,16 +90,16 @@ describeIntegration('checkinTicket (intégration, transaction réelle)', () => {
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.alreadyCheckedIn).toBe(false)
-    expect(result.pointAwarded).toBe(true)
+    expect(result.pointAwarded).toBe(false)
 
     const freshHolder = await User.findById(holder.id).lean()
-    expect(freshHolder?.points).toBe(1)
+    expect(freshHolder?.points).toBe(0)
     const freshTicket = await Ticket.findOne({ ticketCode: 'TICK0001', eventId: event.id }).lean()
     expect(freshTicket?.checkedInAt).toBeTruthy()
     expect(freshTicket?.checkedInBy).toBe('organizer-1')
   })
 
-  it('est idempotent : un second check-in ne recrédite jamais de point', async () => {
+  it('est idempotent : un second check-in ne crédite toujours pas de points', async () => {
     const event = await seedEvent()
     const holder = await seedHolder()
     await seedTicket(event.id, { userId: holder.id })
@@ -112,7 +112,7 @@ describeIntegration('checkinTicket (intégration, transaction réelle)', () => {
     expect(second.pointAwarded).toBe(false)
 
     const freshHolder = await User.findById(holder.id).lean()
-    expect(freshHolder?.points).toBe(1)
+    expect(freshHolder?.points).toBe(0)
   })
 
   it("refuse un billet gratuit (place à 0) sans crediter de point (anti-farming #75)", async () => {

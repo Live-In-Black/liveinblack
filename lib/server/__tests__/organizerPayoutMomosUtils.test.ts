@@ -3,27 +3,34 @@ import { canRearmPayout, isRearmableFailCode, momosToRecord, resolvePayoutMomoCo
 
 describe('organizerPayoutMomosUtils', () => {
   it('convertit une Map ou un objet simple en record', () => {
-    expect(momosToRecord(new Map([['tg', '+22890000000']]))).toEqual({ tg: '+22890000000' })
+    expect(momosToRecord(new Map([['bj', '+2290197000000']]))).toEqual({ bj: '+2290197000000' })
     expect(momosToRecord({ bj: '+22991111111' })).toEqual({ bj: '+22991111111' })
     expect(momosToRecord(null)).toEqual({})
   })
 
   it('nettoie les numéros valides et ignore les valeurs vides', () => {
-    expect(sanitizePayoutMomos({ tg: '+228 90 00 00 00', bj: '   ' })).toEqual({
+    expect(sanitizePayoutMomos({ bj: '+229 01 97 00 00 00', tg: '   ' })).toEqual({
       ok: true,
-      momos: { tg: '+22890000000' },
+      momos: { bj: '+2290197000000' },
     })
-    expect(sanitizePayoutMomos({ tg: '+22890000000', bj: '+229 91 11 11 11' })).toEqual({
+    expect(sanitizePayoutMomos({ bj: '+229 91 11 11 11' })).toEqual({
       ok: true,
-      momos: { tg: '+22890000000', bj: '+22991111111' },
+      momos: { bj: '+22991111111' },
     })
   })
 
   it('remonte une erreur quand un numéro est invalide', () => {
-    const result = sanitizePayoutMomos({ tg: '+229 90 00 00 00' })
+    const result = sanitizePayoutMomos({ bj: '+228 90 00 00 00' })
     expect(result.ok).toBe(false)
     if (result.ok) return
-    expect(result.error).toContain('Numéro invalide pour Togo')
+    expect(result.error).toContain('Numéro invalide pour Bénin')
+  })
+
+  it('refuse les pays Mobile Money historiques hors Bénin', () => {
+    const result = sanitizePayoutMomos({ tg: '+228 90 00 00 00' })
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.error).toBe('Pays Mobile Money inconnu.')
   })
 
   it('reconnaît les codes d’échec réarmables', () => {
@@ -33,9 +40,10 @@ describe('organizerPayoutMomosUtils', () => {
   })
 
   it('résout le pays de versement depuis le payout ou la région de l’événement', () => {
-    expect(resolvePayoutMomoCountry({ momoCountry: 'tg' }, { region: 'Bénin' })).toBe('tg')
+    expect(resolvePayoutMomoCountry({ momoCountry: 'bj' }, { region: 'Bénin' })).toBe('bj')
     expect(resolvePayoutMomoCountry({ momoCountry: null }, { region: 'Bénin' })).toBe('bj')
-    expect(resolvePayoutMomoCountry({ momoCountry: '' }, { region: 'Togo' })).toBe('tg')
+    expect(resolvePayoutMomoCountry({ momoCountry: 'tg' }, { region: 'Togo' })).toBeNull()
+    expect(resolvePayoutMomoCountry({ momoCountry: '' }, { region: 'Togo' })).toBeNull()
     expect(resolvePayoutMomoCountry({ momoCountry: null }, { region: 'Unknown' })).toBeNull()
   })
 
@@ -66,11 +74,11 @@ describe('organizerPayoutMomosUtils', () => {
 
     expect(
       canRearmPayout(
-        { failCode: 'no_momo_number', momoCountry: 'tg' },
+        { failCode: 'no_momo_number', momoCountry: 'bj' },
         { region: 'Unknown', cancelled: false },
-        { tg: '+22890000000' }
+        { bj: '+2290197000000' }
       )
-    ).toEqual({ ok: true, eventCountry: 'tg' })
+    ).toEqual({ ok: true, eventCountry: 'bj' })
 
     expect(
       canRearmPayout(

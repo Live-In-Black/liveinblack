@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/db/mongoose'
 import Event from '@/lib/models/Event'
 import EventStaff from '@/lib/models/EventStaff'
+import OrganizerMember from '@/lib/models/OrganizerMember'
 import { isEventLive, isEventStarted } from '@/lib/shared/event-time'
 
 // Port de src/pages/MesSoireesPage.jsx (getMyStaffEvents/listenMyStaffAssignments,
@@ -34,7 +35,10 @@ const OWNED_EVENTS_CAP = 100
 export async function listMyStaffedEvents(caller: StaffCaller): Promise<StaffedEventView[]> {
   await getDb()
 
-  const staffDocs = await EventStaff.find({ [`roster.${caller.id}`]: { $exists: true } }).lean()
+  const [staffDocs, memberships] = await Promise.all([
+    EventStaff.find({ [`roster.${caller.id}`]: { $exists: true } }).lean(),
+    OrganizerMember.find({ userId: caller.id, status: 'active' }).lean(),
+  ])
 
   // Additif : les événements que l'utilisateur ORGANISE lui-même
   // (organizerId/createdBy), même sans ligne roster dédiée — fusionné ici
@@ -43,16 +47,27 @@ export async function listMyStaffedEvents(caller: StaffCaller): Promise<StaffedE
   // ce soir ?"). Rôle synthétique 'owner', jamais une valeur réelle de
   // EventStaff.roster[].role.
   const ownedEvents = await Event.find({ $or: [{ organizerId: caller.id }, { createdBy: caller.id }] })
-    .select('name date dateDisplay time endTime closingDate city cancelled')
+    .select('name date dateDisplay time endTime closingDate city cancelled organizerId createdBy')
     .limit(OWNED_EVENTS_CAP)
     .lean()
 
-  const staffEventIds = staffDocs.map((d) => d.eventId).filter(Boolean)
-  const missingIds = staffEventIds.filter((id) => !ownedEvents.some((e) => String(e._id) === id))
-  const staffOnlyEvents = missingIds.length > 0
-    ? await Event.find({ _id: { $in: missingIds } }).select('name date dateDisplay time endTime closingDate city cancelled').lean()
+  // Événements des organisations où l'utilisateur est membre d'équipe (agents de terrain)
+  const memberOrgIds = memberships.map((m) => m.organizerId)
+  const memberOrgEvents = memberOrgIds.length > 0
+    ? await Event.find({ $or: [{ organizerId: { $in: memberOrgIds } }, { createdBy: { $in: memberOrgIds } }] })
+        .select('name date dateDisplay time endTime closingDate city cancelled organizerId createdBy')
+        .limit(OWNED_EVENTS_CAP)
+        .lean()
     : []
-  const eventsById = new Map([...ownedEvents, ...staffOnlyEvents].map((e) => [String(e._id), e]))
+
+  const staffEventIds = staffDocs.map((d) => d.eventId).filter(Boolean)
+  const missingIds = staffEventIds.filter(
+    (id) => !ownedEvents.some((e) => String(e._id) === id) && !memberOrgEvents.some((e) => String(e._id) === id)
+  )
+  const staffOnlyEvents = missingIds.length > 0
+    ? await Event.find({ _id: { $in: missingIds } }).select('name date dateDisplay time endTime closingDate city cancelled organizerId createdBy').lean()
+    : []
+  const eventsById = new Map([...ownedEvents, ...memberOrgEvents, ...staffOnlyEvents].map((e) => [String(e._id), e]))
 
   const now = Date.now()
   type Ranked = StaffedEventView & { sortDate: string }
@@ -108,6 +123,31 @@ export async function listMyStaffedEvents(caller: StaffCaller): Promise<StaffedE
       started: isEventStarted(event, now),
       sortDate: event.date ?? '',
     })
+  }
+
+  for (const m of memberships) {
+    const perms = m.permissions || []
+    // Rôle affiché pour le collaborateur de terrain
+    const derivedRole = perms.includes('scan') ? 'scan' : perms.includes('sales') ? 'vendeur' : 'manager'
+    for (const event of memberOrgEvents) {
+      const eventId = String(event._id)
+      if (seenEventIds.has(eventId)) continue
+      if (event.organizerId !== m.organizerId && event.createdBy !== m.organizerId) continue
+      if (m.assignedEventIds?.length && !m.assignedEventIds.includes(eventId)) continue
+      seenEventIds.add(eventId)
+
+      results.push({
+        eventId,
+        eventName: event.name ?? '',
+        role: derivedRole,
+        addedAt: m.createdAt ? new Date(m.createdAt).toISOString() : '',
+        dateDisplay: event.dateDisplay || event.date || '',
+        city: event.city ?? '',
+        live: isEventLive(event, now, LIVE_GRACE_MS),
+        started: isEventStarted(event, now),
+        sortDate: event.date ?? '',
+      })
+    }
   }
 
   // En cours d'abord, puis à venir (le plus proche en premier), puis
