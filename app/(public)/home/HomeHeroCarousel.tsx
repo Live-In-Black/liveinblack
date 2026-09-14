@@ -88,6 +88,7 @@ export default function HomeHeroCarousel() {
               alt=""
               fill
               priority={index === 0}
+              fetchPriority={index === 0 ? 'high' : 'auto'}
               sizes="100vw"
               className={`${styles.heroImage} ${isActive ? styles.heroImageActive : ''}`}
             />
