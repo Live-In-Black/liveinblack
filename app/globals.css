@@ -503,10 +503,17 @@ body::before {
   pointer-events: none;
   background:
     var(--page-overlay),
-    url('/media1.jpg') 58% center / cover no-repeat;
+    url('/media1.webp') 58% center / cover no-repeat;
   filter: blur(3px);
   transform: translateZ(0);
   will-change: transform;
+}
+
+@media (max-width: 768px) {
+  body::before {
+    background: var(--page-overlay);
+    filter: none;
+  }
 }
 
 h1,

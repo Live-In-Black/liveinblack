@@ -32,7 +32,13 @@ const SLIDES: HeroSlide[] = [
 
 export default function HomeHeroCarousel() {
   const [active, setActive] = useState(0)
+  const [visited, setVisited] = useState<number[]>([0])
   const videoRef = useRef<HTMLVideoElement>(null)
+
+  const goToSlide = (next: number) => {
+    setActive(next)
+    setVisited((prev) => (prev.includes(next) ? prev : [...prev, next]))
+  }
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -40,7 +46,8 @@ export default function HomeHeroCarousel() {
     // Si on est sur le slide vidéo, on laisse la vidéo se jouer avant de passer à la suite
     const duration = SLIDES[active].type === 'video' ? 8000 : 6000
     const timer = window.setTimeout(() => {
-      setActive((current) => (current + 1) % SLIDES.length)
+      const next = (active + 1) % SLIDES.length
+      goToSlide(next)
     }, duration)
 
     return () => window.clearTimeout(timer)
@@ -60,6 +67,7 @@ export default function HomeHeroCarousel() {
       <div className={styles.heroSlides} aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: -3 }}>
         {SLIDES.map((slide, index) => {
           const isActive = index === active
+          if (!visited.includes(index) && !isActive) return null
           if (slide.type === 'video') {
             return (
               <video
@@ -103,7 +111,7 @@ export default function HomeHeroCarousel() {
             className={index === active ? styles.heroCarouselDotActive : styles.heroCarouselDot}
             aria-label={`Afficher le média ${index + 1} (${slide.type === 'video' ? 'Vidéo' : 'Photo'})`}
             aria-pressed={index === active}
-            onClick={() => setActive(index)}
+            onClick={() => goToSlide(index)}
           />
         ))}
       </div>

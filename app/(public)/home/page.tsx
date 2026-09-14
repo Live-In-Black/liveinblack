@@ -199,7 +199,7 @@ export default async function AccueilPage() {
                         alt={e.name}
                         fill
                         style={{ objectFit: 'cover' }}
-                        sizes="(max-width: 768px) 100vw, 220px"
+                        sizes="(max-width: 768px) 320px, 320px"
                       />
                       <span
                         style={{
@@ -271,7 +271,7 @@ export default async function AccueilPage() {
           ) : (
             <>
               <div className={`${styles.contentGrid} ${styles.mobileRail}`}>
-                {events.map((event, index) => <HomeEventCard key={event.id} event={event} eager={index === 0} fallbackImage={HOME_EVENT_FALLBACKS[index % HOME_EVENT_FALLBACKS.length]} />)}
+                {events.map((event, index) => <HomeEventCard key={event.id} event={event} fallbackImage={HOME_EVENT_FALLBACKS[index % HOME_EVENT_FALLBACKS.length]} />)}
               </div>
             </>
           )}
@@ -291,7 +291,7 @@ export default async function AccueilPage() {
                   return (
                     <Link key={p.userId} href={`/providers/${encodeURIComponent(p.userId)}`} className={`lb-card ${styles.compactSquareCard}`} style={{ ...card, overflow: 'hidden', display: 'flex', flexDirection: 'column', textDecoration: 'none', color: 'inherit' }}>
                       <div style={{ position: 'relative', aspectRatio: '16/9', background: 'var(--surface-2)', overflow: 'hidden' }}>
-                        <Image src={coverImage} alt="" fill loading={index === 0 ? 'eager' : undefined} style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 100vw, 280px" />
+                        <Image src={coverImage} alt="" fill style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 250px, 250px" />
                         <span style={{ position: 'absolute', top: 12, left: 12, fontSize: 'var(--font-size-callout)', fontWeight: 800, color: 'var(--image-text)', background: 'var(--media-panel)', border: `1px solid ${pc.color}`, padding: '5px 11px', borderRadius: 999 }}>
                           {pc.label}
                           {categories.length > 1 ? ` +${categories.length - 1}` : ''}
@@ -438,7 +438,7 @@ export default async function AccueilPage() {
   )
 }
 
-function HomeEventCard({ event, badge, boosted = false, reason, eager = false, fallbackImage }: { event: PublicEvent; badge?: string; boosted?: boolean; reason?: string; eager?: boolean; fallbackImage?: string }) {
+function HomeEventCard({ event, badge, boosted = false, reason, fallbackImage }: { event: PublicEvent; badge?: string; boosted?: boolean; reason?: string; fallbackImage?: string }) {
   const prices = (event.places || []).map((place) => Number(place.price)).filter((price) => Number.isFinite(price) && price >= 0)
   const minPrice = prices.length ? Math.min(...prices) : null
   const isRanking = Boolean(badge)
@@ -449,9 +449,8 @@ function HomeEventCard({ event, badge, boosted = false, reason, eager = false, f
           src={reliablePhotoUrl(event.imageUrl, event.id, 460, 259, fallbackImage)}
           alt={event.name}
           fill
-          loading={eager ? 'eager' : undefined}
           style={{ objectFit: 'cover' }}
-          sizes="(max-width: 768px) 100vw, 230px"
+          sizes="(max-width: 768px) 250px, 250px"
         />
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(var(--media-black-rgb), .16)' }} />
         {badge ? (
