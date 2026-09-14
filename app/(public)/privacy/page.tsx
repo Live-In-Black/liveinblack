@@ -27,13 +27,13 @@ Pour toute question relative à vos données personnelles, vous pouvez nous cont
         { label: "Données d'identification", value: 'nom, prénom, email, mot de passe (chiffré), date de naissance, photo de profil' },
         { label: 'Données de connexion', value: 'adresse IP, type de navigateur, date et heure de connexion' },
         { label: 'Données de transaction', value: 'historique des achats de billets, montants, moyens de paiement et dossiers de remboursement (via FedaPay pour la billetterie XOF du lancement Bénin ; nous ne stockons jamais vos numéros de carte)' },
-        { label: 'Données de candidature (organisateurs / prestataires)', value: "documents d'identité, justificatifs, informations professionnelles" },
+        { label: 'Données de candidature (organisateurs / prestataires)', value: "pièce d'identité du titulaire du compte et informations professionnelles déclarées" },
         { label: 'Données de communication', value: 'messages échangés sur la plateforme, photos et fichiers partagés' },
         { label: 'Données de localisation', value: "région d'intervention déclarée par les prestataires (jamais de géolocalisation en temps réel)" },
         {
           label: "Données d'un participant sans compte",
           value:
-            "lorsqu'un billet est émis sans création de compte (guestlist d'un organisateur, vente sur place par un agent) : prénom/nom déclaré et, le cas échéant, un email et/ou un numéro de téléphone de contact fournis par l'acheteur ou par l'agent au moment de la vente",
+            "lorsqu'un billet est émis sans création de compte (guestlist d'un organisateur, vente sur place par un membre d'équipe autorisé) : prénom/nom déclaré et, le cas échéant, un email et/ou un numéro de téléphone de contact fournis par l'acheteur ou par ce membre d'équipe au moment de la vente",
         },
       ],
     },

@@ -17,7 +17,7 @@ const organizerMemberSchema = new Schema(
     userId: { type: String, required: true, index: true },
     displayName: { type: String, required: true, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true },
-    roleTitle: { type: String, default: 'Agent de terrain' }, // ex: "Contrôleur entrée", "Vendeur", "Assistant manager"
+    roleTitle: { type: String, default: 'Membre terrain' }, // ex: "Contrôleur entrée", "Vendeur", "Assistant manager"
     permissions: { type: [String], enum: ORGANIZER_PERMISSIONS, default: ['scan', 'sales'] },
     status: { type: String, enum: ['active', 'suspended'], default: 'active' },
     assignedEventIds: { type: [String], default: [] }, // vide = tous les événements ou global

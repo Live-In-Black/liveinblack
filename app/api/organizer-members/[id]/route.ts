@@ -16,7 +16,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json(result, { status: result.status })
     }
     return NextResponse.json(result)
-  } catch (err: unknown) {
+  } catch {
     return NextResponse.json({ ok: false, error: 'bad_request' }, { status: 400 })
   }
 }

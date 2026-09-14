@@ -436,7 +436,7 @@ export default function StudioClient({
               {tab === 'page' ? 'Page publique & Profil' : tab === 'media' ? 'Galerie & Médias' : tab === 'paiements' ? 'Encaissements' : tab === 'remboursements' ? 'Remboursements' : 'Équipe & Accès'}
             </h1>
             <p className="lb-dashboard-description" style={{ marginTop: 6 }}>
-              {tab === 'page' ? 'Personnalise ton univers de marque, ta bio et tes liens de contact.' : tab === 'media' ? 'Gère les photos et vidéos de tes soirées passées.' : tab === 'paiements' ? 'Configure ton encaissement FedaPay Marketplace et ton Mobile Money Bénin.' : tab === 'remboursements' ? 'Suis les demandes et dossiers de remboursement.' : 'Crée et gère les sous-comptes pour tes agents de contrôle et vendeurs.'}
+              {tab === 'page' ? 'Personnalise ton univers de marque, ta bio et tes liens de contact.' : tab === 'media' ? 'Gère les photos et vidéos de tes soirées passées.' : tab === 'paiements' ? 'Configure ton encaissement FedaPay Marketplace et ton Mobile Money Bénin.' : tab === 'remboursements' ? 'Suis les demandes et dossiers de remboursement.' : 'Ajoute les membres de ton équipe terrain et gère leurs accès autorisés.'}
             </p>
           </div>
           <Button
@@ -712,7 +712,7 @@ export default function StudioClient({
                         Devise de compte : Bénin · FCFA (XOF)
                       </p>
                       <p style={{ margin: '2px 0 0', fontSize: 'var(--font-size-caption)', color: 'var(--text-muted)' }}>
-                        Fixée lors de ton inscription. Tes prix et reversements restent régis par cette devise de base.
+                        Fixée lors de ton inscription. Tes prix et encaissements restent régis par cette devise de base.
                       </p>
                     </div>
                   </div>
@@ -1539,7 +1539,7 @@ function PayoutSection({
               {fmtMoney(status.amountDueXOF, 'XOF')}
             </p>
             <p style={{ margin: '6px 0 0', fontSize: 'var(--font-size-caption-lg)', color: 'var(--text-muted)' }}>
-              Ce montant est affiché pour contrôle interne si un ancien flux n&apos;a pas été rapproché ; il ne déclenche pas une demande de reversement organisateur.
+              Ce montant est affiché pour contrôle interne si un ancien flux n&apos;a pas été rapproché ; il ne crée aucun dossier de paiement manuel pour l&apos;organisateur.
             </p>
           </div>
         </div>

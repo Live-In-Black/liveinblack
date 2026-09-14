@@ -1,11 +1,8 @@
 import { Schema, model, models, type InferSchemaType, type Model } from 'mongoose'
 
-// Bourse de revente officielle (LIVE_IN_BLACK_Systeme_de_revente.docx) — un
-// listing par billet (ou par table entière — `isGroupListing`) mis en vente
-// par son détenteur. Le paiement acheteur passe par le MÊME flux Order que
-// n'importe quel achat (lib/server/orders.ts crée un Order `kind:'resale'`
-// référençant ce listing) : ce modèle ne porte que l'état de la MISE EN VENTE
-// elle-même, jamais l'argent — voir lib/server/resale.ts pour la finalisation.
+// Module historique de revente, fermé pour la V1 Bénin. Le modèle reste présent
+// uniquement pour relire d'anciennes données et empêcher les vieux liens de
+// casser ; aucune nouvelle mise en vente ne doit être exposée.
 const resaleListingSchema = new Schema(
   {
     // ticketCode plutôt qu'un ObjectId Ticket — même convention que le reste

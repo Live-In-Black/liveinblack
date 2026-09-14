@@ -9,7 +9,7 @@ export function getInitialTheme(): 'dark' | 'light' {
   try {
     const stored = window.localStorage.getItem('lib_theme')
     if (stored === 'light' || stored === 'dark') return stored
-  } catch (_) {}
+  } catch {}
   return 'dark'
 }
 
@@ -22,7 +22,7 @@ export function toggleThemeMode(): 'dark' | 'light' {
     document.documentElement.dataset.theme = next
     document.documentElement.style.colorScheme = next
     window.dispatchEvent(new Event('lib_theme_change'))
-  } catch (_) {}
+  } catch {}
   return next
 }
 

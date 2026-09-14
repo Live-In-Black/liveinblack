@@ -106,7 +106,8 @@ const GENERIC_ERROR = "Enregistrement impossible — vérifie ta connexion (ou d
 
 export default function PromoCodesPanel({ event, onClose }: PromoCodesPanelProps) {
   const eventId = event.id
-  const currency: 'EUR' | 'XOF' = event.currency === 'EUR' ? 'EUR' : 'XOF'
+  const historicalCurrency = event.currency !== 'XOF'
+  const currency = 'XOF' as const
   const curLabel = currencySymbol(currency)
 
   const [items, setItems] = useState<PromoCode[]>([])
@@ -265,6 +266,11 @@ export default function PromoCodesPanel({ event, onClose }: PromoCodesPanelProps
             <p style={{ font: `500 12px var(--font-open-sans)`, color: 'var(--text-faint)', margin: '5px 0 0' }}>
               {event.name} · réduction appliquée <strong style={{ color: 'var(--text-muted)' }}>par billet</strong>
             </p>
+            {historicalCurrency ? (
+              <p style={{ font: `700 12px var(--font-open-sans)`, color: 'var(--warning)', margin: '7px 0 0' }}>
+                Ancienne devise détectée : vérifiez cet événement avant toute nouvelle opération commerciale V1.
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -363,6 +369,7 @@ export default function PromoCodesPanel({ event, onClose }: PromoCodesPanelProps
               {error && <p style={{ margin: '10px 0 0', color: 'var(--danger)', font: `500 12.5px var(--font-open-sans)` }}>{error}</p>}
               <Button
                 onClick={addCode}
+                disabled={saving || historicalCurrency}
                 loading={saving}
                 loadingText="Enregistrement…"
                 style={{
@@ -370,13 +377,13 @@ export default function PromoCodesPanel({ event, onClose }: PromoCodesPanelProps
                   width: '100%',
                   minHeight: 44,
                   borderRadius: 10,
-                  background: saving ? 'var(--surface-2)' : 'var(--gold)',
-                  color: saving ? 'var(--text-faint)' : 'var(--background)',
+                  background: saving || historicalCurrency ? 'var(--surface-2)' : 'var(--gold)',
+                  color: saving || historicalCurrency ? 'var(--text-faint)' : 'var(--background)',
                   font: `700 13px var(--font-open-sans)`,
                   letterSpacing: '.03em',
                 }}
               >
-                Créer le code
+                {historicalCurrency ? 'Création réservée aux événements FCFA' : 'Créer le code'}
               </Button>
             </div>
 
@@ -409,7 +416,7 @@ export default function PromoCodesPanel({ event, onClose }: PromoCodesPanelProps
                         <p style={{ margin: 0, font: `700 14px var(--font-open-sans)`, letterSpacing: '.05em', color: 'var(--text)' }}>
                           {p.code}
                           <span style={{ marginLeft: 9, font: `700 12px var(--font-open-sans)`, color: 'var(--primary)' }}>
-                            {p.type === 'percent' ? `-${p.value} %` : `-${fmtMoney(p.value, currency)}`} / billet
+                            {historicalCurrency ? 'Montant historique à vérifier' : p.type === 'percent' ? `-${p.value} %` : `-${fmtMoney(p.value, currency)}`} / billet
                           </span>
                         </p>
                         <p style={{ margin: '3px 0 0', font: `500 11.5px var(--font-open-sans)`, color: 'var(--text-faint)' }}>

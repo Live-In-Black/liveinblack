@@ -48,7 +48,7 @@ Les deux echecs intermediaires E2E venaient de selecteurs de texte ambigus ; les
 ## Lot 4 : frais par admission et regressions de connexion
 
 - Correction des frais XOF pour les groupes/tables : prix moyen par admission, arrondi des frais a l'entier par admission, plancher/plafond appliques a chaque entree puis multiplication. Exemples D90 : 120000/8 -> 6000 ; 200000/10 -> 10000 ; 500000/10 -> 15000 FCFA.
-- Meme calcul dans les commandes web, ventes agents et apercus web. Le total de confirmation agent inclut maintenant les frais LIB et distingue facial/frais.
+- Meme calcul dans les commandes web, ventes terrain et apercus web. Le total de confirmation du membre vendeur inclut maintenant les frais LIB et distingue facial/frais.
 - Refus d'une place de groupe presentee comme billet individuel. Admissions prises depuis la configuration serveur et conservees dans la commande ; refus si prix/type/capacite changent entre lecture et transaction.
 - Interface : nombre definitif d'entrees incluses, plus de case agent permettant de sous-declarer un groupe ; configuration invalide bloquee avec explication.
 - Recette : 25 tests de frais, 6 tests d'integration transactionnelle sur base isolee et suite unitaire complete de 618 tests reussis (123 fichiers). TypeScript et ESLint cibles reussis.
@@ -608,14 +608,14 @@ Migration des anciens comptes multi-profils sans perte, arbitrages cash/OTP/acom
 
 ## Lot 66 : fallbacks EUR restants retires des paiements actifs
 
-- Ecart traite : certains chemins actifs retombaient encore en EUR quand `event.currency` etait absent ou different de XOF, notamment blocages de place, vente agent, creation d'order et previsualisation de code promo.
+- Ecart traite : certains chemins actifs retombaient encore en EUR quand `event.currency` etait absent ou different de XOF, notamment blocages de place, vente terrain, creation d'order et previsualisation de code promo.
 - Blocage de place : `createSeatHold` refuse maintenant le rail Stripe avec `410 stripe_seat_hold_disabled_v1`, traite l'absence de devise comme XOF, et refuse une devise explicite non-XOF avec `xof_required_v1`. La completion de solde refuse aussi le rail Stripe avant toute lecture metier.
-- Vente agent : le calcul de devise passe en fail-safe XOF pour les anciens evenements sans devise, mais refuse l'EUR explicite avec `xof_required_v1`. Les ventes cash/Mobile Money ne peuvent donc plus produire une commande EUR active.
+- Vente terrain : le calcul de devise passe en fail-safe XOF pour les anciens evenements sans devise, mais refuse l'EUR explicite avec `xof_required_v1`. Les ventes cash/Mobile Money ne peuvent donc plus produire une commande EUR active.
 - Creation d'order billet : meme logique, absence de devise = XOF, devise explicite EUR = refus `benin_xof_launch_scope_required`, sans conversion silencieuse.
 - Preview code promo : un evenement EUR explicite est refuse avant calcul de reduction et label, pour ne plus afficher un symbole euro utilisable sur un parcours V1.
 - Checkout FedaPay billet : le precheck ne bloque plus les anciens evenements sans champ `currency`; il refuse seulement `EUR` explicite et laisse `createOrder` appliquer le garde-fou serveur.
 - Tests et controles : TypeScript web passe ; suite unitaire complete web 764 tests / 141 fichiers passe ; recherche ciblee sans fallback actif `event.currency || 'EUR'`, `event.currency === 'XOF' ? 'XOF' : 'EUR'` ni `event.currency !== 'XOF'` dans `app`/`lib`, hors service historique de revente deja ferme en V1.
-- Limites : les tests d'integration Mongo des ventes agent, orders, promos et seat-holds n'ont pas ete relances faute d'acces Mongo local autorise. Le service historique de revente conserve un fallback EUR dans du code archive/inactif ; les routes de revente restent fermees en 410 depuis les lots 57-58.
+- Limites : les tests d'integration Mongo des ventes terrain, orders, promos et seat-holds n'ont pas ete relances faute d'acces Mongo local autorise. Le service historique de revente conserve un fallback EUR dans du code archive/inactif ; les routes de revente restent fermees en 410 depuis les lots 57-58.
 
 ## Lot 67 : creation et edition d'evenements forcees Benin/XOF
 
@@ -730,7 +730,7 @@ Migration des anciens comptes multi-profils sans perte, arbitrages cash/OTP/acom
 - Le service historique `freeCheckout` retourne lui aussi `410 free_checkout_disabled_v1` immediatement. Les guestlists/invitations restent separees et ne sont pas confondues avec un checkout public gratuit.
 - Les documents fonctionnels et architecture audites ne presentent plus Stripe, revente ou billet gratuit comme parcours actif de lancement ; les mentions restantes qualifient ces sujets comme historiques, exclus V1 ou lies aux guestlists.
 - Tests et controles : test cible `freeCheckoutDisabledV1` + revente/webhook 11 tests / 3 fichiers passe ; TypeScript web passe ; suite unitaire complete web 768 tests / 143 fichiers passe ; build Next 16.3.3 webpack passe avec 183 pages statiques.
-- Limites : les anciens rails `free` restent dans des modeles/services pour les guestlists, ventes agent cash et donnees historiques. Ce lot ferme le checkout public gratuit, pas toute representation interne d'une invitation sans paiement.
+- Limites : les anciens rails `free` restent dans des modeles/services pour les guestlists, ventes terrain cash et donnees historiques. Ce lot ferme le checkout public gratuit, pas toute representation interne d'une invitation sans paiement.
 
 ## Lot 78 : carte de lieu evenement fonctionnelle
 

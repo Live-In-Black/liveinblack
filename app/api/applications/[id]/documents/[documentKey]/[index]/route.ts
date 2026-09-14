@@ -34,7 +34,7 @@ export async function GET(
     return response
   }
 
-  // Compatibilité transitoire avec les justificatifs téléversés avant le
+  // Compatibilité transitoire avec les pièces téléversées avant le
   // stockage authentifié. On ne redirige que vers le domaine Cloudinary.
   try {
     const legacyUrl = new URL(result.document.legacyUrl)

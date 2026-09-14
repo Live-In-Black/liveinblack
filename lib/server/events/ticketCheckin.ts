@@ -59,7 +59,7 @@ export async function checkinTicket(caller: CheckinCaller, input: CheckinInput):
   // ── Autorisation : propriétaire/organisateur de CET événement, membre du
   // staff, ou sous-compte terrain assigné par l'organisateur. Le rôle global
   // "agent" de l'équipe LIVEINBLACK ne donne pas un passe-droit scanner : en
-  // V1, un agent terrain est un client nommé sur un événement précis.
+  // V1, un membre terrain est un client nommé sur un événement précis.
   const event = await Event.findById(ticket.eventId)
   if (!event) return { ok: false, status: 404, error: 'event_not_found' }
 

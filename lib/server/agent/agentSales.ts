@@ -233,7 +233,7 @@ async function mintAgentSaleTickets(order: OrderDoc & { _id: mongoose.Types.Obje
   const unitMajor = order.unitPriceMinor / (order.currency === 'XOF' ? 1 : 100)
   const preorderTotalMajor = order.preorders.reduce((s, p) => s + (p.price / (order.currency === 'XOF' ? 1 : 100)) * p.qty, 0)
 
-  // Rattachement au VRAI compte du client si l'email saisi par l'agent
+  // Rattachement au VRAI compte du client si l'email saisi par le membre vendeur
   // correspond à un compte déjà inscrit (#E11, confirmé en réunion live le
   // 11/08/2026 — auparavant toujours rattaché à l'agent, billet invité
   // orphelin même quand un compte existait). `guestName` reste renseigné
@@ -320,13 +320,13 @@ async function processSale(agentCaller: AgentSaleCaller, eventId: string, input:
       const preorderTotal = order.preorders.reduce((s, p) => s + p.price * p.qty, 0)
       const amountTotal = order.unitPriceMinor * seatCount + preorderTotal + order.feeMinor
       const sellerShare = sellerShareForOrder({ unitPriceMinor: order.unitPriceMinor, seatCount, preorderTotalMinor: preorderTotal })
-      // Les ventes agent gardent le même fallback que le checkout client :
+      // Les ventes terrain gardent le même fallback que le checkout client :
       // les événements existants sans sous-compte FedaPay encaissent en
       // ledger, tandis que les nouveaux événements restent bloqués à la
       // publication tant que Marketplace n'est pas configuré.
       const marketplaceCommissions = fedapayMarketplaceCommissions(order.fedapaySubAccountReference, sellerShare)
       const txn = await createTransaction({
-        description: `${order.placeType} — vente agent`.slice(0, 200),
+        description: `${order.placeType} — vente terrain`.slice(0, 200),
         amount: amountTotal,
         metadata: { orderId: String(order._id) },
         reference: String(order._id),
@@ -521,7 +521,7 @@ function momoCountryForRegion(region: string | null | undefined): string | null 
   return map[key] || null
 }
 
-// Relâche le stock d'une vente agent jamais réglée (cash abandonné) ou dont
+// Relâche le stock d'une vente terrain jamais réglée (cash abandonné) ou dont
 // le paiement Mobile Money a échoué/expiré — miroir de
 // lib/server/orders.ts::releaseOrder.
 export async function releaseAgentSaleOrder(orderId: string): Promise<{ ok: boolean }> {

@@ -12,9 +12,6 @@ import {
   Calendar,
   Clock,
   User,
-  Sparkles,
-  Layers,
-  HelpCircle,
   Eye,
   FileText
 } from 'lucide-react'

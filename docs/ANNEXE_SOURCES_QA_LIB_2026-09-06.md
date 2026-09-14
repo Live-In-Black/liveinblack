@@ -43,7 +43,7 @@ Source : classeur WhatsApp `00000422-LIVEINBLACK_mobile_QA_interactive.xlsx`. Le
 | UI-005 | P1 | Navigation/UI | Accessibilité : labels, focus, contraste et taille texte | Conserver ; exécuter sur la V1 et consigner le résultat. |
 | EVT-001 | P1 | Événements | Liste accueil et refresh | Conserver ; exécuter sur la V1 et consigner le résultat. |
 | EVT-002 | P1 | Événements | Recherche exacte, accents, casse et aucun résultat | Conserver ; exécuter sur la V1 et consigner le résultat. |
-| EVT-003 | P1 | Événements | Filtres région, devise, date et catégorie | Adapter : retirer sélection internationale de région/devise ; conserver les filtres pertinents Bénin. |
+| EVT-003 | P1 | Événements | Catalogue Bénin sans filtre région/devise actif ; date et catégorie | Adapter : retirer sélection internationale de région/devise ; conserver les filtres pertinents Bénin. |
 | EVT-004 | P1 | Événements | Détail événement complet | Conserver ; exécuter sur la V1 et consigner le résultat. |
 | EVT-005 | P1 | Événements | Événement gratuit, payant, complet et passé | Adapter : pas d'événement entièrement gratuit selon R58 ; distinguer guestlists et payant/complet/passé. |
 | EVT-006 | P1 | Événements | Événement annulé, reporté, verrouillé et revente | Adapter : annulation/report conservés ; revente absente et refusée côté serveur. |

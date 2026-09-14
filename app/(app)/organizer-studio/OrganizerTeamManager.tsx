@@ -9,15 +9,11 @@ import {
   Edit2,
   Check,
   UserCheck,
-  AlertCircle,
   QrCode,
   ShoppingCart,
   Calendar,
   BarChart3,
-  Lock,
   Copy,
-  KeyRound,
-  Activity,
   Layers,
 } from 'lucide-react'
 import type { OrganizerMemberView } from '@/lib/server/organizer/organizerMembers'
@@ -91,7 +87,7 @@ export default function OrganizerTeamManager() {
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [roleTitle, setRoleTitle] = useState('Agent de terrain')
+  const [roleTitle, setRoleTitle] = useState('Membre terrain')
   const [permissions, setPermissions] = useState<OrganizerPermissionKey[]>(['scan', 'sales'])
   const [assignedEventIds, setAssignedEventIds] = useState<string[]>([])
   const [allEventsAccess, setAllEventsAccess] = useState(true)
@@ -133,7 +129,7 @@ export default function OrganizerTeamManager() {
     setDisplayName('')
     setEmail('')
     setPassword('')
-    setRoleTitle('Agent de terrain')
+    setRoleTitle('Membre terrain')
     setPermissions(['scan', 'sales'])
     setAssignedEventIds([])
     setAllEventsAccess(true)
@@ -209,7 +205,7 @@ export default function OrganizerTeamManager() {
           }
           throw new Error(data.error || 'creation_failed')
         }
-        setSuccess('Sous-compte agent créé avec succès.')
+        setSuccess('Accès d’équipe créé avec succès.')
         setModalOpen(false)
         // Afficher les identifiants pour transmission
         setCreatedCredentials({
@@ -272,7 +268,7 @@ export default function OrganizerTeamManager() {
       {/* Modal d'affichage des identifiants créés */}
       {createdCredentials && (
         <Modal
-          title="Identifiants du sous-compte créés"
+          title="Identifiants d’accès créés"
           onClose={() => setCreatedCredentials(null)}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -314,7 +310,7 @@ export default function OrganizerTeamManager() {
             </div>
 
             <p style={{ margin: 0, fontSize: 12, color: 'var(--text-faint)', lineHeight: 1.5 }}>
-              Transmettez ces identifiants à votre agent de terrain. Il pourra se connecter sur LIVEINBLACK avec son email et ce mot de passe, et aura directement accès aux outils autorisés (scan des billets, vente guichet, etc.).
+              Transmettez ces identifiants au membre de votre équipe. Il pourra se connecter sur LIVEINBLACK avec son email et ce mot de passe, et aura directement accès aux outils autorisés (scan des billets, vente guichet, etc.).
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 6 }}>
@@ -341,12 +337,12 @@ export default function OrganizerTeamManager() {
               Gestion des Agents & Équipe de terrain
             </h2>
             <p style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--text-muted)', margin: '4px 0 0', maxWidth: 680 }}>
-              Créez des sous-comptes pour vos agents de contrôle et vendeurs. Définissez précisément leurs permissions d&rsquo;accès (scan, guichet, consultation, etc.) sans donner accès à votre compte principal.
+              Ajoutez les membres de votre équipe terrain et définissez précisément leurs permissions d&rsquo;accès (scan, guichet, consultation, etc.) sans donner accès à votre compte principal.
             </p>
           </div>
           <Button variant="primary" onClick={openCreateModal} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <Plus size={16} />
-            <span>Créer un sous-compte</span>
+            <span>Ajouter un membre</span>
           </Button>
         </div>
 
@@ -509,7 +505,7 @@ export default function OrganizerTeamManager() {
       {/* Modal création / édition */}
       {modalOpen && (
         <Modal
-          title={editingMember ? 'Modifier les accès de l’agent' : 'Créer un sous-compte agent'}
+          title={editingMember ? 'Modifier les accès du membre' : 'Ajouter un membre d’équipe'}
           onClose={() => setModalOpen(false)}
         >
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -694,7 +690,7 @@ export default function OrganizerTeamManager() {
                 Annuler
               </Button>
               <Button type="submit" variant="primary" loading={submitting}>
-                {editingMember ? 'Enregistrer les modifications' : 'Créer le sous-compte'}
+                {editingMember ? 'Enregistrer les modifications' : 'Créer l’accès'}
               </Button>
             </div>
           </form>

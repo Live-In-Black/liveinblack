@@ -11,6 +11,10 @@ Toute la documentation technique, architecturale et opérationnelle est organis�
 - [COMPONENT_ARCHITECTURE.md](./architecture/COMPONENT_ARCHITECTURE.md) — Directives de découpage et hiérarchie des composants UI.
 - [modals.md](./architecture/modals.md) — Guide et conventions des fenêtres modales et tiroirs (`SlideOver`).
 
+## 🧭 Reprise projet
+- [DOCUMENTATION_TECHNIQUE_REPRISE.md](./DOCUMENTATION_TECHNIQUE_REPRISE.md) — Documentation technique de reprise pour une nouvelle équipe de développement.
+- [JOURNAL_HEBDOMADAIRE_REPRISE_TOUTPUISSANTGED.md](./JOURNAL_HEBDOMADAIRE_REPRISE_TOUTPUISSANTGED.md) — Journal hebdomadaire des travaux depuis la reprise par `toutpuissantged` / `gedeon`.
+
 ---
 
 ## 🎨 Design System (`docs/design/`)

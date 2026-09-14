@@ -216,7 +216,7 @@ flowchart TD
     STAFF([🔦 Staff Terrain Connecté]) --> MISSION{Mission attribuée}
 
     MISSION -->|Scanner Entrée| SCANNER[📷 Ouvrir Scanner Caméra\nPermission caméra native]
-    MISSION -->|Vendeur Guichet| SALES[🏷️ Écran Vente Agent]
+    MISSION -->|Vendeur Guichet| SALES[🏷️ Écran Vente terrain]
 
     SCANNER --> CAM{Caméra OK ?}
     CAM -->|Oui| SCAN_QR[🔲 Scanner le QR Code du billet]

@@ -172,7 +172,7 @@ export default async function AccueilPage() {
           </Section>
         )}
 
-        {/* ACTUALITÉ (carrousel éditorial curé par l'agent) */}
+        {/* ACTUALITÉ (carrousel éditorial curé par l'admin) */}
         {actualiteEvents.length > 0 && (
           <section className={styles.newsSection}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
@@ -353,7 +353,7 @@ export default async function AccueilPage() {
         {!session?.user && <Section className={styles.roleSection} eyebrow="Pour les professionnels" title="Organisateurs & prestataires" sub="Deux espaces dédiés pour faire connaître ton activité et gérer chaque opportunité simplement.">
           <div className={styles.roleGrid}>
             <article className={styles.roleCard}>
-              <div className={styles.roleVisual}>
+              <div className={styles.roleVisual} style={{ position: 'relative' }}>
                 <Image src="/images/live-in-black/night-benin/night-benin-rooftop.png" alt="Organisateur préparant un événement" fill className={styles.roleImage} sizes="(max-width: 640px) 100vw, 42vw" />
                 <div className={styles.roleImageScrim} />
                 <span className={styles.roleNumber}>01</span>
@@ -382,7 +382,7 @@ export default async function AccueilPage() {
             </article>
 
             <article className={styles.roleCard}>
-              <div className={styles.roleVisual}>
+              <div className={styles.roleVisual} style={{ position: 'relative' }}>
                 <Image src="/images/live-in-black/night-benin/night-benin-organizer.png" alt="Prestataire événementiel en action" fill className={styles.roleImage} sizes="(max-width: 640px) 100vw, 42vw" />
                 <div className={styles.roleImageScrim} />
                 <span className={styles.roleNumber}>02</span>

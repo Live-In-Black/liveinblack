@@ -1115,7 +1115,7 @@ function DangerZoneCard() {
 const FAQ = [
   { q: 'Comment réserver un billet ?', a: 'Va sur l’onglet Événements, sélectionne la soirée de ton choix et clique sur Réservation. Choisis ton type de place et confirme.' },
   { q: 'Où retrouver mes billets ?', a: 'Tes billets sont disponibles dans « Mes billets » depuis ton espace client. Tu peux y consulter tes places et les informations de chaque événement.' },
-  { q: 'Puis-je annuler ma réservation ?', a: 'Les réservations sont fermes et définitives. En cas d’annulation d’événement par l’organisateur, un remboursement sera traité sous 5 jours ouvrés.' },
+  { q: 'Puis-je annuler ma réservation ?', a: 'Les réservations sont fermes et définitives. En cas d’annulation d’événement par l’organisateur, un dossier de remboursement est créé et suivi selon le parcours indiqué dans tes billets.' },
   { q: 'Comment créer un événement ?', a: "Rends-toi dans 'Mes Événements' via le menu. Tu peux créer et publier ton événement en 5 étapes simples." },
   { q: 'Comment modifier mes informations personnelles ?', a: 'Ouvre « Paramètres », puis l’onglet « Profil ». Tu peux modifier séparément ton nom, ton téléphone et tes informations facultatives.' },
   { q: 'J’ai oublié mon mot de passe, que faire ?', a: 'Depuis la page de connexion, utilise le lien de mot de passe oublié. Un lien sécurisé sera envoyé à l’adresse e-mail associée à ton compte.' },

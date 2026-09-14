@@ -41,7 +41,7 @@ export const LEGAL = {
   subprocessors: [
     { name: 'Vercel Inc.', purpose: 'Hébergement', country: 'USA', dpa: 'https://vercel.com/legal/dpa' },
     { name: 'MongoDB, Inc. (MongoDB Atlas)', purpose: 'Hébergement de la base de données (comptes, événements, messages, transactions)', country: 'USA / UE', dpa: 'https://www.mongodb.com/legal/data-processing-agreement' },
-    { name: 'Cloudinary Ltd.', purpose: "Hébergement des images et documents (photos de profil, visuels d'événements, portfolios prestataires, justificatifs d'identité des candidatures)", country: 'USA', dpa: 'https://cloudinary.com/dpa' },
+    { name: 'Cloudinary Ltd.', purpose: "Hébergement des images et documents (photos de profil, visuels d'événements, portfolios prestataires, pièces d'identité des candidatures)", country: 'USA', dpa: 'https://cloudinary.com/dpa' },
     { name: 'FedaPay S.A.', purpose: 'Paiements en FCFA (mobile money et cartes)', country: 'Bénin', dpa: 'https://www.fedapay.com/privacy-policies' },
     { name: 'Resend, Inc.', purpose: 'Envoi des emails transactionnels (validation de dossier, notifications)', country: 'USA', dpa: 'https://resend.com/legal/dpa' },
   ],

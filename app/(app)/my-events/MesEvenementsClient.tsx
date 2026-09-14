@@ -270,9 +270,9 @@ export default function MesEvenementsClient({ initialEvents, initialLegacyCardPa
 
       {payoutSetupLabel && (
         <div style={{ padding: '16px 18px', marginBottom: 16, borderRadius: 'var(--radius-card)', border: '1px solid var(--primary-a35)', background: 'var(--primary-a08)' }}>
-          <p style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 500, color: 'var(--text)', margin: '0 0 6px' }}>Configure ton encaissement pour être payé</p>
+          <p style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 500, color: 'var(--text)', margin: '0 0 6px' }}>Configure ton encaissement FedaPay</p>
           <p style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', lineHeight: 1.6, margin: '0 0 12px' }}>
-            Il te manque {payoutSetupLabel}. Sans ces informations, tes recettes ne pourront pas être versées automatiquement.
+            Il te manque {payoutSetupLabel}. Sans ces informations, tes ventes FCFA ne pourront pas être encaissées correctement via FedaPay Marketplace.
           </p>
           <Link
             href="/organizer-studio?tab=paiements"

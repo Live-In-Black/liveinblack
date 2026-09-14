@@ -1,7 +1,6 @@
 import { getDb } from '@/lib/db/mongoose'
 import OrganizerMember, { type OrganizerPermissionKey, ORGANIZER_PERMISSIONS } from '@/lib/models/OrganizerMember'
 import User from '@/lib/models/User'
-import Event from '@/lib/models/Event'
 import Ticket from '@/lib/models/Ticket'
 import Order from '@/lib/models/Order'
 import bcrypt from 'bcryptjs'
@@ -34,7 +33,7 @@ export async function listOrganizerMembers(caller: MemberCaller): Promise<{ ok: 
 
   const userIds = members.map((m) => m.userId)
 
-  // Activité des agents : scans validés et ventes guichet réalisées
+  // Activité des membres terrain : scans validés et ventes guichet réalisées
   const [scanCounts, saleCounts] = await Promise.all([
     Ticket.aggregate([
       { $match: { checkedInBy: { $in: userIds } } },
@@ -100,7 +99,7 @@ export async function createOrganizerMember(
     targetUser = await User.create({
       email: cleanEmail,
       passwordHash,
-      firstName: first || 'Agent',
+      firstName: first || 'Membre',
       lastName: rest.join(' ') || '',
       roles: ['client'],
       activeRole: 'client',
@@ -128,7 +127,7 @@ export async function createOrganizerMember(
     userId: String(targetUser._id),
     displayName: cleanName,
     email: cleanEmail,
-    roleTitle: input.roleTitle?.trim() || 'Agent de terrain',
+    roleTitle: input.roleTitle?.trim() || 'Membre terrain',
     permissions: validPerms.length > 0 ? validPerms : ['scan', 'sales'],
     assignedEventIds: input.assignedEventIds || [],
     createdBy: caller.id,

@@ -9,7 +9,7 @@ import Event from '@/lib/models/Event'
 import { getAgentSalesDashboard } from '@/lib/server/agent/agentSales'
 import AgentSalesClient, { type PlaceView } from './AgentSalesClient'
 
-// Espace agent DE VENTE (#C — rôle EventStaff 'vendeur') — route renommée
+// Espace membre vendeur (#C — rôle EventStaff 'vendeur') — route renommée
 // /on-site-sales (était /agent-sales) pour éviter la confusion visuelle
 // avec app/(app)/agent (staff LIVE IN BLACK, concept totalement différent) ;
 // les deux noms se ressemblaient trop dans l'URL/le code malgré l'intention
@@ -71,7 +71,7 @@ export default async function AgentSalesPage({ params }: { params: Promise<{ eve
 
   const dashboardResult = await getAgentSalesDashboard({ id: session.user.id }, eventId)
   if (!dashboardResult.ok) {
-    return <GateScreen title="Accès refusé" message="Tu dois être désigné agent de vente (rôle « Vente sur place ») pour cet événement." />
+    return <GateScreen title="Accès refusé" message="Tu dois être membre vendeur désigné (rôle « Vente sur place ») pour cet événement." />
   }
 
   const places: PlaceView[] = (event.places || []).map((p) => ({

@@ -54,7 +54,7 @@ export function eventCancelledCashPickupEmail(
     ${paragraph(`<strong style="color:inherit;">${evName}</strong> a été annulé. Ton remboursement de <strong style="color:inherit;">${amountLabel}</strong> est prévu en retrait espèces au point attribué.`)}
     ${reason ? paragraph(`<strong style="color:inherit;">Motif :</strong> ${escapeHtml(reason)}`) : ''}
     ${note(`<strong>Code de retrait :</strong> ${code}<br/><strong>Point :</strong> ${point}<br/><strong>Adresse :</strong> ${address}`)}
-    ${paragraph(`Toute personne présentant ce code valide peut retirer le montant exact. Garde-le confidentiel : une fois validé par l'agent avec signature, il devient définitivement inutilisable.`)}
+    ${paragraph(`Toute personne présentant ce code valide peut retirer le montant exact. Garde-le confidentiel : une fois validé par le point de retrait avec signature, il devient définitivement inutilisable.`)}
     ${button(`${site}/profile/billets`, 'Voir mon dossier', 'primary')}
     ${button(`${site}/profile/billets`, 'Je ne peux pas me déplacer', 'outline')}
   `

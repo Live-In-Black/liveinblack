@@ -10,9 +10,11 @@ vi.mock('@/app/components/ui', () => ({
   HiddenField: () => null,
   Input: () => <input />,
   PageLinks: () => null,
+  EmptyState: () => null,
 }))
 vi.mock('../../_components/FilterSelect', () => ({ default: () => null }))
 vi.mock('../../_components/ProviderDirectoryCard', () => ({ default: () => null }))
+vi.mock('../../_components/UnifiedSearchBar', () => ({ default: () => null }))
 
 beforeEach(() => {
   vi.clearAllMocks()

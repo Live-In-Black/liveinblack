@@ -65,15 +65,15 @@ Toute demande de remboursement, contestation ou litige relatif à un événement
     },
     {
       n: '09',
-      title: 'Billets de groupe achetés sans compte (vente sur place par un agent)',
-      body: `Lorsqu'un lot de billets de groupe est acheté sur place auprès d'un agent ${LEGAL.brand}, en espèces ou par mobile money, sans que chaque participant ne dispose d'un compte sur la plateforme, l'ensemble des billets du groupe est remis au premier participant nommé lors de la vente, qui a la qualité d'hôte du groupe. L'hôte est seul responsable de la transmission de ces billets aux autres participants.
+      title: 'Billets de groupe achetés sans compte (vente sur place)',
+      body: `Lorsqu'un lot de billets de groupe est acheté sur place auprès d'un membre d'équipe autorisé par l'organisateur, en espèces ou par mobile money, sans que chaque participant ne dispose d'un compte sur la plateforme, l'ensemble des billets du groupe est remis au premier participant nommé lors de la vente, qui a la qualité d'hôte du groupe. L'hôte est seul responsable de la transmission de ces billets aux autres participants.
 
 Faute de compte associé à chaque participant, ${LEGAL.brand} n'est techniquement pas en mesure d'invalider ou de faire réémettre un billet déjà transmis par l'hôte à un tiers, y compris en cas de perte, de vol, de transmission par erreur ou de litige entre l'hôte et les participants. L'hôte reconnaît et accepte ce risque au moment de l'achat sur place et demeure seul responsable de la diffusion de ces billets.`,
     },
     {
       n: '10',
-      title: 'Reversements aux vendeurs',
-      body: `Dans le parcours billetterie Bénin, la part vendeur est répartie dès le paiement par FedaPay Marketplace : ${LEGAL.brand} ne conserve pas l'argent de l'organisateur jusqu'à la fin de l'événement. L'organisateur reste donc responsable de conserver une trésorerie suffisante pour financer les remboursements dus en cas d'annulation, de report ou d'option d'annulation valable. Pour les autres services ou zones, les reversements suivent le rail de paiement applicable. Le vendeur est responsable de l'exactitude de ses coordonnées de paiement et de ses obligations fiscales et déclaratives.`,
+      title: 'Répartition vendeur',
+      body: `Dans le parcours billetterie Bénin, la part vendeur est répartie dès le paiement par FedaPay Marketplace : ${LEGAL.brand} ne conserve pas l'argent de l'organisateur jusqu'à la fin de l'événement. L'organisateur reste donc responsable de conserver une trésorerie suffisante pour financer les remboursements dus en cas d'annulation, de report ou d'option d'annulation valable. Pour les autres services ou zones hors périmètre V1, le règlement vendeur suit le rail de paiement applicable. Le vendeur est responsable de l'exactitude de ses coordonnées de paiement et de ses obligations fiscales et déclaratives.`,
     },
     {
       n: '11',

@@ -18,7 +18,7 @@
 //     contact.ts                  formulaire de contact public
 //     tickets.ts                   achat billet, paiement échoué, seat hold, billet reçu
 //     refunds.ts                    annulation/report événement, remboursement
-//     resale.ts                      bourse de revente de billets
+//     resale.ts                      emails historiques de revente, module fermé en V1
 //     organizerEvents.ts              cycle de vie événement côté organisateur
 //     payouts.ts                       versements organisateur/prestataire
 //     staff.ts                          équipe événement (staff)

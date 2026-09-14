@@ -26,6 +26,7 @@ export default function robots(): MetadataRoute.Robots {
         '/organizer-studio',
         '/offer-services',
         '/admin',
+        '/agent',
         '/order',
         '/playlist',
       ],

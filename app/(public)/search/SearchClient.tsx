@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { CalendarDays, MapPin, Search, Sparkles, Store, UsersRound } from 'lucide-react'
+import { CalendarDays, MapPin, Search, Store, UsersRound } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import styles from './search.module.css'

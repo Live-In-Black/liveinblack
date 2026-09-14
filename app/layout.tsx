@@ -167,7 +167,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr-BJ" data-theme="dark" style={{ colorScheme: 'dark' }} className={`${interfaceFont.variable} h-full antialiased`} suppressHydrationWarning>
-      <head><style>{'nextjs-portal{display:none!important}'}</style></head>
       <body className="min-h-full flex flex-col">
         <Script id="lib-theme-boot" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         <Script

@@ -1,4 +1,4 @@
-import { normalizeProviderBillingRegion, providerBillingCurrency } from '@/lib/shared/providerBillingRegion'
+import { providerBillingCurrency } from '@/lib/shared/providerBillingRegion'
 
 export type BillingContext = {
   billingRegionId: string

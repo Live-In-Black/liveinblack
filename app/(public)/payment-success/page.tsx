@@ -24,7 +24,7 @@ export default async function PaiementReussiPage({
   // order_id ne compte comme identifiant "billet gratuit" que si ni session_id
   // ni id FedaPay ne sont là ET que le flag free=true est explicitement posé.
   const freeOrderId = !sessionId && !fedapayTxnId && params.free === 'true' ? params.order_id || null : null
-  const stripeCancelledEventId = !sessionId && !fedapayTxnId && !freeOrderId && params.cancelled === '1' ? params.event_id || null : null
+  const historicalCancelledEventId = !sessionId && !fedapayTxnId && !freeOrderId && params.cancelled === '1' ? params.event_id || null : null
 
   return (
     <PaymentSuccessClient
@@ -32,7 +32,7 @@ export default async function PaiementReussiPage({
       fedapayTxnId={fedapayTxnId}
       fedapayClose={fedapayClose}
       freeOrderId={freeOrderId}
-      stripeCancelledEventId={stripeCancelledEventId}
+      historicalCancelledEventId={historicalCancelledEventId}
     />
   )
 }

@@ -353,7 +353,7 @@ export default function DashboardShell({ activeRole, user, children }: { activeR
                 <span>Se déconnecter</span>
               </button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Link href="/home" className={styles.publicLink} style={{ flex: 1 }}><Globe size={18} aria-hidden="true" /><span>Site public</span></Link>
+                <Link href="/home" className={styles.publicLink} style={{ flex: 1 }}><Globe size={18} aria-hidden="true" /><span>Accueil</span></Link>
                 <ThemeModeToggle size={34} />
               </div>
             </div>
@@ -412,7 +412,7 @@ export default function DashboardShell({ activeRole, user, children }: { activeR
               ) : null}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Link href="/home" className={styles.publicLink} style={{ flex: 1 }}><Globe size={18} aria-hidden="true" /><span>Site public</span></Link>
+              <Link href="/home" className={styles.publicLink} style={{ flex: 1 }}><Globe size={18} aria-hidden="true" /><span>Accueil</span></Link>
               <ThemeModeToggle size={34} />
             </div>
           </div>

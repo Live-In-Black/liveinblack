@@ -300,7 +300,7 @@ export default function AgentSalesClient({
             <p>Prix facial : {fmtMoney(facialAmount, currency)} · Frais LIB : {fmtMoney(serviceFee, currency)}</p>
             <p style={{ margin: '4px 0 0', fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', lineHeight: 1.6 }}>
               {method === 'cash'
-                ? `Paiement en espèces · ${settlementMode === 'agent_settles' ? 'règlement manuel par l’agent' : 'prélèvement immédiat sur le solde organisateur'}`
+                ? `Paiement en espèces · ${settlementMode === 'agent_settles' ? 'règlement numérique par le membre vendeur' : 'prélèvement immédiat sur le solde organisateur'}`
                 : `Paiement Mobile Money · ${momoNumber.trim() || 'numéro à confirmer'}`}
             </p>
           </>

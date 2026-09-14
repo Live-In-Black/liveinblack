@@ -115,7 +115,7 @@ export async function getTransaction(transactionId: number | string): Promise<Fe
 
 // Mode "sans redirection" (agent vente sur place, #C) : pousse la demande de
 // paiement directement sur le téléphone du client (USSD), qui valide avec son
-// propre code Mobile Money — jamais un code ressaisi par l'agent. La
+// propre code Mobile Money — jamais un code ressaisi par le membre vendeur. La
 // confirmation arrive ENSUITE par le même webhook que le checkout classique
 // (transaction.approved) — voir lib/server/agentSales.ts::fulfillAgentMomoSale.
 // Doc FedaPay : POST /transactions/{mode} avec {token, phone_number}.

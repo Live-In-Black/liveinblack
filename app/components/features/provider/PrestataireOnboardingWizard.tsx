@@ -232,7 +232,7 @@ export default function PrestataireOnboardingWizard({
 
   async function handleSubmit() {
     setError(null)
-    if (missingDocs.length > 0) return setError('Certains documents obligatoires sont manquants.')
+    if (missingDocs.length > 0) return setError("La pièce d'identité est obligatoire.")
 
     const cleanedForm = {
       ...form,
@@ -654,7 +654,7 @@ export default function PrestataireOnboardingWizard({
 
           {step === 3 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <h2 style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>Documents justificatifs</h2>
+              <h2 style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>Pièce d&apos;identité</h2>
               <p style={{ fontSize: 'var(--font-size-footnote-lg)', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
                 Seule la pièce d&apos;identité du titulaire du compte est demandée dans le formulaire LIVEINBLACK. Elle est stockée de façon privée et accessible
                 uniquement à l&apos;équipe LIVEINBLACK.
@@ -670,10 +670,10 @@ export default function PrestataireOnboardingWizard({
               <h2 style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>Finaliser</h2>
               {missingDocs.length > 0 ? (
                 <p style={{ fontSize: 'var(--font-size-footnote-lg)', color: 'var(--danger)', margin: 0 }}>
-                  Documents manquants : {missingDocs.map((k) => DOC_LABELS[k] || k).join(', ')}
+                  Pièce d&apos;identité manquante : {missingDocs.map((k) => DOC_LABELS[k] || k).join(', ')}
                 </p>
               ) : (
-                <p style={{ fontSize: 'var(--font-size-footnote-lg)', color: 'var(--primary)', margin: 0 }}>Tous les documents obligatoires sont fournis.</p>
+                <p style={{ fontSize: 'var(--font-size-footnote-lg)', color: 'var(--primary)', margin: 0 }}>La pièce d&apos;identité est fournie.</p>
               )}
               <p style={{ fontSize: 'var(--font-size-callout)', color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
                 Une fois validé, ton compte est créé. Pour rendre ton profil visible publiquement, tu activeras ton abonnement depuis ton espace prestataire —{' '}

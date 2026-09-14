@@ -3,7 +3,6 @@
 import type { ReactNode } from 'react'
 import { BellOff, Pin, Search } from 'lucide-react'
 import { Button, Input, Pagination } from '@/app/components/ui'
-import MessagingEmptyState from './MessagingEmptyState'
 import styles from '@/app/(app)/messages/MessagesClient.module.css'
 
 interface ConversationMemberView {

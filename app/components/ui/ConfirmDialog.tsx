@@ -45,7 +45,7 @@ export default function ConfirmDialog({
   const isDanger = confirmVariant === 'danger'
 
   return (
-    <Modal onClose={onCancel} maxWidth={maxWidth ?? 420} zIndex={zIndex}>
+    <Modal onClose={onCancel} maxWidth={maxWidth ?? 420} zIndex={zIndex} title={title}>
       <div
         style={{
           display: 'flex',

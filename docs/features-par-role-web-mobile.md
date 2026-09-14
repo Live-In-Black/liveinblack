@@ -460,7 +460,7 @@ Le staff evenement correspond aux personnes ajoutees par un organisateur sur un 
 - Check-in d'un billet.
 - Affichage des informations utiles a l'entree.
 - Acces a la vente sur place lorsqu'autorise.
-- Vente de billets par agent de vente.
+- Vente de billets par membre vendeur assigné.
 - Vente immediate ou vente avec reglement agent selon le mode.
 - Tableau de ventes sur place.
 - Acces aux commandes de menu / precommandes selon le role.

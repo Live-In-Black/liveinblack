@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, ExternalLink, Gauge, HelpCircle, RefreshCw, ServerCog, ShieldCheck, Sliders } from 'lucide-react'
+import { Activity, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, ExternalLink, Gauge, RefreshCw, ServerCog, ShieldCheck, Sliders } from 'lucide-react'
 import { Badge, Button, Card, DashboardPageHeader, Select, SkeletonCard, Tabs } from '@/app/components/ui'
 import ConfirmDialog from '@/app/components/ui/ConfirmDialog'
 
@@ -354,20 +354,15 @@ function badgeTone(event: VercelOpsEvent) {
   return 'neutral'
 }
 
-function shortId(value: string | null | undefined) {
-  if (!value) return null
-  return value.length > 18 ? `${value.slice(0, 10)}…${value.slice(-5)}` : value
-}
-
 export default function AgentVercelOpsClient() {
   const [events, setEvents] = useState<VercelOpsEvent[]>([])
   const [config, setConfig] = useState<OpsConfig | null>(null)
   const [opsStatus, setOpsStatus] = useState<OpsStatus | null>(null)
-  const [proDecisions, setProDecisions] = useState<ProDecisionSummary | null>(null)
+  const [, setProDecisions] = useState<ProDecisionSummary | null>(null)
   const [usageWatchlist, setUsageWatchlist] = useState<UsageWatchlistSummary | null>(null)
-  const [liveActivationGates, setLiveActivationGates] = useState<LiveActivationGatesSummary | null>(null)
-  const [activationOrder, setActivationOrder] = useState<ActivationOrderSummary | null>(null)
-  const [completionEvidence, setCompletionEvidence] = useState<CompletionEvidenceSummary | null>(null)
+  const [, setLiveActivationGates] = useState<LiveActivationGatesSummary | null>(null)
+  const [, setActivationOrder] = useState<ActivationOrderSummary | null>(null)
+  const [, setCompletionEvidence] = useState<CompletionEvidenceSummary | null>(null)
   const [auditSuite, setAuditSuite] = useState<AuditSuiteSummary | null>(null)
   const [nextAction, setNextAction] = useState<NextVercelActionSummary | null>(null)
   const [actionBlockers, setActionBlockers] = useState<ActionBlockerSummary | null>(null)
@@ -388,7 +383,7 @@ export default function AgentVercelOpsClient() {
   const [savingKey, setSavingKey] = useState<string | null>(null)
   const [pendingConfigChange, setPendingConfigChange] = useState<PendingConfigChange | null>(null)
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null)
-  const [error, setError] = useState(false)
+  const [, setError] = useState(false)
   const [configError, setConfigError] = useState(false)
   const [activeTab, setActiveTab] = useState<'controls' | 'status' | 'events' | 'advanced'>('controls')
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false)
@@ -1615,36 +1610,6 @@ function RiskCostRow({ item }: { item: RiskCostSummary['items'][number] }) {
   )
 }
 
-function DashboardLinksCard({ dashboardLinks }: { dashboardLinks: DashboardLinksSummary }) {
-  return (
-    <Card style={{ marginBottom: 18 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: 14 }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 'var(--font-size-title-4)' }}>Accès dashboard Vercel</h2>
-          <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 'var(--font-size-body-sm)' }}>
-            Les raccourcis utiles pour fermer les portes live sans chercher dans Vercel.
-          </p>
-        </div>
-        {dashboardLinks.teamId ? <Badge tone="neutral">{shortId(dashboardLinks.teamId)}</Badge> : null}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 10 }}>
-        {dashboardLinks.links.map((link) => (
-          <a
-            key={link.key}
-            href={link.href}
-            target="_blank"
-            rel="noreferrer"
-            style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 12, display: 'grid', gap: 6, color: 'var(--text)', textDecoration: 'none', background: 'var(--surface)' }}
-          >
-            <strong>{link.label}</strong>
-            <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote-lg)' }}>{link.purpose}</span>
-          </a>
-        ))}
-      </div>
-    </Card>
-  )
-}
-
 function ReadinessRow({ label, detail, done }: { label: string; detail: string; done: boolean }) {
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 12, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
@@ -1653,18 +1618,6 @@ function ReadinessRow({ label, detail, done }: { label: string; detail: string; 
         <strong style={{ display: 'block' }}>{label}</strong>
         <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote-lg)' }}>{detail}</span>
       </div>
-    </div>
-  )
-}
-
-function DecisionRow({ label, status, nextAction }: { label: string; status: string; nextAction: string }) {
-  return (
-    <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 12, display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-      <div style={{ minWidth: 220, flex: 1 }}>
-        <strong style={{ display: 'block' }}>{label}</strong>
-        <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote-lg)' }}>{nextAction}</span>
-      </div>
-      <Badge tone={status === 'planned' ? 'gold' : 'neutral'}>{status === 'prepared' ? 'Prêt' : status === 'planned' ? 'Planifié' : status}</Badge>
     </div>
   )
 }
@@ -1678,119 +1631,6 @@ function UsageRow({ label, dashboard, owner, actionIfBad }: { label: string; das
       </div>
       <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote-lg)' }}>{dashboard}</span>
       <span style={{ color: 'var(--text-faint)', fontSize: 'var(--font-size-footnote-lg)' }}>{actionIfBad}</span>
-    </div>
-  )
-}
-
-function LiveGateRow({
-  label,
-  status,
-  evidenceRequired,
-  safeNextAction,
-  riskIfForced,
-}: {
-  label: string
-  status: string
-  evidenceRequired: string
-  safeNextAction: string
-  riskIfForced: string
-}) {
-  const tone = status === 'requires-explicit-approval' ? 'danger' : status.includes('manual') ? 'gold' : 'neutral'
-  return (
-    <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 12, display: 'grid', gap: 8 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <strong>{label}</strong>
-        <Badge tone={tone}>{status === 'requires-explicit-approval' ? 'Accord requis' : status.includes('manual') ? 'Action humaine' : 'Action préparée'}</Badge>
-      </div>
-      <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote-lg)' }}>Preuve attendue: {evidenceRequired}</span>
-      <span style={{ color: 'var(--text)', fontSize: 'var(--font-size-footnote-lg)' }}>Prochaine action: {safeNextAction}</span>
-      <span style={{ color: 'var(--danger)', fontSize: 'var(--font-size-footnote-lg)' }}>Risque si forcé: {riskIfForced}</span>
-    </div>
-  )
-}
-
-function ActivationStepRow({
-  rank,
-  label,
-  owner,
-  automationLevel,
-  whyFirst,
-  preflight,
-  commandOrPlace,
-  doneWhen,
-}: {
-  rank: number
-  label: string
-  owner: string
-  automationLevel: string
-  whyFirst: string
-  preflight: string
-  commandOrPlace: string
-  doneWhen: string
-}) {
-  const tone = automationLevel === 'requires-explicit-approval' ? 'danger' : automationLevel.includes('manual') ? 'gold' : 'teal'
-  const automationLabel = automationLevel === 'requires-explicit-approval'
-    ? 'Accord explicite'
-    : automationLevel.includes('manual')
-      ? 'Manuel'
-      : 'Automatisable'
-  return (
-    <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 12, display: 'grid', gap: 8 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <span style={{ width: 28, height: 28, borderRadius: 'var(--radius-pill)', display: 'grid', placeItems: 'center', background: 'var(--primary-a14)', color: 'var(--primary)', fontWeight: 800 }}>
-            {rank}
-          </span>
-          <strong>{label}</strong>
-        </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Badge tone="neutral">{owner}</Badge>
-          <Badge tone={tone}>{automationLabel}</Badge>
-        </div>
-      </div>
-      <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote-lg)' }}>Pourquoi maintenant: {whyFirst}</span>
-      <span style={{ color: 'var(--text)', fontSize: 'var(--font-size-footnote-lg)' }}>Avant: {preflight}</span>
-      <span style={{ color: 'var(--text-faint)', fontSize: 'var(--font-size-footnote-lg)' }}>Action: {commandOrPlace}</span>
-      <span style={{ color: 'var(--primary)', fontSize: 'var(--font-size-footnote-lg)' }}>Terminé quand: {doneWhen}</span>
-    </div>
-  )
-}
-
-function CompletionRequirementRow({
-  label,
-  status,
-  evidenceSource,
-  evidenceRequired,
-  currentEvidence,
-  nextAction,
-  evidenceRecordCommand,
-  copiedCommand,
-  onCopyCommand,
-}: {
-  label: string
-  status: string
-  evidenceSource: string
-  evidenceRequired: string
-  currentEvidence: string
-  nextAction: string
-  evidenceRecordCommand: string
-  copiedCommand: string | null
-  onCopyCommand: (command: string) => void
-}) {
-  const isComplete = status === 'complete'
-  const tone = isComplete ? 'teal' : status === 'prepared' ? 'neutral' : 'gold'
-  const labelText = isComplete ? 'Prouvé' : status === 'prepared' ? 'Préparé' : 'Preuve live attendue'
-  return (
-    <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 12, display: 'grid', gap: 8 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <strong>{label}</strong>
-        <Badge tone={tone}>{labelText}</Badge>
-      </div>
-      <span style={{ color: 'var(--text-faint)', fontSize: 'var(--font-size-footnote-lg)' }}>Source: {evidenceSource}</span>
-      <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-footnote-lg)' }}>Preuve requise: {evidenceRequired}</span>
-      <span style={{ color: isComplete ? 'var(--primary)' : 'var(--warning)', fontSize: 'var(--font-size-footnote-lg)' }}>Preuve actuelle: {currentEvidence}</span>
-      <span style={{ color: 'var(--text)', fontSize: 'var(--font-size-footnote-lg)' }}>Prochaine action: {nextAction}</span>
-      <CommandLine label="Commande preuve" command={evidenceRecordCommand} copied={copiedCommand === evidenceRecordCommand} onCopy={onCopyCommand} />
     </div>
   )
 }

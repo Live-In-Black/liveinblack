@@ -177,7 +177,7 @@ graph TD
 | **Achat Billetterie (FCFA)** | Tunnel de paiement complet | `app/checkout/[eventId]` | ✅ Opérationnel |
 | **Portefeuille de Billets** | `/profile/billets`, `/ticket/[token]` | `(tabs)/tickets`, `order/[id]/[code]` | ✅ Opérationnel |
 | **Scanner QR Code Staff** | `/scanner/[eventId]` | `app/scanner.tsx` (Caméra native) | ✅ Opérationnel |
-| **Vente Agent Guichet** | `/on-site-sales/[eventId]` | `app/agent-sales/[eventId]` | ✅ Opérationnel |
+| **Vente sur place membre vendeur** | `/on-site-sales/[eventId]` | `app/agent-sales/[eventId]` | ✅ Opérationnel |
 | **Messagerie & Groupes** | `/messages` | `(tabs)/messages`, `conversation/[id]` | ✅ Opérationnel |
 | **Studio Organisateur** | `/organizer-studio`, `/my-events` | `app/spaces/organizer` | ✅ Opérationnel |
 | **Espace Prestataire** | `/offer-services` | `app/provider/[id]`, `app/spaces/` | ✅ Opérationnel |

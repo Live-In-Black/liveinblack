@@ -1,4 +1,4 @@
-// Templates historiques de la bourse de revente officielle de billets.
+// Templates historiques d'un module fermé en V1.
 // La revente est exclue de la V1 : ne pas exposer ces e-mails dans le catalogue actif.
 import type { Email } from '../types'
 import { DEFAULT_SITE } from '../theme'

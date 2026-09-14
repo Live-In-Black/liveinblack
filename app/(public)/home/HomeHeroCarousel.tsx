@@ -12,8 +12,12 @@ interface HeroSlide {
 
 const SLIDES: HeroSlide[] = [
   {
+    type: 'image',
+    src: '/images/live-in-black/night-benin/night-benin-hero.png',
+  },
+  {
     type: 'video',
-    src: 'https://assets.mixkit.co/videos/337/337-720.mp4',
+    src: '/videos/nightclub-atmosphere.mp4',
     poster: '/videos/nightclub-atmosphere-poster.jpg',
   },
   {
@@ -63,7 +67,8 @@ export default function HomeHeroCarousel() {
                 ref={videoRef}
                 src={slide.src}
                 poster={slide.poster}
-                autoPlay
+                preload="none"
+                autoPlay={isActive}
                 muted
                 playsInline
                 loop={false}
@@ -83,7 +88,6 @@ export default function HomeHeroCarousel() {
               alt=""
               fill
               priority={index === 0}
-              unoptimized
               sizes="100vw"
               className={`${styles.heroImage} ${isActive ? styles.heroImageActive : ''}`}
             />

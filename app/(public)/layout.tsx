@@ -1,7 +1,11 @@
+import dynamic from 'next/dynamic'
 import { Footer, PublicNav } from '@/app/components/layout'
-import AmbientMusicPlayer from '@/app/components/layout/AmbientMusicPlayer'
 import PublicRouteFrame from './_components/PublicRouteFrame'
 import './public-system.css'
+
+const AmbientMusicPlayer = dynamic(
+  () => import('@/app/components/layout/AmbientMusicPlayer')
+)
 
 export default function PublicLayout({
   children,

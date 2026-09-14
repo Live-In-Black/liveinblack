@@ -619,7 +619,7 @@ Cette priorisation est une recommandation de synthèse, pas une nouvelle décisi
 
 1. **Bloquer les incohérences d'argent et de droits** : paiement FedaPay complet, montants XOF exacts, comptes séparés, revente désactivée réellement, permissions et invalidation atomique des billets/remboursements.
 2. **Conformer les parcours d'inscription aux demandes exactes** : retirer les champs/pièces/étape indiqués, accepter les numéros béninois, corriger mot de passe/confirmation et accessibilité des actions.
-3. **Conformer remboursements et ventes agents** : règles R58, signature/code unique, contestations, preuve et arbitrages cash avant exploitation réelle.
+3. **Conformer remboursements et ventes terrain** : règles R58, signature/code unique, contestations, preuve et arbitrages cash avant exploitation réelle.
 4. **Nettoyer le périmètre Bénin et les communications** : données, filtres, devises, Stripe, exemples/e-mails, contact professionnel et rappels de messagerie non répétitifs.
 5. **Réparer découverte et ergonomie** : catégories, cartes, blog, statistiques, responsive, contrastes, boutons et régressions mobiles.
 6. **Mettre à jour la recette puis valider la release réelle** : comptes propres, paiement de bout en bout, agents/QR/remboursement, builds Android/iOS, réseau faible, résultats et preuves par cas.

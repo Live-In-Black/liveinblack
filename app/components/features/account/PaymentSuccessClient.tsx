@@ -62,13 +62,13 @@ export default function PaymentSuccessClient({
   fedapayTxnId,
   fedapayClose,
   freeOrderId,
-  stripeCancelledEventId,
+  historicalCancelledEventId,
 }: {
   sessionId: string | null
   fedapayTxnId: string | null
   fedapayClose: boolean
   freeOrderId: string | null
-  stripeCancelledEventId?: string | null
+  historicalCancelledEventId?: string | null
 }) {
   const router = useRouter()
   const isFedapay = !sessionId && !!fedapayTxnId
@@ -76,13 +76,13 @@ export default function PaymentSuccessClient({
   // Retour direct d'un ancien cancel_url historique (jamais de session_id, jamais
   // de webhook actif en V1) : état "cancelled" immédiat, même écran que
   // l'abandon FedaPay.
-  const isStripeCancelled = !sessionId && !fedapayTxnId && !freeOrderId && !!stripeCancelledEventId
+  const isHistoricalCancelled = !sessionId && !fedapayTxnId && !freeOrderId && !!historicalCancelledEventId
 
-  const missingParams = !sessionId && !fedapayTxnId && !freeOrderId && !isStripeCancelled
-  const [state, setState] = useState<State>(isStripeCancelled ? 'cancelled' : missingParams ? 'error' : 'loading')
+  const missingParams = !sessionId && !fedapayTxnId && !freeOrderId && !isHistoricalCancelled
+  const [state, setState] = useState<State>(isHistoricalCancelled ? 'cancelled' : missingParams ? 'error' : 'loading')
   const [ticketCount, setTicketCount] = useState(0)
   const [eventName, setEventName] = useState('')
-  const [eventId, setEventId] = useState(stripeCancelledEventId || '')
+  const [eventId, setEventId] = useState(historicalCancelledEventId || '')
   const [errorMsg, setErrorMsg] = useState(missingParams ? "Impossible de retrouver ta commande. Vérifie tes billets ou réessaie depuis l'événement." : '')
   const [copied, setCopied] = useState(false)
   const [attempt, setAttempt] = useState(0)
@@ -95,7 +95,7 @@ export default function PaymentSuccessClient({
   }
 
   useEffect(() => {
-    if (missingParams || isStripeCancelled) return
+    if (missingParams || isHistoricalCancelled) return
 
     let cancelled = false
     ;(async () => {
@@ -155,7 +155,7 @@ export default function PaymentSuccessClient({
       setState(result)
     })()
     return () => { cancelled = true }
-  }, [sessionId, fedapayTxnId, fedapayClose, freeOrderId, isFedapay, isFree, missingParams, isStripeCancelled, attempt])
+  }, [sessionId, fedapayTxnId, fedapayClose, freeOrderId, isFedapay, isFree, missingParams, isHistoricalCancelled, attempt])
 
   // Auto-refresh borné : tant que « en attente », on re-vérifie tout seul
   // toutes les 3,5 s (jusqu'à 5 fois) — le webhook finit en général en

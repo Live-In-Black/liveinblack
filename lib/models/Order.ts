@@ -76,7 +76,7 @@ const orderSchema = new Schema(
     // 'ticket' = achat normal (stock décrémenté, billets mintés par
     // fulfillOrder). 'resale' = achat d'un billet REVENDU (aucun stock
     // touché, mute un Ticket existant — voir lib/server/resale.ts).
-    // 'agent_sale' = vente sur place par un agent désigné (#C,
+    // 'agent_sale' = vente sur place par un membre vendeur désigné (#C,
     // lib/server/agentSales.ts) — décrémente le stock comme un achat normal,
     // mais le titulaire du billet n'est pas forcément le payeur (userId reste
     // requis par le schéma Ticket mais ne représente qu'un rattachement

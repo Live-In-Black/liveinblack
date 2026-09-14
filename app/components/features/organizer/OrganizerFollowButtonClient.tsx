@@ -16,7 +16,7 @@ import styles from './OrganizerFollowButtonClient.module.css'
 
 // 'outline' : utilisé quand ce bouton est affiché juste à côté d'une action
 // principale déjà pleine (ex. « Envoyer un message » sur la fiche
-// organisateur) — deux pills pleines vert vif de même poids visuel côte à
+// organisateur) — deux actions primaires de même poids visuel côte à
 // côte laissaient croire aux deux actions d'être équivalentes.
 export type FollowAppearance = 'default' | 'premium' | 'outline'
 

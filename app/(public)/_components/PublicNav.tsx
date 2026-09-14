@@ -400,6 +400,7 @@ export default function PublicNav({ dashboardLinks }: { dashboardLinks?: Dashboa
           height={285}
           className="lb-public-nav__brand-logo"
           priority
+          sizes="(max-width: 768px) 140px, 180px"
         />
       </Link>
       <nav aria-label="Navigation principale" className="lb-public-nav__links">

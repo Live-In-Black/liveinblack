@@ -5,7 +5,7 @@ import { canAdminister, type Role, type AccountStatus } from '@/lib/server/permi
 // (allowlist env) du legacy : cette migration n'a pas besoin de ce
 // contournement permanent, puisque `roles: string[]` accepte déjà 'agent'
 // comme n'importe quel autre rôle (voir lib/server/permissions.ts). Le tout
-// premier compte agent se crée par écriture directe en base (script
+// premier compte administrateur plateforme se crée par écriture directe en base (script
 // d'exploitation, comme scripts/seed-dev.ts), pas par un bypass qui
 // resterait actif à vie dans le code — cohérent avec l'esprit de fermeture
 // de failles de cette migration plutôt que de reproduire un contournement.

@@ -98,7 +98,7 @@
 - **Booster un événement** (mise en avant payante, slots limités)
 - Consulter les réservations (`BookingsPanel`) et les statistiques par événement (`/my-events/[id]/statistiques`)
 - Gérer le staff d'un événement (rôles : scan, serveur, manager, dj — `EventStaff`)
-- Assigner un agent de vente sur place à un événement
+- Assigner un membre vendeur sur place à un événement
 
 ### 3.4 Suivi de trésorerie
 - Consulter ses versements automatiques (payouts)
@@ -144,12 +144,12 @@
 - Gérer les paiements en attente (versements auto en échec, demandes de virement, soldes dus)
 - Marquer un versement comme payé / remboursé / examiné
 
-### 5.4 Vente de billets sur place (agent terrain)
+### 5.4 Vente de billets sur place (membre terrain)
 - Vendre un billet en espèces ou Mobile Money directement à l'entrée d'un événement (sans besoin de compte pour l'acheteur — billet nommé, `source: agent_cash`/`agent_momo`)
-- Règlement cash en deux modes : débit immédiat de la commission sur l'organisateur, ou règlement numérique par l'agent lui-même
+- Règlement cash en deux modes : débit immédiat de la commission sur l'organisateur, ou règlement numérique par le membre vendeur lui-même
 - Vente de groupe à prix forfaitaire (3-5 places), premier participant nommé désigné hôte automatique
 - Blocage des ventes cash pour un agent/organisateur après 5 ventes non réglées
-- Paiement Mobile Money push direct (le client valide lui-même sur son téléphone, aucun OTP ne transite par l'agent)
+- Paiement Mobile Money push direct (le client valide lui-même sur son téléphone, aucun OTP ne transite par le membre vendeur)
 
 ### 5.5 Configuration plateforme
 - Configurer la page d'accueil publique (mise en avant, carrousel actualité)

@@ -520,8 +520,8 @@ export default function OrganizerOnboardingWizard({
               </p>
               {[
                 ['01', 'Dossier approuvé', 'Ton dossier est examiné et validé par notre équipe.'],
-                ['02', 'Connexion FedaPay', 'Tu relies ton compte de reversement via FedaPay.'],
-                ['03', 'Répartition instantanée', "Ta part t'est versée directement à chaque achat de billet, sans délai d'attente."],
+                ['02', 'Connexion FedaPay', 'Tu relies ton compte FedaPay Marketplace pour recevoir ta part.'],
+                ['03', 'Répartition instantanée', 'Ta part est répartie directement à chaque achat de billet, sans délai d’attente.'],
               ].map(([n, title, body]) => (
                 <div key={n} style={{ display: 'flex', gap: 12 }}>
                   <span style={{ fontSize: 'var(--font-size-callout)', fontWeight: 800, color: 'var(--primary)' }}>{n}</span>
@@ -532,14 +532,14 @@ export default function OrganizerOnboardingWizard({
                 </div>
               ))}
               <p style={{ fontSize: 'var(--font-size-caption-lg)', color: 'var(--text-faint)', margin: 0 }}>
-                Tes coordonnées de paiement ne transitent jamais par LIVEINBLACK. Les transactions sont sécurisées par FedaPay. Aucune information bancaire n&apos;est demandée ici — tu configureras ton compte de reversement après approbation.
+                Tes coordonnées de paiement ne transitent jamais par LIVEINBLACK. Les transactions sont sécurisées par FedaPay. Aucune information bancaire n&apos;est demandée ici — tu configureras ton compte FedaPay Marketplace après approbation.
               </p>
             </div>
           )}
 
           {step === 3 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <h2 style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>Documents justificatifs</h2>
+              <h2 style={{ fontSize: 'var(--font-size-body-sm)', fontWeight: 400, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3.2px', fontFamily: 'var(--font-display), sans-serif', margin: 0 }}>Pièce d&apos;identité</h2>
               <p style={{ fontSize: 'var(--font-size-footnote-lg)', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
                 Seule la pièce d&apos;identité du titulaire du compte est demandée. Elle est stockée de façon privée et accessible uniquement à
                 l&apos;équipe LIVEINBLACK. Formats acceptés : PDF, JPG, PNG — 10 Mo max par fichier.

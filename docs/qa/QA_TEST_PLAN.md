@@ -698,7 +698,7 @@
 
 ### TICK-029 — Aucune action "Revendre" visible
 **Priorité** : Critique
-**Étapes** : 1. Ouvrir l'espace billets avec un billet payé, gratuit, invité, agent terrain, table/groupe et billet scanné. 2. Vérifier les actions disponibles.
+**Étapes** : 1. Ouvrir l'espace billets avec un billet payé, gratuit, invité, membre terrain, table/groupe et billet scanné. 2. Vérifier les actions disponibles.
 **Résultat attendu** : Aucun bouton, formulaire, listing public ou prix de revente n'est affiché. La V1 Bénin conserve seulement les actions de billet, invitation/assignation et remboursement autorisé.
 **Couverture auto existante** : `test-v1-resale` / gardes d'absence de parcours V1.
 
@@ -2224,7 +2224,7 @@ La vente sur place (`lib/server/agentSales.ts`) est le module le plus complexe d
 - Priorité : Moyenne
 - Préconditions : utilisateur avec email non vérifié.
 - Étapes : depuis le panneau détail, cliquer "Renvoyer vérification" puis "Envoyer réinitialisation".
-- Résultat attendu : un jeton à usage unique est émis (`issueVerificationToken`), les anciens jetons invalidés, un email est envoyé au vrai email de l'utilisateur (jamais de mot de passe visible/choisi par l'agent) ; si `already_verified`, l'action "vérification" est refusée (409).
+- Résultat attendu : un jeton à usage unique est émis (`issueVerificationToken`), les anciens jetons invalidés, un email est envoyé au vrai email de l'utilisateur (jamais de mot de passe visible/choisi par l'admin) ; si `already_verified`, l'action "vérification" est refusée (409).
 - Couverture auto existante : `agentUsers.integration.test.ts` couvre `sendUserVerificationEmail`/`sendUserPasswordResetEmail` (succès + cas `already_verified` + échec d'envoi → jetons ré-invalidés).
 
 **AGT-015 — Modifier l'email d'un compte : unicité et invalidation des jetons**
@@ -2507,7 +2507,7 @@ Contexte : rôle `EventStaff` "vendeur" (jamais confondu avec `User.roles: 'agen
 - Préconditions : compte quelconque n'ayant ni `organizerId`/`createdBy` sur l'événement, ni entrée `EventStaff.roster[uid].role === 'vendeur'`.
 - Étapes : appeler `sellTicketOnSite`/route `sell` avec ce compte.
 - Résultat attendu : `403 forbidden`, aucune commande créée, aucun stock décrémenté.
-- Couverture auto existante : test "refuse un appelant qui n'est ni propriétaire ni agent de vente désigné".
+- Couverture auto existante : test "refuse un appelant qui n'est ni propriétaire ni membre vendeur désigné".
 
 **AGT-101 — Autorisation : le rôle `EventStaff` "vendeur" peut vendre**
 - Priorité : Critique
@@ -2597,14 +2597,14 @@ Contexte : rôle `EventStaff` "vendeur" (jamais confondu avec `User.roles: 'agen
 - Résultat attendu : `qty` forcé à 1, `isTable` forcé à `false` (une tentative de vente de table à l'entrée est rejetée : `no_group_at_door`), aucune précommande acceptée même si transmise ; le billet généré a `checkedInAt` renseigné immédiatement (`checkInImmediately: order.qty === 1 && !order.isTable && order.preorders.length === 0`) — le client entre directement sans scan de QR code, conformément à la spec §1.3 ("évite d'attendre l'envoi/scan d'un QR alors que le client est déjà à l'entrée").
 - Couverture auto existante : test "force qty=1, aucune précommande, et check-in immédiat" — vérifie `ticketCodes.length === 1` et `ticket.checkedInAt` renseigné.
 
-**AGT-114 — Un billet vendu par l'agent n'est jamais revendable**
+**AGT-114 — Un billet vendu par membre terrain n'est jamais revendable**
 - Priorité : Critique
 - Préconditions : billet émis via `agent_cash` ou `agent_momo` (n'importe lequel des scénarios ci-dessus).
 - Étapes : depuis le compte destinataire (si un compte existe et que le billet lui a été rattaché) ou via l'API de revente, tenter de mettre ce billet en revente.
 - Résultat attendu : `lib/server/resale.ts` refuse avec `not_resellable_source` (409) — la garde vérifie que `ticket.source === 'paid'` OU commence par `'stripe'`/`'fedapay'` ; `'agent_cash'` et `'agent_momo'` ne remplissent aucune de ces conditions et sont donc systématiquement exclus de la revente.
 - Couverture auto existante : la garde de revente est testée dans la suite `resale` générale (hors périmètre agent listé) ; le lien direct "billet `agent_sale` → source `agent_cash`/`agent_momo` → non revendable" n'est pas testé explicitement dans `agentSales.integration.test.ts` — recommandé d'ajouter un test croisé `agentSales` + `resale`, ou de le couvrir manuellement.
 
-**AGT-115 — Dashboard des ventes agent pour un événement**
+**AGT-115 — Dashboard des ventes terrain pour un événement**
 - Priorité : Basse
 - Étapes : consulter `getAgentSalesDashboard` pour un événement avec un mélange de ventes cash réglées/en attente et Mobile Money payées.
 - Résultat attendu : `totalSales` = commandes `agent_sale` payées ; `cashPending`/`cashSettled` = comptage des `CashSaleSettlement` par statut ; `momoSales` = commandes `rail: 'fedapay'` payées ; l'agrégation est bien filtrée sur `agentUid: caller.id` (un agent ne voit que ses propres ventes sur ce tableau, pas celles des autres vendeurs de l'événement).

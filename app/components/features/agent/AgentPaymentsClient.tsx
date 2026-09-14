@@ -25,13 +25,13 @@ import styles from './AgentPaymentsClient.module.css'
 const PAGE_SIZE = 15
 const CASH_OPERATION_STORAGE_PREFIX = 'lib:cash-refund-operation:'
 
-// Port de la fusion des 3 onglets legacy 'reversements' / 'remboursements' /
+// Port de la fusion des 3 onglets legacy 'exceptions finance' / 'remboursements' /
 // 'paiements' (src/pages/AgentPage.jsx) en un seul panneau (#9 phase
 // agent/admin, tâche #102). Logique métier (calcul des soldes, décrément
-// atomique, garde anti double-versement) déjà côté serveur — voir
+// atomique, garde anti double-règlement) déjà côté serveur — voir
 // lib/server/agentPayments.ts. Ce composant ne fait qu'afficher les files
-// d'attente et déclencher les 2-3 actions de règlement manuel, toujours
-// derrière une confirmation explicite (argent réel qui bouge).
+// d'attente et déclencher les actions d'exception validées par l'admin,
+// toujours derrière une confirmation explicite (argent réel qui bouge).
 //
 function fmtXOF(amountDueXOF: number): string {
   return fmtMoney(amountDueXOF, 'XOF')
@@ -138,7 +138,7 @@ interface PaymentAlertView {
 }
 
 const ALERT_REASON_LABEL: Record<string, string> = {
-  auto_payout_failed: "Versement auto à l'organisateur ÉCHOUÉ — à régler à la main",
+  auto_payout_failed: "Répartition FedaPay vers l'organisateur ÉCHOUÉE — à vérifier",
   boost_plan_missing: 'Boost payé mais formule introuvable',
   boost_price_mismatch: 'Boost activé au prix payé (le tarif avait changé depuis) — vérifier',
   boost_slot_lost: "Remboursement d'un boost (créneau perdu) à vérifier",
@@ -156,7 +156,7 @@ function fmtDate(iso: string): string {
 }
 
 // `details` vient de sources d'alerte hétérogènes (webhooks, cron de
-// versement…) sans schéma commun exhaustif à mapper vers des
+// règlement…) sans schéma commun exhaustif à mapper vers des
 // libellés — on affiche donc chaque paire clé/valeur lisiblement (clé
 // humanisée, valeur brute) plutôt qu'un blob JSON.stringify() d'un bloc.
 function humanizeDetailKey(key: string): string {
@@ -194,7 +194,7 @@ type ConfirmAction =
 // une vue sans filtre ni action, à sa place naturelle à côté des autres
 // files financières plutôt que dans sa propre entrée de sidebar.
 const SECTIONS = [
-  { key: 'payouts', label: 'Reversements', helper: 'À verser', color: 'var(--gold-text)', icon: Landmark },
+  { key: 'payouts', label: 'Exceptions finance', helper: 'À vérifier', color: 'var(--gold-text)', icon: Landmark },
   { key: 'refunds', label: 'Remboursements', helper: 'À restituer', color: 'var(--accent-text)', icon: RotateCcw },
   { key: 'points', label: 'Lieux retrait', helper: 'Réseau cash', color: 'var(--gold-text)', icon: Banknote },
   { key: 'alerts', label: 'Alertes paiement', helper: 'À vérifier', color: 'var(--accent-text)', icon: ShieldCheck },
@@ -223,7 +223,6 @@ export default function AgentPaymentsClient() {
   const [toast, setToast] = useState<ToastState | null>(null)
 
   const [failedPayoutsPage, setFailedPayoutsPage] = useState(1)
-  const [payoutRequestsPage, setPayoutRequestsPage] = useState(1)
   const [balancesNoReqPage, setBalancesNoReqPage] = useState(1)
   const [refundsPage, setRefundsPage] = useState(1)
   const [alertsPage, setAlertsPage] = useState(1)
@@ -252,7 +251,6 @@ export default function AgentPaymentsClient() {
       setRefundPoints(pointsData.points)
       setAlerts(alertsData.alerts)
       setFailedPayoutsPage(1)
-      setPayoutRequestsPage(1)
       setBalancesNoReqPage(1)
       setRefundsPage(1)
       setAlertsPage(1)
@@ -285,7 +283,6 @@ export default function AgentPaymentsClient() {
             setRefundPoints(pointsData.points)
             setAlerts(alertsData.alerts)
           setFailedPayoutsPage(1)
-          setPayoutRequestsPage(1)
           setBalancesNoReqPage(1)
           setRefundsPage(1)
           setAlertsPage(1)
@@ -318,7 +315,7 @@ export default function AgentPaymentsClient() {
           showToast(data.error === 'not_failed' ? 'Reparti en automatique entre-temps — liste mise à jour.' : "Échec du marquage — rien n'a été décrémenté. Réessaie.", 'error')
         } else {
           setFailedPayouts((prev) => prev.filter((p) => p.eventId !== confirm.eventId))
-          showToast(`Versement de ${fmtXOF(data.paid)} marqué payé`, 'success')
+          showToast(`Règlement de ${fmtXOF(data.paid)} marqué payé`, 'success')
         }
       } else if (confirm.type === 'closeRequest') {
         const res = await fetch('/api/admin/payments/payouts/settle', {
@@ -331,7 +328,7 @@ export default function AgentPaymentsClient() {
           showToast('Échec — la demande reste ouverte. Réessaie.', 'error')
         } else {
           setPayoutRequests((prev) => prev.filter((r) => r.requestId !== confirm.requestId))
-          showToast('Demande close (solde déjà à zéro)', 'success')
+          showToast('Dossier clos (solde déjà à zéro)', 'success')
         }
       } else if (confirm.type === 'completeRefund') {
         const res = await fetch(`/api/admin/payments/refunds/${confirm.refundId}/complete`, {
@@ -472,13 +469,10 @@ export default function AgentPaymentsClient() {
           ) : section === 'payouts' ? (
             <PayoutsSection
               failedPayouts={failedPayouts}
-              payoutRequests={payoutRequests}
               balancesNoReq={balancesNoReq}
               setConfirm={setConfirm}
               failedPayoutsPage={failedPayoutsPage}
               setFailedPayoutsPage={setFailedPayoutsPage}
-              payoutRequestsPage={payoutRequestsPage}
-              setPayoutRequestsPage={setPayoutRequestsPage}
               balancesNoReqPage={balancesNoReqPage}
               setBalancesNoReqPage={setBalancesNoReqPage}
             />
@@ -499,28 +493,22 @@ export default function AgentPaymentsClient() {
   )
 }
 
-// ──────────────────────────── Reversements ──────────────────────────────────
+// ──────────────────────────── Exceptions finance ────────────────────────────
 
 function PayoutsSection({
   failedPayouts,
-  payoutRequests,
   balancesNoReq,
   setConfirm,
   failedPayoutsPage,
   setFailedPayoutsPage,
-  payoutRequestsPage,
-  setPayoutRequestsPage,
   balancesNoReqPage,
   setBalancesNoReqPage,
 }: {
   failedPayouts: FailedPayout[]
-  payoutRequests: PayoutRequestView[]
   balancesNoReq: SellerBalanceView[]
   setConfirm: (a: ConfirmAction) => void
   failedPayoutsPage: number
   setFailedPayoutsPage: (p: number) => void
-  payoutRequestsPage: number
-  setPayoutRequestsPage: (p: number) => void
   balancesNoReqPage: number
   setBalancesNoReqPage: (p: number) => void
 }) {
@@ -538,7 +526,7 @@ function PayoutsSection({
 
   if (empty) {
     return (
-      <EmptyState title="Aucun reversement en attente" description="Les soldes vendeurs non reversés automatiquement apparaîtront ici." />
+      <EmptyState title="Aucune exception finance" description="Les répartitions FedaPay ou soldes historiques à vérifier apparaîtront ici." />
     )
   }
 
@@ -547,17 +535,17 @@ function PayoutsSection({
       <Card accent="rgba(var(--gold-rgb), .30)" className={styles.guideCard} role="note">
         <div className={styles.guideIcon} aria-hidden="true"><CircleDollarSign size={21} /></div>
         <div>
-          <strong>Filet de sécurité des reversements</strong>
+          <strong>Filet de sécurité FedaPay</strong>
           <p>La V1 Bénin suit les montants FCFA et les règlements FedaPay/Mobile Money. Les anciens soldes hors périmètre ne sont pas proposés comme actions de lancement.</p>
         </div>
       </Card>
 
       {failedPayouts.length > 0 && (
         <div className={styles.queue}>
-          <QueueHeader icon={<Smartphone size={18} aria-hidden="true" />} title="Versements Mobile Money en échec" description="À régler dans FedaPay avant de les marquer comme payés." count={failedPayouts.length} tone="danger" />
+          <QueueHeader icon={<Smartphone size={18} aria-hidden="true" />} title="Répartitions FedaPay en échec" description="À vérifier dans FedaPay avant de les marquer comme réglées." count={failedPayouts.length} tone="danger" />
           <div className={styles.cardGrid}>
             {failedPayoutsPageItems.map((p) => (
-              <Card key={p.eventId} accent="var(--primary-a32)" className={`${styles.moneyCard} ${styles.dangerCard}`} role="article" aria-label={`Versement en échec pour ${p.eventName}, ${fmtXOF(p.amountDueXOF)}`}>
+              <Card key={p.eventId} accent="var(--primary-a32)" className={`${styles.moneyCard} ${styles.dangerCard}`} role="article" aria-label={`Répartition FedaPay en échec pour ${p.eventName}, ${fmtXOF(p.amountDueXOF)}`}>
                 <div className={styles.cardTop}>
                   <div className={styles.identity}>
                     <span className={`${styles.identityIcon} ${styles.dangerIcon}`} aria-hidden="true"><AlertTriangle size={18} /></span>
@@ -568,13 +556,13 @@ function PayoutsSection({
                   </div>
                   <span className={`${styles.status} ${styles.statusDanger}`}>Échec</span>
                 </div>
-                <div className={styles.amountRow}><span>Montant à verser</span><strong>{fmtXOF(p.amountDueXOF)}</strong></div>
+                <div className={styles.amountRow}><span>Montant à régler</span><strong>{fmtXOF(p.amountDueXOF)}</strong></div>
                 {p.failReason && <div className={styles.note}><AlertTriangle size={15} aria-hidden="true" /><span><strong>Motif de l’échec : </strong>{p.failReason}</span></div>}
                 {p.eventCancelled ? (
-                  <div className={`${styles.note} ${styles.blockingNote}`} role="alert"><ShieldCheck size={16} aria-hidden="true" /><span><strong>Opération bloquée. </strong>Événement annulé : ne rien verser à l&apos;organisateur. La recette doit rembourser les acheteurs.</span></div>
+                  <div className={`${styles.note} ${styles.blockingNote}`} role="alert"><ShieldCheck size={16} aria-hidden="true" /><span><strong>Opération bloquée. </strong>Événement annulé : ne rien régler à l&apos;organisateur. La recette doit financer les remboursements acheteurs.</span></div>
                 ) : (
-                  <Button variant="primary" icon={<CheckCircle2 size={16} aria-hidden="true" />} className={styles.cardAction} aria-label={`Confirmer le versement de ${fmtXOF(p.amountDueXOF)} à ${p.sellerName}`} onClick={() => setConfirm({ type: 'markPayoutPaid', eventId: p.eventId, label: fmtXOF(p.amountDueXOF), who: p.sellerName })}>
-                    Confirmer le versement
+                  <Button variant="primary" icon={<CheckCircle2 size={16} aria-hidden="true" />} className={styles.cardAction} aria-label={`Confirmer le règlement de ${fmtXOF(p.amountDueXOF)} à ${p.sellerName}`} onClick={() => setConfirm({ type: 'markPayoutPaid', eventId: p.eventId, label: fmtXOF(p.amountDueXOF), who: p.sellerName })}>
+                    Confirmer le règlement
                   </Button>
                 )}
               </Card>
@@ -586,7 +574,7 @@ function PayoutsSection({
 
       {xofBalancesNoReq.length > 0 && (
         <div className={styles.queue}>
-          <QueueHeader icon={<Banknote size={18} aria-hidden="true" />} title="Soldes XOF dus sans demande" description="Soldes FCFA disponibles qui n’ont pas encore fait l’objet d’une demande." count={xofBalancesNoReq.length} tone="muted" />
+          <QueueHeader icon={<Banknote size={18} aria-hidden="true" />} title="Soldes XOF historiques" description="Soldes FCFA à contrôler hors parcours FedaPay Marketplace V1." count={xofBalancesNoReq.length} tone="muted" />
           <div className={styles.cardGrid}>
             {balancesNoReqPageItems.map((b) => (
               <PayoutCard key={b.sellerUid} sellerUid={b.sellerUid} sellerName={b.sellerName} sellerEmail={b.sellerEmail} amountDueCents={b.amountDueCents} amountDueXOF={b.amountDueXOF} requestId={null} requestedAt={null} mismatch={false} setConfirm={setConfirm} />
@@ -634,7 +622,7 @@ function PayoutCard({
   setConfirm: (a: ConfirmAction) => void
 }) {
   return (
-    <Card accent={requestId ? 'rgba(var(--gold-rgb), .30)' : undefined} className={styles.moneyCard} role="article" aria-label={`${requestId ? 'Demande de virement' : 'Solde disponible'} pour ${sellerName}`}>
+    <Card accent={requestId ? 'rgba(var(--gold-rgb), .30)' : undefined} className={styles.moneyCard} role="article" aria-label={`${requestId ? 'Dossier historique' : 'Solde disponible'} pour ${sellerName}`}>
       <div className={styles.cardTop}>
         <div className={styles.identity}>
           <span className={styles.identityIcon} aria-hidden="true"><UserRound size={18} /></span>
@@ -643,10 +631,10 @@ function PayoutCard({
             <span>{sellerEmail || sellerUid}</span>
           </div>
         </div>
-        <span className={`${styles.status} ${requestId ? styles.statusPending : styles.statusNeutral}`}>{requestId ? 'Demandé' : 'Disponible'}</span>
+        <span className={`${styles.status} ${requestId ? styles.statusPending : styles.statusNeutral}`}>{requestId ? 'Historique' : 'Disponible'}</span>
       </div>
 
-      {requestedAt && <div className={styles.dateLine}><Clock3 size={14} aria-hidden="true" /> Demandé le {new Date(requestedAt).toLocaleDateString('fr-FR')}</div>}
+      {requestedAt && <div className={styles.dateLine}><Clock3 size={14} aria-hidden="true" /> Créé le {new Date(requestedAt).toLocaleDateString('fr-FR')}</div>}
       <div className={styles.amounts}>
         {amountDueXOF > 0 && <div><span>Solde XOF</span><strong>{fmtXOF(amountDueXOF)}</strong></div>}
         {amountDueCents <= 0 && amountDueXOF <= 0 && <div><span>Solde disponible</span><strong>0</strong></div>}
@@ -655,12 +643,12 @@ function PayoutCard({
       {mismatch && <div className={styles.note} role="alert"><AlertTriangle size={15} aria-hidden="true" /><span><strong>Montant incohérent. </strong>La demande dépasse le solde réel. Seul le montant disponible sera réglé.</span></div>}
 
       {amountDueXOF > 0 && (
-        <div className={`${styles.note} ${styles.infoNote}`}><Smartphone size={15} aria-hidden="true" /><span>{fmtXOF(amountDueXOF)} sont destinés au versement automatique Mobile Money.</span></div>
+        <div className={`${styles.note} ${styles.infoNote}`}><Smartphone size={15} aria-hidden="true" /><span>{fmtXOF(amountDueXOF)} sont à contrôler comme exception FedaPay/Mobile Money.</span></div>
       )}
 
       {requestId && amountDueXOF <= 0 && (
-        <Button variant="secondary" icon={<CheckCircle2 size={16} aria-hidden="true" />} className={styles.secondaryAction} aria-label={`Clore la demande à zéro de ${sellerName}`} onClick={() => setConfirm({ type: 'closeRequest', requestId, who: sellerName })}>
-          Clore la demande à zéro
+        <Button variant="secondary" icon={<CheckCircle2 size={16} aria-hidden="true" />} className={styles.secondaryAction} aria-label={`Clore le dossier à zéro de ${sellerName}`} onClick={() => setConfirm({ type: 'closeRequest', requestId, who: sellerName })}>
+          Clore le dossier à zéro
         </Button>
       )}
     </Card>
@@ -925,11 +913,11 @@ function ConfirmModal({ action, busy, onCancel, onConfirm }: { action: ConfirmAc
   let title = ''
   let helper = ''
   if (action.type === 'markPayoutPaid') {
-    title = `Confirmer le versement de ${action.label} à ${action.who} ?`
-    helper = "À faire APRÈS avoir envoyé l'argent sur son Mobile Money."
+    title = `Confirmer le règlement de ${action.label} à ${action.who} ?`
+    helper = "À faire APRÈS vérification finance et régularisation documentée de cette exception."
   } else if (action.type === 'closeRequest') {
-    title = `Clore la demande de virement de ${action.who} ?`
-    helper = 'Le solde réel du ledger est déjà à zéro — aucun argent ne sera envoyé.'
+    title = `Clore le dossier historique de ${action.who} ?`
+    helper = 'Le solde réel du ledger est déjà à zéro — aucun paiement manuel ne sera effectué.'
   } else if (action.type === 'completeRefund') {
     title = `Confirmer le remboursement de ${action.label} à ${action.who} ?`
     helper = preparedAmount == null

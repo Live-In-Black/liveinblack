@@ -163,7 +163,7 @@ export function validatePrestataireFormData(f: Partial<PrestataireFormData>): Fo
   return validatePrestataireStep2(f)
 }
 
-// Onboarding LIB V1 : seuls les justificatifs d'identité du titulaire du
+// Onboarding LIB V1 : seule la pièce d'identité du titulaire du
 // compte sont demandés. Les pièces éventuellement requises par FedaPay ou un
 // contrôle juridique séparé ne doivent pas réapparaître dans ce formulaire.
 export function getRequiredDocs(type: 'organisateur' | 'prestataire', prestataireTypes: string[] = []): string[] {

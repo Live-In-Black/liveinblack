@@ -6,14 +6,12 @@ import type { OrganizerEventView } from '../my-events/types'
 import { formatMoney } from '../my-events/types'
 import type { PayoutStatusView } from '@/lib/server/organizer/organizerPayoutsUtils'
 import type { DeepAnalyticsData } from '@/lib/server/organizer/organizerDeepAnalytics'
-import { Button, Card } from '@/app/components/ui'
+import { Card } from '@/app/components/ui'
 import {
   BarChart,
   Bar,
   AreaChart,
   Area,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
@@ -27,22 +25,15 @@ import {
   TrendingUp,
   Ticket,
   Wallet,
-  CalendarDays,
   ArrowUpRight,
   Plus,
-  Users,
-  CheckCircle2,
   Clock,
   DollarSign,
-  Layers,
   BarChart3,
-  Sparkles,
-  Smartphone,
   CreditCard,
   QrCode,
   Store,
   Compass,
-  ArrowRight,
 } from 'lucide-react'
 
 export interface DashboardClientProps {
@@ -68,7 +59,6 @@ export default function DashboardClient({
   events,
   payoutStatus,
   momos,
-  userName,
 }: DashboardClientProps) {
   const [viewMode, setViewMode] = useState<'standard' | 'analytics'>('standard')
   const [activeRange, setActiveRange] = useState<'all' | 'upcoming' | 'past'>('all')

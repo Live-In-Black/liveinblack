@@ -43,14 +43,11 @@ const apiDefaultHeaders = [
   { key: 'Vary', value: 'Accept-Encoding' },
 ];
 
-const developmentNoStoreHeaders = [
-  ...securityHeaders,
-  { key: 'Cache-Control', value: 'no-store, max-age=0, must-revalidate' },
-];
 
 const nextConfig: NextConfig = {
   output: 'standalone',
   poweredByHeader: false,
+  compress: true,
   // Le panneau flottant Next.js masque une partie des pages longues quand il
   // est ouvert sur localhost. Les erreurs restent disponibles dans le terminal.
   devIndicators: false,
@@ -59,6 +56,9 @@ const nextConfig: NextConfig = {
   // build de production type-check uniquement le code livré.
   typescript: {
     tsconfigPath: isDev ? 'tsconfig.json' : 'tsconfig.build.json',
+  },
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'recharts'],
   },
   // Le navigateur de prévisualisation local utilise 127.0.0.1 alors que
   // Next démarre sur localhost. Autoriser explicitement cette origine évite
@@ -69,6 +69,10 @@ const nextConfig: NextConfig = {
     root: path.join(__dirname),
   },
   images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 31536000,
+    deviceSizes: [360, 480, 640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       { protocol: 'https', hostname: 'res.cloudinary.com' }, // nouveau stockage média
       { protocol: 'https', hostname: 'firebasestorage.googleapis.com' }, // URLs pré-migration (phase 10)
@@ -81,20 +85,12 @@ const nextConfig: NextConfig = {
     const productionStaticCacheRoutes = isDev
       ? []
       : [
-          { source: '/_next/static/:path*', headers: staticCacheHeaders },
-          { source: '/_next/image/:path*', headers: staticCacheHeaders },
           { source: '/favicon.ico', headers: staticCacheHeaders },
           { source: '/images/:path*', headers: staticCacheHeaders },
         ];
 
     return [
       { source: '/(.*)', headers: securityHeaders },
-      ...(isDev
-        ? [
-            { source: '/_next/static/:path*', headers: developmentNoStoreHeaders },
-            { source: '/_next/image/:path*', headers: developmentNoStoreHeaders },
-          ]
-        : []),
       ...productionStaticCacheRoutes,
       { source: '/api/:path*', headers: apiDefaultHeaders },
     ];
@@ -111,7 +107,6 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       // --- Public ---
-      { source: '/', destination: '/home', permanent: true },
       { source: '/accueil', destination: '/home', permanent: true },
       { source: '/c-est-quoi', destination: '/about', permanent: true },
       { source: '/connexion', destination: '/login', permanent: true },

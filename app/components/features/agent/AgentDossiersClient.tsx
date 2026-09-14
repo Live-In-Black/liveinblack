@@ -559,7 +559,7 @@ export default function AgentDossiersClient() {
                 <AppCard key={group[0].id} app={group[0]} onClick={() => setSelectedId(group[0].id)} />
               ) : (
                 <Card key={group[0].userEmail || group[0].userId} className={styles.groupCard}>
-                  <div className={styles.groupHeader}><strong>Même compte · plusieurs activités</strong><span>{group.length} dossiers</span></div>
+                  <div className={styles.groupHeader}><strong>Ancien compte à séparer</strong><span>{group.length} dossiers</span></div>
                   <div className={styles.groupGrid}>{group.map((app) => <AppCard key={app.id} app={app} compact onClick={() => setSelectedId(app.id)} />)}</div>
                 </Card>
               )

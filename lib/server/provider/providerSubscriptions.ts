@@ -1,6 +1,6 @@
-// Remplace api/create-subscription.js (rail EUR/Stripe) + la branche
-// `action:'subscribe'`/finalizeProviderSubscription de api/fedapay.js (rail
-// XOF) + la partie "abonnements" de api/cron-subscriptions.js. Abonnement
+// Remplace la branche `action:'subscribe'`/finalizeProviderSubscription de
+// api/fedapay.js (rail XOF) + la partie "abonnements" de
+// api/cron-subscriptions.js. Abonnement
 // prestataire mensuel (annuaire/profil/contact organisateurs) — AUCUNE
 // commission de service (les prestations se paient en direct, hors plateforme).
 //
@@ -15,7 +15,6 @@ import ProviderProfile from '@/lib/models/ProviderProfile'
 import CronLock from '@/lib/models/CronLock'
 import PaymentAlert from '@/lib/models/PaymentAlert'
 import SubscriptionPayment from '@/lib/models/SubscriptionPayment'
-import { SUBSCRIPTION } from '@/lib/shared/fees'
 import { PROVIDER_SUB, computeRenewal, deriveSubStatus, dueReminders, cycleKey, type SubWindow } from '@/lib/shared/providerSubscription'
 import { getProviderBillingContext } from './providerBilling'
 import { sendEmail } from '@/lib/server/email'
@@ -24,45 +23,6 @@ import { createNotification } from '@/lib/server/notifications'
 import { sendPushToUser } from '@/lib/server/push'
 
 const SITE = process.env.PUBLIC_SITE_URL || 'https://liveinblack.com'
-
-function stripeSubIsActive(sub: Stripe.Subscription | null | undefined): boolean {
-  return Boolean(sub) && (sub!.status === 'active' || sub!.status === 'trialing')
-}
-
-// Depuis l'API Stripe épinglée par ce projet, `current_period_end` a migré
-// du Subscription vers chaque SubscriptionItem (support multi-item) — on lit
-// le premier item, seul cas possible ici (un abonnement = un seul price).
-function stripeSubPeriodEnd(sub: Stripe.Subscription): Date | null {
-  const end = sub.items?.data?.[0]?.current_period_end
-  return end ? new Date(end * 1000) : null
-}
-
-// ── Mirroring commun : User (source de vérité pour les gates qui ne chargent
-// que User) + ProviderProfile SI il existe déjà (jamais de profil fantôme
-// créé ici — voir lib/server/providerProfile.ts, création paresseuse #88). ──
-async function mirrorStripeStatus(
-  uid: string,
-  { active, status, end, stripeSubscriptionId, stripeCustomerId }: { active: boolean; status: string; end: Date | null; stripeSubscriptionId: string | null; stripeCustomerId: string | null }
-): Promise<void> {
-  await User.updateOne(
-    { _id: uid },
-    {
-      $set: {
-        prestataireSubActive: active,
-        prestataireSubStatus: status,
-        prestataireSubEnd: end,
-        prestataireSubRail: 'stripe',
-        stripeSubscriptionId,
-        stripeCustomerId,
-      },
-    }
-  )
-  // Le statut Stripe (active/trialing/past_due/unpaid/incomplete/paused/canceled)
-  // n'est jamais forcé dans l'enum XOF de ProviderProfile (conçu pour la
-  // machine à états à renouvellement manuel) — seul un statut binaire y est
-  // reflété, `subscriptionActive` restant le VRAI gate de visibilité.
-  await ProviderProfile.updateOne({ userId: uid }, { $set: { subscriptionActive: active, subscriptionStatus: active ? 'active' : 'expired' } })
-}
 
 async function mirrorFedapayStatus(uid: string, renewal: ReturnType<typeof computeRenewal>): Promise<void> {
   await User.updateOne(

@@ -1,10 +1,9 @@
 'use client'
 
 import { useEffect, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
-import { Ban, Check, Clock, Handshake, MessageSquare, Phone, Search, ShieldAlert, Trash2, UserCheck, UserMinus, UserPlus, Users, X } from 'lucide-react'
+import { Ban, Check, Clock, Handshake, Phone, Search, ShieldAlert, Trash2, UserCheck, UserMinus, UserPlus, Users, X } from 'lucide-react'
 import { Button, Checkbox, Input, Radio } from '@/app/components/ui'
 import { ModalActions, ModalShell } from './MessagingModals'
-import MessagingEmptyState from './MessagingEmptyState'
 import type { ConversationMember, ConversationView, FriendRequestView, FriendView, SentFriendRequestView } from './types'
 import styles from '@/app/(app)/messages/MessagesClient.module.css'
 
